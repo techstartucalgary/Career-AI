@@ -1,17 +1,16 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import React from 'react'
 import './App.css'
+import HomePage from './pages/HomePage.jsx'
+import { Routes, Route } from 'react-router-dom'
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
 
   return (
-    <>
       <div>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+          </Routes>
       </div>
-      <h1><button type="button" class="btn btn-primary btn-lg">meow :)</button></h1>
-    </>
   )
 }
 
