@@ -1,0 +1,12 @@
+.header {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.nav-link {
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: #0d6efd !important;
+}
+

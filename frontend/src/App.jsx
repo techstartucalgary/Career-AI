@@ -1,18 +1,9 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import React from 'react'
 import './App.css'
-
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-      </div>
-      <h1><button type="button" class="btn btn-primary btn-lg">meow :)</button></h1>
-    </>
-  )
+import HomePage from './pages/HomePage.jsx'
+/* deleted the router FOR NOW (we can add this after we have the rest of the pages figured out) */
+const App = () => {
+  return <HomePage />
 }
 
 export default App
