@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
+import { View, Text, TextInput, Pressable, ScrollView, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
-import './HomePage.css';
+import './HomePage.css'; // keep for web fallback during migration
+import styles from './HomePage.styles';
 
 const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
 
   const handleSearch = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     console.log('Searching for:', searchQuery, 'in', location);
   };
 
@@ -19,107 +22,111 @@ const HomePage = () => {
   ];
 
   return (
-    <div className="homepage">
+    <ScrollView style={styles.homepage}>
       <Header />
       
       {/* hero section */}
-      <section className="hero-section text-center">
-        <div className="container">
-          <h1 className="display-3 fw-bold mb-3">Find Your Dream Career with AI</h1>
-          <p className="lead text-muted mb-5">Leverage artificial intelligence to discover opportunities perfectly matched to your skills and aspirations.</p>
+      <View style={styles.heroSection}>
+        <LinearGradient
+          colors={['#f8f9fa', '#e9ecef']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroGradient}
+        />
+        <View style={styles.container}>
+          <Text style={styles.heroTitle}>Find Your Dream Career with AI</Text>
+          <Text style={styles.heroSubtitle}>
+            Leverage artificial intelligence to discover opportunities perfectly matched to your skills and aspirations.
+          </Text>
           
-          <form onSubmit={handleSearch} className="search-bar mx-auto">
-            <div className="row g-2">
-              <div className="col-md-5">
-                <input
-                  type="text"
-                  className="form-control form-control-lg"
-                  placeholder="Job title or keyword"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="col-md-4">
-                <input
-                  type="text"
-                  className="form-control form-control-lg"
-                  placeholder="Location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
-              </div>
-              <div className="col-md-3">
-                <button type="submit" className="btn btn-primary btn-lg w-100">
-                  Search Jobs
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </section>
+          <View style={styles.searchBar}>
+            <View style={styles.searchRow}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Job title or keyword"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor="#6c757d"
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Location"
+                value={location}
+                onChangeText={setLocation}
+                placeholderTextColor="#6c757d"
+              />
+              <Pressable style={styles.searchButton} onPress={handleSearch}>
+                <Text style={styles.searchButtonText}>Search Jobs</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </View>
 
       {/* features section */}
-      <section className="features-section">
-        <div className="container">
-          <h2 className="text-center mb-5">Why Choose Career AI?</h2>
-          <div className="row g-4">
+      <View style={styles.featuresSection}>
+        <View style={styles.container}>
+          <Text style={styles.featuresTitle}>Why Choose Career AI?</Text>
+          <View style={styles.featuresRow}>
             {features.map((feature, idx) => (
-              <div key={idx} className="col-md-6 col-lg-3">
-                <div className="feature-card text-center p-4 h-100">
-                  <div className="feature-icon mb-3">{feature.icon}</div>
-                  <h5 className="fw-bold mb-2">{feature.title}</h5>
-                  <p className="text-muted mb-0">{feature.desc}</p>
-                </div>
-              </div>
+              <View key={idx} style={styles.featureCard}>
+                <Text style={styles.featureIcon}>{feature.icon}</Text>
+                <Text style={styles.featureTitle}>{feature.title}</Text>
+                <Text style={styles.featureDesc}>{feature.desc}</Text>
+              </View>
             ))}
-          </div>
-        </div>
-      </section>
+          </View>
+        </View>
+      </View>
 
       {/* stats section */}
-      <section className="stats-section bg-primary text-white">
-        <div className="container">
-          <div className="row text-center">
-            <div className="col-md-4">
-              <h2 className="display-4 fw-bold">10k+</h2>
-              <p className="mb-0">Active Jobs</p>
-            </div>
-            <div className="col-md-4">
-              <h2 className="display-4 fw-bold">5k+</h2>
-              <p className="mb-0">Success Stories</p>
-            </div>
-            <div className="col-md-4">
-              <h2 className="display-4 fw-bold">500+</h2>
-              <p className="mb-0">Partner Companies</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <View style={styles.statsSection}>
+        <View style={styles.container}>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>10k+</Text>
+              <Text style={styles.statLabel}>Active Jobs</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>5k+</Text>
+              <Text style={styles.statLabel}>Success Stories</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>500+</Text>
+              <Text style={styles.statLabel}>Partner Companies</Text>
+            </View>
+          </View>
+        </View>
+      </View>
 
       {/* CTA section */}
-      <section className="cta-section text-center">
-        <div className="container">
-          <h2 className="mb-3">Ready to Start Your Journey?</h2>
-          <p className="lead text-muted mb-4">Join thousands of professionals who found their dream careers</p>
-          <button className="btn btn-primary btn-lg px-5">Get Started Free</button>
-        </div>
-      </section>
+      <View style={styles.ctaSection}>
+        <View style={styles.container}>
+          <Text style={styles.ctaTitle}>Ready to Start Your Journey?</Text>
+          <Text style={styles.ctaSubtitle}>
+            Join thousands of professionals who found their dream careers
+          </Text>
+          <Pressable style={styles.ctaButton}>
+            <Text style={styles.ctaButtonText}>Get Started Free</Text>
+          </Pressable>
+        </View>
+      </View>
 
       {/* footer */}
-      <footer className="footer bg-dark text-white">
-        <div className="container">
-          <div className="row py-4">
-            <div className="col-md-6">
-              <h5 className="fw-bold mb-3">Career AI</h5>
-              <p className="text-muted mb-0">Your AI-powered career companion</p>
-            </div>
-            <div className="col-md-6 text-md-end">
-              <p className="text-muted mb-0">&copy; 2025 Career AI. All rights reserved.</p>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+      <View style={styles.footer}>
+        <View style={styles.container}>
+          <View style={styles.footerRow}>
+            <View>
+              <Text style={styles.footerTitle}>Career AI</Text>
+              <Text style={styles.footerText}>Your AI-powered career companion</Text>
+            </View>
+            <View>
+              <Text style={styles.footerCopyright}>&copy; 2025 Career AI. All rights reserved.</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 };
 
