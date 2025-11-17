@@ -27,7 +27,7 @@ This plan migrates your React + Vite web app to Expo, enabling simultaneous web 
 ## Phase 1: Project Structure Setup
 
 ### Step 1.1: Install Expo CLI and Dependencies
-**Location:** Root directory (`/Users/sardarwaheed/Developer/Career-AI/`)
+**Location:** Root directory
 
 **Actions:**
 1. Install Expo CLI globally (if not already installed):
