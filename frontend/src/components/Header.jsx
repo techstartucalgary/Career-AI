@@ -22,8 +22,11 @@ const Header = () => {
             <Pressable onPress={() => {}}>
               <Text style={styles.navLink}>Jobs</Text>
             </Pressable>
-            <Pressable onPress={() => {}}>
+            <Pressable onPress={() => router.push('/resume')}>
               <Text style={styles.navLink}>Resume Builder</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push('/cover-letter')}>
+              <Text style={styles.navLink}>Cover Letter Builder</Text>
             </Pressable>
             <Pressable onPress={() => {}}>
               <Text style={styles.navLink}>About</Text>
