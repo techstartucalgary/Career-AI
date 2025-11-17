@@ -1,31 +1,47 @@
 import React from 'react';
-import './Header.css';
+import { View, Text, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+import './Header.css'; // keep for web fallback during migration
+import styles from './Header.styles';
 
 const Header = () => {
+  const router = useRouter();
+
   return (
-    <header className="header sticky-top bg-white shadow-sm">
-      <nav className="container">
-        <div className="d-flex justify-content-between align-items-center py-3">
-          <a href="/" className="logo text-decoration-none">
-            <h3 className="mb-0 fw-bold text-primary">Career AI</h3>
-          </a>
+    <View style={styles.header}>
+      <View style={styles.container}>
+        <View style={styles.nav}>
+          <Pressable onPress={() => router.push('/')} style={styles.logo}>
+            <Text style={styles.logoText}>Career AI</Text>
+          </Pressable>
           
-          <ul className="nav gap-4 d-none d-md-flex">
-            <li><a href="/" className="nav-link text-dark fw-medium">Home</a></li>
-            <li><a href="#jobs" className="nav-link text-dark fw-medium">Jobs</a></li>
-            <li><a href="#resume" className="nav-link text-dark fw-medium">Resume Builder</a></li>
-            <li><a href="#about" className="nav-link text-dark fw-medium">About</a></li>
-          </ul>
+          <View style={styles.navLinks}>
+            <Pressable onPress={() => router.push('/')}>
+              <Text style={styles.navLink}>Home</Text>
+            </Pressable>
+            <Pressable onPress={() => {}}>
+              <Text style={styles.navLink}>Jobs</Text>
+            </Pressable>
+            <Pressable onPress={() => {}}>
+              <Text style={styles.navLink}>Resume Builder</Text>
+            </Pressable>
+            <Pressable onPress={() => {}}>
+              <Text style={styles.navLink}>About</Text>
+            </Pressable>
+          </View>
           
-          <div className="d-flex gap-2">
-            <button className="btn btn-outline-primary">Login</button>
-            <button className="btn btn-primary">Sign Up</button>
-          </div>
-        </div>
-      </nav>
-    </header>
+          <View style={styles.buttonGroup}>
+            <Pressable style={styles.button}>
+              <Text style={styles.buttonText}>Login</Text>
+            </Pressable>
+            <Pressable style={[styles.button, styles.buttonPrimary]}>
+              <Text style={[styles.buttonText, styles.buttonTextPrimary]}>Sign Up</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 };
 
 export default Header;
-

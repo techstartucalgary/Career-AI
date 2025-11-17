@@ -5,21 +5,34 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:expo": "expo start",
+    "dev:web": "expo start --web",
+    "dev:ios": "expo start --ios",
+    "dev:android": "expo start --android",
     "build": "vite build",
+    "build:expo:web": "expo export:web",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "bootstrap": "^5.3.8",
+    "@expo/metro-config": "^54.0.9",
+    "expo": "^54.0.23",
+    "expo-linear-gradient": "~15.0.7",
+    "expo-router": "~6.0.14",
+    "expo-status-bar": "~3.0.8",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-router-dom": "^7.9.5"
+    "react-native": "^0.82.1",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-web": "^0.21.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
+    "babel-preset-expo": "^54.0.7",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",
