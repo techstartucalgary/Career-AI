@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useMessages } from '../contexts/MessagesContext';
 import './Header.css'; // keep for web fallback during migration
 import styles from './Header.styles';
 
 const Header = () => {
   const router = useRouter();
+  const { openMessages } = useMessages();
 
   return (
     <View style={styles.header}>
@@ -19,7 +21,7 @@ const Header = () => {
             <Pressable onPress={() => router.push('/')}>
               <Text style={styles.navLink}>Home</Text>
             </Pressable>
-            <Pressable onPress={() => {}}>
+            <Pressable onPress={() => router.push('/jobs')}>
               <Text style={styles.navLink}>Jobs</Text>
             </Pressable>
             <Pressable onPress={() => router.push('/resume')}>
@@ -37,6 +39,9 @@ const Header = () => {
           </View>
           
           <View style={styles.buttonGroup}>
+          <Pressable onPress={openMessages} style={styles.messagesButton}>
+              <Text style={styles.messagesButtonText}>Messages</Text>
+            </Pressable>
             <Pressable onPress={() => router.push('/authentication')} style={styles.button}>
               <Text style={styles.buttonText}>Login</Text>
             </Pressable>
