@@ -48,6 +48,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     padding: 20,
     borderRadius: 12,
+    alignSelf: 'center',
+    width: '100%',
     ...Platform.select({
       web: {
         boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',

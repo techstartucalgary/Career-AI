@@ -59,6 +59,27 @@ const styles = StyleSheet.create({
   buttonGroup: {
     flexDirection: 'row',
     gap: 8,
+    alignItems: 'center',
+  },
+  messagesButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#0d6efd',
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  messagesButtonText: {
+    color: '#212529',
+    fontSize: 16,
+    fontWeight: '500',
   },
   button: {
     paddingVertical: 8,
