@@ -48,6 +48,9 @@ const Header = () => {
             <Pressable onPress={() => router.push('/authentication')} style={[styles.button, styles.buttonPrimary]}>
               <Text style={[styles.buttonText, styles.buttonTextPrimary]}>Sign Up</Text>
             </Pressable>
+            <Pressable onPress={() => router.push('/profile')} style={[styles.button, styles.buttonPrimary]}>
+              <Text style={[styles.buttonText, styles.buttonTextPrimary]}>Profile</Text>
+            </Pressable>
           </View>
         </View>
       </View>
