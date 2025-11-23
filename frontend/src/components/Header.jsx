@@ -12,7 +12,7 @@ const Header = () => {
       <View style={styles.container}>
         <View style={styles.nav}>
           <Pressable onPress={() => router.push('/')} style={styles.logo}>
-            <Text style={styles.logoText}>Career AI</Text>
+            <Text style={styles.logoText}>Vexera</Text>
           </Pressable>
           
           <View style={styles.navLinks}>
@@ -28,16 +28,19 @@ const Header = () => {
             <Pressable onPress={() => router.push('/cover-letter')}>
               <Text style={styles.navLink}>Cover Letter Builder</Text>
             </Pressable>
+            <Pressable onPress={() => router.push('/interview')}>
+              <Text style={styles.navLink}>Mock Interview</Text>
+            </Pressable>
             <Pressable onPress={() => {}}>
               <Text style={styles.navLink}>About</Text>
             </Pressable>
           </View>
           
           <View style={styles.buttonGroup}>
-            <Pressable style={styles.button}>
+            <Pressable onPress={() => router.push('/authentication')} style={styles.button}>
               <Text style={styles.buttonText}>Login</Text>
             </Pressable>
-            <Pressable style={[styles.button, styles.buttonPrimary]}>
+            <Pressable onPress={() => router.push('/authentication')} style={[styles.button, styles.buttonPrimary]}>
               <Text style={[styles.buttonText, styles.buttonTextPrimary]}>Sign Up</Text>
             </Pressable>
           </View>

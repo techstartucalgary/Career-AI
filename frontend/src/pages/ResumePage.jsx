@@ -11,6 +11,7 @@ import {
   Linking,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
+import Header from '../components/Header';
 
 const { width, height } = Dimensions.get('window');
 
@@ -47,7 +48,8 @@ export const ResumeBuilder = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Resume Builder</Text>
+      <Header />
+        <Text style={[styles.title, {marginTop: 40}]}>Resume Builder</Text>
         
         <TouchableOpacity 
           style={styles.uploadButton}
