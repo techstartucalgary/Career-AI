@@ -12,20 +12,16 @@ app = FastAPI()
 def read_root():
     return {"message": "Hello, World"}
 
-@app.get("/resume")
-def read_item():
-    try:
-        with open('data.json', 'r') as f:
-            data = json.load(f)
-
-        return data
-    except FileNotFoundError:
-        return("Error: 'data.json' not found. Please ensure the file exists.")
-    except json.JSONDecodeError:
-        return("Error: Invalid JSON format in 'data.json'.")
-
 @app.get("/login")
 def login():
+    return {"message": "Hello, World"}
+
+@app.get("/logout")
+def logout():
+    return {"message": "Hello, World"}
+
+@app.get("/signup")
+def signup():
     return {"message": "Hello, World"}
 
 @app.get("/logout")
