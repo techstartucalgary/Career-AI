@@ -2,7 +2,10 @@
 *.iml
 .DS_Store
 TLmeetingNotes.md
-
+/.env
+.env.local
+.env.*.local
+.env
 # Java .gitignore
 ## from: https://github.com/github/gitignore/blob/main/Java.gitignore
 ## Compiled class file
