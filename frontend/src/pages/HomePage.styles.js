@@ -1,229 +1,231 @@
 import { StyleSheet, Platform, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const isWeb = Platform.OS === 'web';
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
+const DARK_PURPLE = '#1F1C2F';
+const LIGHT_PURPLE = '#8B7AB8';
+const WHITE = '#ffffff';
+
 const styles = StyleSheet.create({
-  homepage: {
-    minHeight: '100vh',
+  container: {
+    flex: 1,
+    backgroundColor: DARK_PURPLE,
+  },
+  scrollView: {
     flex: 1,
   },
-  heroSection: {
-    paddingVertical: 100,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroGradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-  },
-  container: {
-    width: '100%',
-    maxWidth: 1200,
-    marginHorizontal: 'auto',
-    paddingHorizontal: 15,
-    zIndex: 1,
-  },
-  heroTitle: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-    color: '#212529',
-  },
-  heroSubtitle: {
-    fontSize: 20,
-    color: '#6c757d',
-    marginBottom: 40,
-    textAlign: 'center',
-  },
-  searchBar: {
-    maxWidth: 900,
-    backgroundColor: '#ffffff',
+  content: {
     padding: 20,
-    borderRadius: 12,
-    alignSelf: 'center',
-    width: '100%',
-    ...Platform.select({
-      web: {
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.1,
-        shadowRadius: 40,
-        elevation: 10,
-      },
-    }),
+    paddingTop: 40,
+    alignItems: 'center',
   },
-  searchRow: {
-    flexDirection: isTablet ? 'row' : 'column',
+  tabsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 40,
+    flexWrap: 'wrap',
+    alignSelf: 'flex-start',
+    width: '100%',
+  },
+  tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: DARK_PURPLE,
+    borderWidth: 1,
+    borderColor: LIGHT_PURPLE,
     gap: 8,
   },
-  searchInput: {
-    flex: isTablet ? 1 : undefined,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+  tabActive: {
+    backgroundColor: LIGHT_PURPLE,
+    borderColor: LIGHT_PURPLE,
+  },
+  tabText: {
+    color: WHITE,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ced4da',
-    borderRadius: 6,
-    backgroundColor: '#ffffff',
-    minHeight: 48,
-    color: '#212529',
+    fontWeight: '500',
   },
-  searchButton: {
-    backgroundColor: '#0d6efd',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-    ...(isTablet ? {} : { width: '100%' }),
+  tabTextActive: {
+    color: WHITE,
   },
-  searchButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
+  checkmarkContainer: {
+    width: 14,
+    height: 14,
+    position: 'relative',
   },
-  featuresSection: {
-    paddingVertical: 80,
-    paddingHorizontal: 20,
+  checkmarkLine1: {
+    position: 'absolute',
+    left: 2,
+    bottom: 4,
+    width: 6,
+    height: 2,
+    backgroundColor: WHITE,
+    transform: [{ rotate: '-45deg' }],
   },
-  featuresTitle: {
-    fontSize: 36,
+  checkmarkLine2: {
+    position: 'absolute',
+    left: 4,
+    bottom: 2,
+    width: 8,
+    height: 2,
+    backgroundColor: WHITE,
+    transform: [{ rotate: '45deg' }],
+  },
+  heroTitle: {
+    fontSize: isDesktop ? 56 : isTablet ? 48 : 36,
     fontWeight: 'bold',
-    textAlign: 'center',
+    color: WHITE,
     marginBottom: 40,
-    color: '#212529',
+    textAlign: 'center',
+    fontFamily: Platform.select({
+      web: 'Georgia, serif',
+      default: 'serif',
+    }),
   },
-  featuresRow: {
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E5E7EB',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginBottom: 40,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    width: '100%',
+    maxWidth: 900,
+    alignSelf: 'center',
+  },
+  searchIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 12,
+    position: 'relative',
+  },
+  searchIconCircle: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#9CA3AF',
+    top: 0,
+    left: 0,
+  },
+  searchIconLine: {
+    position: 'absolute',
+    width: 8,
+    height: 2,
+    backgroundColor: '#9CA3AF',
+    transform: [{ rotate: '45deg' }],
+    bottom: 2,
+    right: 2,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#1F2937',
+    fontSize: 16,
+  },
+  searchFilters: {
+    flexDirection: 'row',
+    gap: 8,
+    marginLeft: 12,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: LIGHT_PURPLE,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    gap: 6,
+  },
+  filterChipText: {
+    color: WHITE,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  filterArrowIcon: {
+    width: 12,
+    height: 12,
+    position: 'relative',
+  },
+  filterArrowUp: {
+    position: 'absolute',
+    top: 0,
+    left: 4,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 2,
+    borderRightWidth: 2,
+    borderBottomWidth: 4,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: WHITE,
+  },
+  filterArrowDown: {
+    position: 'absolute',
+    bottom: 0,
+    left: 4,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 2,
+    borderRightWidth: 2,
+    borderTopWidth: 4,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: WHITE,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: WHITE,
+    marginBottom: 20,
+    fontFamily: Platform.select({
+      web: 'Georgia, serif',
+      default: 'serif',
+    }),
+  },
+  quickActions: {
+    marginTop: 20,
+    width: '100%',
+    maxWidth: 1200,
+    alignSelf: 'center',
+  },
+  actionsGrid: {
     flexDirection: isDesktop ? 'row' : isTablet ? 'row' : 'column',
     flexWrap: 'wrap',
     gap: 16,
   },
-  featureCard: {
+  actionCard: {
     flex: isDesktop ? 1 : isTablet ? 0.48 : 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#2D1B3D',
     borderRadius: 12,
+    padding: 20,
     borderWidth: 1,
-    borderColor: '#e9ecef',
-    padding: 24,
-    alignItems: 'center',
+    borderColor: LIGHT_PURPLE,
     minWidth: isTablet ? 200 : '100%',
     ...Platform.select({
       web: {
-        transition: 'transform 0.3s, box-shadow 0.3s',
+        cursor: 'pointer',
       },
     }),
   },
-  featureIcon: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  featureTitle: {
+  actionCardTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-    color: '#212529',
-  },
-  featureDesc: {
-    fontSize: 16,
-    color: '#6c757d',
-    textAlign: 'center',
-  },
-  statsSection: {
-    paddingVertical: 60,
-    paddingHorizontal: 20,
-    backgroundColor: '#0d6efd',
-  },
-  statsRow: {
-    flexDirection: isTablet ? 'row' : 'column',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  statItem: {
-    alignItems: 'center',
-    marginBottom: isTablet ? 0 : 24,
-  },
-  statNumber: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 8,
-  },
-  statLabel: {
-    fontSize: 18,
-    color: '#ffffff',
-  },
-  ctaSection: {
-    paddingVertical: 80,
-    paddingHorizontal: 20,
-    backgroundColor: '#f8f9fa',
-    alignItems: 'center',
-  },
-  ctaTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#212529',
-  },
-  ctaSubtitle: {
-    fontSize: 20,
-    color: '#6c757d',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  ctaButton: {
-    backgroundColor: '#0d6efd',
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
     fontWeight: '600',
+    color: WHITE,
+    marginBottom: 8,
   },
-  footer: {
-    backgroundColor: '#212529',
-    paddingVertical: 32,
-    paddingHorizontal: 20,
-    marginTop: 'auto',
-  },
-  footerRow: {
-    flexDirection: isTablet ? 'row' : 'column',
-    justifyContent: 'space-between',
-    alignItems: isTablet ? 'center' : 'flex-start',
-    gap: 16,
-  },
-  footerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 12,
-  },
-  footerText: {
-    fontSize: 16,
-    color: '#6c757d',
-  },
-  footerCopyright: {
+  actionCardDesc: {
     fontSize: 14,
-    color: '#6c757d',
-    textAlign: isTablet ? 'right' : 'left',
+    color: '#D1D5DB',
+    lineHeight: 20,
   },
 });
 
 export default styles;
-

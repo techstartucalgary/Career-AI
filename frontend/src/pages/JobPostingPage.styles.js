@@ -1,206 +1,173 @@
 import { StyleSheet, Platform, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
+const DARK_PURPLE = '#1F1C2F';
+const LIGHT_PURPLE = '#8B7AB8';
+const WHITE = '#ffffff';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: DARK_PURPLE,
   },
-  navBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'web' ? 20 : 50,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-    backgroundColor: '#ffffff',
+  contentContainer: {
+    flex: 1,
+    flexDirection: width > 768 ? 'row' : 'column',
+  },
+  sidebar: {
+    width: width > 768 ? 300 : '100%',
+    padding: 24,
+    backgroundColor: DARK_PURPLE,
+    borderRightWidth: width > 768 ? 1 : 0,
+    borderRightColor: LIGHT_PURPLE,
   },
   backButton: {
     width: 40,
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 40,
   },
-  backIcon: {
-    fontSize: 24,
-    color: '#212529',
-    fontWeight: 'bold',
+  backArrow: {
+    width: 24,
+    height: 24,
+    position: 'relative',
   },
-  navRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  backArrowLine: {
+    position: 'absolute',
+    left: 0,
+    top: 11,
+    width: 16,
+    height: 2,
+    backgroundColor: WHITE,
+  },
+  backArrowHead: {
+    position: 'absolute',
+    left: 0,
+    top: 6,
+    width: 0,
+    height: 0,
+    borderTopWidth: 6,
+    borderBottomWidth: 6,
+    borderLeftWidth: 8,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: WHITE,
+  },
+  actionButtons: {
     gap: 16,
   },
-  iconButton: {
-    width: 40,
-    height: 40,
+  actionButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: LIGHT_PURPLE,
+    backgroundColor: 'transparent',
     alignItems: 'center',
-    justifyContent: 'center',
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
   },
-  bookmarkIcon: {
-    fontSize: 20,
-    color: '#212529',
-  },
-  menuIcon: {
-    fontSize: 20,
-    color: '#212529',
-    fontWeight: 'bold',
+  actionButtonText: {
+    color: WHITE,
+    fontSize: 16,
+    fontWeight: '500',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
-    alignItems: 'center',
+    paddingBottom: 40,
   },
   contentWrapper: {
-    width: '100%',
-    maxWidth: 800,
+    maxWidth: 900,
     alignSelf: 'center',
+    width: '100%',
+    padding: 32,
   },
-  summarySection: {
+  jobHeader: {
     flexDirection: 'row',
-    padding: 16,
-    gap: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-  },
-  logoContainer: {
-    width: 100,
-    height: 100,
-  },
-  logoPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  logoShape1: {
-    position: 'absolute',
-    top: 20,
-    alignSelf: 'center',
-    width: 0,
-    height: 0,
-    borderLeftWidth: 12,
-    borderRightWidth: 12,
-    borderBottomWidth: 18,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: '#6c757d',
-  },
-  logoShape2: {
-    position: 'absolute',
-    bottom: 20,
-    left: 15,
-    width: 20,
-    height: 20,
-    backgroundColor: '#6c757d',
-    borderRadius: 10,
-  },
-  logoShape3: {
-    position: 'absolute',
-    bottom: 15,
-    right: 15,
-    width: 24,
-    height: 24,
-    backgroundColor: '#6c757d',
-    borderRadius: 4,
-  },
-  summaryContent: {
-    flex: 1,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 32,
   },
   jobTitle: {
-    fontSize: 20,
+    flex: 1,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#212529',
-    marginBottom: 8,
-    lineHeight: 28,
+    color: WHITE,
+    lineHeight: 40,
+    marginRight: 24,
+    fontFamily: Platform.select({
+      web: 'Georgia, serif',
+      default: 'serif',
+    }),
   },
-  postedTime: {
-    fontSize: 14,
-    color: '#6c757d',
-    marginBottom: 16,
+  bookmarkButton: {
+    padding: 8,
+  },
+  bookmarkIcon: {
+    width: 24,
+    height: 24,
+    position: 'relative',
+  },
+  bookmarkShape: {
+    position: 'absolute',
+    width: 20,
+    height: 24,
+    borderWidth: 2,
+    borderColor: WHITE,
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 0,
+    backgroundColor: 'transparent',
+  },
+  section: {
+    marginBottom: 40,
   },
   sectionHeading: {
-    fontSize: 18,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#212529',
-    marginBottom: 12,
+    color: WHITE,
+    marginBottom: 20,
+    fontFamily: Platform.select({
+      web: 'Georgia, serif',
+      default: 'serif',
+    }),
   },
-  contentSection: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+  sectionSubtext: {
+    fontSize: 16,
+    color: WHITE,
+    marginBottom: 16,
+    lineHeight: 24,
   },
   paragraph: {
     fontSize: 16,
-    color: '#212529',
-    lineHeight: 24,
-    marginBottom: 16,
+    color: WHITE,
+    lineHeight: 28,
+    marginBottom: 20,
   },
   bulletItem: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 16,
     paddingLeft: 4,
   },
   bullet: {
     fontSize: 16,
-    color: '#212529',
-    marginRight: 8,
+    color: WHITE,
+    marginRight: 12,
     lineHeight: 24,
   },
   bulletText: {
     flex: 1,
     fontSize: 16,
-    color: '#212529',
+    color: WHITE,
     lineHeight: 24,
-  },
-  bottomSpacer: {
-    height: 20,
-  },
-  saveButtonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: '#ffffff',
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
-    ...Platform.select({
-      web: {
-        boxShadow: '0 -2px 8px rgba(0,0,0,0.1)',
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 5,
-      },
-    }),
-  },
-  saveButton: {
-    backgroundColor: '#0d6efd',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
   },
 });
 
 export default styles;
-

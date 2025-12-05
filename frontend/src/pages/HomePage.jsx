@@ -1,132 +1,116 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, Pressable, ScrollView, TextInput } from 'react-native';
+import { useRouter } from 'expo-router';
 import Header from '../components/Header';
-import './HomePage.css'; // keep for web fallback during migration
 import styles from './HomePage.styles';
 
 const HomePage = () => {
+  const router = useRouter();
+  const [selectedTab, setSelectedTab] = useState('Recommended');
   const [searchQuery, setSearchQuery] = useState('');
-  const [location, setLocation] = useState('');
 
-  const handleSearch = (e) => {
-    if (e) e.preventDefault();
-    console.log('Searching for:', searchQuery, 'in', location);
-  };
-
-  const features = [
-    { icon: '🎯', title: 'AI Job Matching', desc: 'Smart algorithms match you with perfect opportunities' },
-    { icon: '📄', title: 'Resume Optimizer', desc: 'AI-powered resume analysis and improvement tips' },
-    { icon: '🚀', title: 'Career Insights', desc: 'Personalized career path recommendations' },
-    { icon: '💼', title: 'Interview Prep', desc: 'Practice with AI-driven interview questions' }
-  ];
+  const tabs = ['Recommended For You', 'All Jobs', 'Applied Jobs'];
 
   return (
-    <ScrollView style={styles.homepage}>
+    <View style={styles.container}>
       <Header />
       
-      {/* hero section */}
-      <View style={styles.heroSection}>
-        <LinearGradient
-          colors={['#f8f9fa', '#e9ecef']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.heroGradient}
-        />
-        <View style={styles.container}>
-          <Text style={styles.heroTitle}>Find Your Dream Career with AI</Text>
-          <Text style={styles.heroSubtitle}>
-            Leverage artificial intelligence to discover opportunities perfectly matched to your skills and aspirations.
-          </Text>
-          
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Filter Tabs */}
+          <View style={styles.tabsContainer}>
+            {tabs.map((tab) => (
+              <Pressable
+                key={tab}
+                style={[
+                  styles.tab,
+                  selectedTab === tab && styles.tabActive
+                ]}
+                onPress={() => setSelectedTab(tab)}
+              >
+                {tab === 'Applied Jobs' && (
+                  <View style={styles.checkmarkContainer}>
+                    <View style={styles.checkmarkLine1} />
+                    <View style={styles.checkmarkLine2} />
+                  </View>
+                )}
+                <Text style={[
+                  styles.tabText,
+                  selectedTab === tab && styles.tabTextActive
+                ]}>
+                  {tab}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Hero Title */}
+          <Text style={styles.heroTitle}>Find Your Dream Career With AI</Text>
+
+          {/* Search Bar */}
           <View style={styles.searchBar}>
-            <View style={styles.searchRow}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Job title or keyword"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholderTextColor="#6c757d"
-              />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Location"
-                value={location}
-                onChangeText={setLocation}
-                placeholderTextColor="#6c757d"
-              />
-              <Pressable style={styles.searchButton} onPress={handleSearch}>
-                <Text style={styles.searchButtonText}>Search Jobs</Text>
+            <View style={styles.searchIcon}>
+              <View style={styles.searchIconCircle} />
+              <View style={styles.searchIconLine} />
+            </View>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Job Title or Keyword"
+              placeholderTextColor="#6B7280"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <View style={styles.searchFilters}>
+              <Pressable style={styles.filterChip}>
+                <Text style={styles.filterChipText}>Location</Text>
+              </Pressable>
+              <Pressable style={styles.filterChip}>
+                <Text style={styles.filterChipText}>Work Arrangement</Text>
+                <View style={styles.filterArrowIcon}>
+                  <View style={styles.filterArrowUp} />
+                  <View style={styles.filterArrowDown} />
+                </View>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Quick Actions Section */}
+          <View style={styles.quickActions}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <View style={styles.actionsGrid}>
+              <Pressable 
+                style={styles.actionCard}
+                onPress={() => router.push('/jobs')}
+              >
+                <Text style={styles.actionCardTitle}>Browse Jobs</Text>
+                <Text style={styles.actionCardDesc}>Find opportunities that match your skills</Text>
+              </Pressable>
+              <Pressable 
+                style={styles.actionCard}
+                onPress={() => router.push('/resume')}
+              >
+                <Text style={styles.actionCardTitle}>Resume Builder</Text>
+                <Text style={styles.actionCardDesc}>Create or optimize your resume</Text>
+              </Pressable>
+              <Pressable 
+                style={styles.actionCard}
+                onPress={() => router.push('/cover-letter')}
+              >
+                <Text style={styles.actionCardTitle}>Cover Letters</Text>
+                <Text style={styles.actionCardDesc}>Generate personalized cover letters</Text>
+              </Pressable>
+              <Pressable 
+                style={styles.actionCard}
+                onPress={() => router.push('/interview')}
+              >
+                <Text style={styles.actionCardTitle}>Interview Prep</Text>
+                <Text style={styles.actionCardDesc}>Practice with AI-powered questions</Text>
               </Pressable>
             </View>
           </View>
         </View>
-      </View>
-
-      {/* features section */}
-      <View style={styles.featuresSection}>
-        <View style={styles.container}>
-          <Text style={styles.featuresTitle}>Why Choose Career AI?</Text>
-          <View style={styles.featuresRow}>
-            {features.map((feature, idx) => (
-              <View key={idx} style={styles.featureCard}>
-                <Text style={styles.featureIcon}>{feature.icon}</Text>
-                <Text style={styles.featureTitle}>{feature.title}</Text>
-                <Text style={styles.featureDesc}>{feature.desc}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      </View>
-
-      {/* stats section */}
-      <View style={styles.statsSection}>
-        <View style={styles.container}>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>10k+</Text>
-              <Text style={styles.statLabel}>Active Jobs</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>5k+</Text>
-              <Text style={styles.statLabel}>Success Stories</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>500+</Text>
-              <Text style={styles.statLabel}>Partner Companies</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      {/* CTA section */}
-      <View style={styles.ctaSection}>
-        <View style={styles.container}>
-          <Text style={styles.ctaTitle}>Ready to Start Your Journey?</Text>
-          <Text style={styles.ctaSubtitle}>
-            Join thousands of professionals who found their dream careers
-          </Text>
-          <Pressable style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>Get Started Free</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* footer */}
-      <View style={styles.footer}>
-        <View style={styles.container}>
-          <View style={styles.footerRow}>
-            <View>
-              <Text style={styles.footerTitle}>Career AI</Text>
-              <Text style={styles.footerText}>Your AI-powered career companion</Text>
-            </View>
-            <View>
-              <Text style={styles.footerCopyright}>&copy; 2025 Career AI. All rights reserved.</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 

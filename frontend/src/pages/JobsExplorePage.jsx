@@ -1,116 +1,178 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView, FlatList } from 'react-native';
+import { View, Text, Pressable, ScrollView, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
+import Header from '../components/Header';
 import styles from './JobsExplorePage.styles';
 
 const JobsExplorePage = () => {
   const router = useRouter();
-  const [selectedFilterIndex, setSelectedFilterIndex] = useState(1); // student is at index 1
+  const [selectedTab, setSelectedTab] = useState('Recommended');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const filters = ['Latest', 'Student', 'Label', 'Label', 'Label']; // add labels you see relevant when we have this part figured out
+  const tabs = ['Recommended For You', 'All Jobs', 'Applied Jobs'];
 
-  // mock job data, in real app, this would come from whatever API we use
+  // mock job data
   const jobs = [
-    { id: 1, title: 'PWC', updated: 'today' },
-    { id: 2, title: 'Rogers', updated: 'yesterday' },
-    { id: 3, title: 'Title', updated: '2 days ago' },
-    { id: 4, title: 'Title', updated: 'today' },
-    { id: 5, title: 'Title', updated: 'yesterday' },
-    { id: 6, title: 'Title', updated: '2 days ago' },
-    { id: 7, title: 'Title', updated: 'today' },
-    { id: 8, title: 'Title', updated: 'yesterday' },
-    { id: 9, title: 'Title', updated: '2 days ago' },
-    { id: 10, title: 'Title', updated: 'today' },
+    {
+      id: 1,
+      company: 'Cenovus',
+      title: 'Student Data Analyst Summer, 2026',
+      location: 'Calgary, AB',
+      rate: '$28.25/hr',
+      types: ['Full-time', 'Hybrid', 'Internship'],
+      description: 'Are you looking for an exciting student opportunity full of meaningful, diverse, and challenging assignments working alongside industry leading professionals? You will be part of a driven, and collaborative team completing important projects while receiving the mentorship, knowledge, and experience to develop the skills you need to build an exciting career. Our team is on a mission to further enable Canadian Thermal Development and Production teams by implementing advanced data and analytics solutions, with a strong focus on generative AI.........',
+      posted: 'Posted 2 days ago',
+    },
+    {
+      id: 2,
+      company: 'Cenovus',
+      title: 'Student Data Analyst Summer, 2026',
+      location: 'Calgary, AB',
+      rate: '$28.25/hr',
+      types: ['Full-time', 'Hybrid', 'Internship'],
+      description: 'Are you looking for an exciting student opportunity full of meaningful, diverse, and challenging assignments working alongside industry leading professionals? You will be part of a driven, and collaborative team completing important projects while receiving the mentorship, knowledge, and experience to develop the skills you need to build an exciting career. Our team is on a mission to further enable Canadian Thermal Development and Production teams by implementing advanced data and analytics solutions, with a strong focus on generative AI.........',
+      posted: 'Posted 2 days ago',
+    },
+    {
+      id: 3,
+      company: 'Cenovus',
+      title: 'Student Data Analyst Summer, 2026',
+      location: 'Calgary, AB',
+      rate: '$28.25/hr',
+      types: ['Full-time', 'Hybrid', 'Internship'],
+      description: 'Are you looking for an exciting student opportunity full of meaningful, diverse, and challenging assignments working alongside industry leading professionals? You will be part of a driven, and collaborative team completing important projects while receiving the mentorship, knowledge, and experience to develop the skills you need to build an exciting career. Our team is on a mission to further enable Canadian Thermal Development and Production teams by implementing advanced data and analytics solutions, with a strong focus on generative AI.........',
+      posted: 'Posted 2 days ago',
+    },
   ];
 
   const handleJobPress = (jobId) => {
     router.push(`/job/${jobId}`);
   };
 
-  const renderJobCard = ({ item, index }) => {
-    const isLastInRow = (index + 1) % 3 === 0;
-    return (
-      <Pressable 
-        style={[
-          styles.jobCard,
-          isLastInRow && styles.jobCardLast
-        ]}
-        onPress={() => handleJobPress(item.id)}
-      >
-        <View style={styles.cardIconContainer}>
-          <View style={styles.cardIcon}>
-            <View style={styles.iconShape1} />
-            <View style={styles.iconShape2} />
-            <View style={styles.iconShape3} />
-          </View>
-        </View>
-        <Text style={styles.jobTitle}>{item.title}</Text>
-        <Text style={styles.jobUpdated}>Updated {item.updated}</Text>
-      </Pressable>
-    );
-  };
-
   return (
     <View style={styles.container}>
-      {/* top navigation bar */}
-      <View style={styles.navBar}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.pageTitle}>Explore Opportunities</Text>
-        <Pressable style={styles.menuButton}>
-          <Text style={styles.menuIcon}>⋮</Text>
-        </Pressable>
-      </View>
-
-      {/* filter bar */}
-      <View style={styles.filterWrapper}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterContainer}
-          contentContainerStyle={styles.filterContent}
-        >
-          {filters.map((filter, index) => (
-            <Pressable
-              key={index}
-              style={[
-                styles.filterButton,
-                selectedFilterIndex === index && styles.filterButtonSelected
-              ]}
-              onPress={() => setSelectedFilterIndex(index)}
-            >
-              {selectedFilterIndex === index && (
-                <Text style={styles.checkmark}>✓</Text>
-              )}
-              <Text
+      <Header />
+      
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Filter Tabs */}
+          <View style={styles.tabsContainer}>
+            {tabs.map((tab) => (
+              <Pressable
+                key={tab}
                 style={[
-                  styles.filterText,
-                  selectedFilterIndex === index && styles.filterTextSelected
+                  styles.tab,
+                  selectedTab === tab && styles.tabActive
                 ]}
+                onPress={() => setSelectedTab(tab)}
               >
-                {filter}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      </View>
+                {tab === 'Applied Jobs' && (
+                  <Text style={styles.checkmark}>✓</Text>
+                )}
+                <Text style={[
+                  styles.tabText,
+                  selectedTab === tab && styles.tabTextActive
+                ]}>
+                  {tab}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
 
-      {/* jobs grid */}
-      <View style={styles.gridWrapper}>
-        <FlatList
-          data={jobs}
-          renderItem={({ item, index }) => renderJobCard({ item, index })}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={3}
-          contentContainerStyle={styles.gridContainer}
-          columnWrapperStyle={styles.gridRow}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+          {/* Hero Title */}
+          <Text style={styles.heroTitle}>Find Your Dream Career With AI</Text>
+
+          {/* Search Bar */}
+          <View style={styles.searchBar}>
+            <View style={styles.searchIcon}>
+              <View style={styles.searchIconCircle} />
+              <View style={styles.searchIconLine} />
+            </View>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Job Title or Keyword"
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <View style={styles.searchFilters}>
+              <Pressable style={styles.filterChip}>
+                <Text style={styles.filterChipText}>Location</Text>
+              </Pressable>
+              <Pressable style={styles.filterChip}>
+                <Text style={styles.filterChipText}>Work Arrangement</Text>
+                <View style={styles.filterArrowIcon}>
+                  <View style={styles.filterArrowUp} />
+                  <View style={styles.filterArrowDown} />
+                </View>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Tailored Section */}
+          <View style={styles.tailoredSection}>
+            <View style={styles.tailoredIcon}>
+              <View style={styles.tailoredCircle}>
+                <View style={styles.tailoredStar} />
+              </View>
+            </View>
+            <Text style={styles.tailoredText}>
+              Based on your resume, we found 5 jobs that match your skills and preferences
+            </Text>
+          </View>
+
+          {/* Job Listings */}
+          <View style={styles.jobsList}>
+            {jobs.map((job) => (
+              <Pressable
+                key={job.id}
+                style={styles.jobCard}
+                onPress={() => handleJobPress(job.id)}
+              >
+                <View style={styles.jobCardHeader}>
+                  <View style={styles.companyLogo}>
+                    <Text style={styles.companyLogoText}>{job.company}</Text>
+                  </View>
+                  <Pressable style={styles.bookmarkButton}>
+                    <View style={styles.bookmarkIcon}>
+                      <View style={styles.bookmarkShape} />
+                    </View>
+                  </Pressable>
+                </View>
+                
+                <Text style={styles.jobCardTitle}>{job.title}</Text>
+                <Text style={styles.jobCardCompany}>{job.company}</Text>
+                <Text style={styles.jobCardLocation}>{job.location}</Text>
+                <Text style={styles.jobCardRate}>{job.rate}</Text>
+                
+                <View style={styles.jobTypes}>
+                  {job.types.map((type, index) => (
+                    <View key={index} style={styles.jobTypeTag}>
+                      <Text style={styles.jobTypeText}>{type}</Text>
+                    </View>
+                  ))}
+                </View>
+                
+                <Text style={styles.jobCardDescription} numberOfLines={3}>
+                  {job.description}
+                </Text>
+                
+                <View style={styles.jobCardFooter}>
+                  <Text style={styles.jobCardPosted}>{job.posted}</Text>
+                  <Pressable style={styles.moreButton}>
+                    <View style={styles.moreButtonArrow}>
+                      <View style={styles.moreButtonLine} />
+                      <View style={styles.moreButtonHead} />
+                    </View>
+                  </Pressable>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 };
 
 export default JobsExplorePage;
-

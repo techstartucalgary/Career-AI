@@ -1,55 +1,64 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useSegments } from 'expo-router';
 import { useMessages } from '../contexts/MessagesContext';
-import './Header.css'; // keep for web fallback during migration
+import './Header.css';
 import styles from './Header.styles';
 
 const Header = () => {
   const router = useRouter();
+  const segments = useSegments();
+  const currentRoute = segments.length > 0 ? '/' + segments.join('/') : '/';
   const { openMessages } = useMessages();
+
+  const navItems = [
+    { label: 'Job Board', route: '/jobs'},
+    { label: 'AI Resume', route: '/resume'},
+    { label: 'AI Cover Letter', route: '/cover-letter'},
+    { label: 'Interview Prep', route: '/interview'},
+  ];
 
   return (
     <View style={styles.header}>
       <View style={styles.container}>
         <View style={styles.nav}>
-          <Pressable onPress={() => router.push('/')} style={styles.logo}>
-            <Text style={styles.logoText}>Vexera</Text>
+          <Pressable onPress={() => router.push('/home')} style={styles.logoContainer}>
+            <View style={styles.logoCircle}>
+              <View style={styles.logoStar} />
+            </View>
+            <Text style={styles.logoText}>Verexa</Text>
           </Pressable>
           
           <View style={styles.navLinks}>
-            <Pressable onPress={() => router.push('/')}>
-              <Text style={styles.navLink}>Home</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push('/jobs')}>
-              <Text style={styles.navLink}>Jobs</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push('/resume')}>
-              <Text style={styles.navLink}>Resume Builder</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push('/cover-letter')}>
-              <Text style={styles.navLink}>Cover Letter Builder</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push('/interview')}>
-              <Text style={styles.navLink}>Mock Interview</Text>
-            </Pressable>
-            <Pressable onPress={() => {}}>
-              <Text style={styles.navLink}>About</Text>
-            </Pressable>
+            {navItems.map((item) => {
+              const isActive = currentRoute === item.route || currentRoute.startsWith(item.route + '/');
+              return (
+                <Pressable 
+                  key={item.route}
+                  onPress={() => router.push(item.route)}
+                  style={styles.navLinkContainer}
+                >
+                  <Text style={[styles.navLink, isActive && styles.navLinkActive]}>
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
           
           <View style={styles.buttonGroup}>
-          <Pressable onPress={openMessages} style={styles.messagesButton}>
+            <Pressable onPress={openMessages} style={styles.messagesButton}>
               <Text style={styles.messagesButtonText}>Messages</Text>
             </Pressable>
-            <Pressable onPress={() => router.push('/authentication')} style={styles.button}>
-              <Text style={styles.buttonText}>Login</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push('/authentication')} style={[styles.button, styles.buttonPrimary]}>
-              <Text style={[styles.buttonText, styles.buttonTextPrimary]}>Sign Up</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push('/profile')} style={[styles.button, styles.buttonPrimary]}>
-              <Text style={[styles.buttonText, styles.buttonTextPrimary]}>Profile</Text>
+            <Pressable 
+              style={styles.logoutButton}
+              onPress={() => router.push('/authentication')}
+            >
+              <Text style={styles.logoutButtonText}>Log Out</Text>
+              <View style={styles.arrowIcon}>
+                <View style={styles.arrowLine} />
+                <View style={styles.arrowHead} />
+              </View>
             </Pressable>
           </View>
         </View>
