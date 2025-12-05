@@ -1,7 +1,8 @@
 """
 Backend file
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 import json
 import pymongo
 import os
@@ -60,23 +61,32 @@ def logout():
     return {"message": "Hello, World"}
 
 @app.get("/signup")
-def signup():
-    return {"message": "Hello, World"}
+async def signup(request: Request):
+    form = await request.form()
+    email = form.get("email")
+    first_name = form.get("first_name")
+    last_name = form.get("last_name")
+    phone = form.get("phone")
+    linkedin = form.get("linkedin")
+    github = form.get("github")
+    location = form.get("location")
+    password = form.get("password")
 
-@app.get("/logout")
-def logout():
+    if email is None or email == "" or first_name is None or first_name == "" or last_name is None or last_name == "" or phone is None or phone == "" or linkedin is None or linkedin == "" or location is None or location == "" or github is None or github == "" or password is None or password == "":
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Missing information!"
+            }
+        )
 
-    return {"message": "Logged out"}
 
 def get_current_user():
     return {"message": "Hello, World"}
 
 @app.get("/profile")
 def read_user():
-    return {"message": "Hello, World"}
-
-@app.get("/signup")
-def read_signup():
     return {"message": "Hello, World"}
 
 @app.get("/jobs")
