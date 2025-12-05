@@ -68,6 +68,9 @@ def logout():
 
     return {"message": "Logged out"}
 
+def get_current_user():
+    return {"message": "Hello, World"}
+
 @app.get("/profile")
 def read_user():
     return {"message": "Hello, World"}
