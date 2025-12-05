@@ -3,14 +3,53 @@ Backend file
 """
 from fastapi import FastAPI
 import json
+import pymongo
+import os
+
+"""
+Import bcrypt to hash passwords.
+"""
+import bcrypt
+
+
+"""
+Import datetime used for saving registration date of users
+"""
+from datetime import datetime, timedelta, timezone
+
+"""
+Import jwt used for authentication
+Define the jwt algorithm used, which is HS256
+Define length of tokens in hours
+"""
+import jwt
+jwt_algo = "HS256"
+jwt_expire_minutes = 60 * 2  # 2 hour token
 
 # Create a FastAPI instance
 app = FastAPI()
 
-# Define a path operation
-@app.get("/start")
-def read_root():
-    return {"message": "Hello, World"}
+database = os.environ.get("DATABASE")
+clientdb = pymongo.MongoClient(f"{database}")
+db_info = os.environ.get("DATABASE_INFO")
+db = clientdb[f'{db_info}']
+
+"""
+Helper function to hash passwords for security purposes
+"""
+def hash_password(pwd):
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(pwd.encode('utf-8'), salt)
+    return hashed.decode('utf-8')
+
+"""
+Helper function to verify a stored password against one provided by the user
+"""
+def verify_password(stored_pwd, provided_pwd):
+
+    stored_pwd = stored_pwd.encode("utf-8")
+
+    return bcrypt.checkpw(provided_pwd.encode("utf-8"), stored_pwd)
 
 @app.get("/login")
 def login():
