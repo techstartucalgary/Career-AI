@@ -1,7 +1,14 @@
 // template for now
+import { ScrollView, Text} from "react-native"
+import Header from "../components/Header"
+
 const MockInterviewPage = () => {
+
   return (
-    <div>MockInterviewPage</div>
+    <ScrollView>
+      <Header />
+      <Text>Mock Interview page here</Text>
+    </ScrollView>
   )
 }
 
