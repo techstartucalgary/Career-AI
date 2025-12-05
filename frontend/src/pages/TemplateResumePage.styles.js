@@ -6,7 +6,9 @@ const isDesktop = width > 992;
 
 const DARK_PURPLE = '#1F1C2F';
 const LIGHT_PURPLE = '#8B7AB8';
+const BRIGHT_PURPLE = '#A78BFA';
 const WHITE = '#ffffff';
+const TEXT_LIGHT = '#D1D5DB';
 const GRAY_BACKGROUND = '#2D1B3D';
 const PREVIEW_GRAY = '#E5E7EB';
 
@@ -14,6 +16,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: DARK_PURPLE,
+  },
+  gradient: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -25,11 +30,60 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
   },
+  headerSection: {
+    alignItems: 'center',
+    marginBottom: 48,
+    width: '100%',
+  },
+  headerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.3)',
+    marginBottom: 20,
+    gap: 8,
+  },
+  badgeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: BRIGHT_PURPLE,
+  },
+  badgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: BRIGHT_PURPLE,
+    letterSpacing: 0.5,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  headerTitle: {
+    fontSize: isDesktop ? 40 : isTablet ? 36 : 28,
+    fontWeight: 'bold',
+    color: WHITE,
+    marginBottom: 12,
+    textAlign: 'center',
+    fontFamily: Platform.select({
+      web: 'Georgia, serif',
+      default: 'serif',
+    }),
+    textShadowColor: LIGHT_PURPLE,
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 12,
+  },
   headerText: {
     fontSize: 18,
-    color: WHITE,
+    color: TEXT_LIGHT,
     marginBottom: 30,
     textAlign: 'center',
+    opacity: 0.9,
+    maxWidth: 700,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
       default: 'sans-serif',
@@ -43,39 +97,29 @@ const styles = StyleSheet.create({
   leftPanel: {
     flex: isDesktop ? 1 : 1,
     backgroundColor: GRAY_BACKGROUND,
-    borderRadius: 16,
-    padding: 24,
-    ...Platform.select({
-      web: {
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 20,
-        elevation: 8,
-      },
-    }),
+    borderRadius: 20,
+    padding: 32,
+    borderWidth: 1.5,
+    borderColor: 'rgba(139, 122, 184, 0.3)',
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
   },
   rightPanel: {
     flex: isDesktop ? 1 : 1,
     backgroundColor: GRAY_BACKGROUND,
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 20,
+    padding: 32,
     minHeight: isDesktop ? 600 : 400,
-    ...Platform.select({
-      web: {
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 20,
-        elevation: 8,
-      },
-    }),
+    borderWidth: 1.5,
+    borderColor: 'rgba(139, 122, 184, 0.3)',
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
   },
   modeToggle: {
     flexDirection: 'row',
@@ -125,17 +169,30 @@ const styles = StyleSheet.create({
   },
   templateCard: {
     width: isDesktop ? '48%' : isTablet ? '48%' : '100%',
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: '#2D1B3D',
     borderRadius: 12,
     padding: 16,
     borderWidth: 2,
     borderColor: LIGHT_PURPLE,
     alignItems: 'center',
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
     ...Platform.select({
       web: {
         cursor: 'pointer',
+        transition: 'all 0.3s ease',
       },
     }),
+  },
+  templateCardHover: {
+    transform: [{ translateY: -2 }],
+    borderColor: BRIGHT_PURPLE,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    backgroundColor: '#3D2B4D',
   },
   templatePreview: {
     width: '100%',
@@ -171,19 +228,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: 'center',
     marginBottom: 12,
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
     ...Platform.select({
       web: {
         cursor: 'pointer',
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
-      },
-      default: {
-        shadowColor: LIGHT_PURPLE,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
+        transition: 'all 0.3s ease',
       },
     }),
+  },
+  uploadButtonHover: {
+    transform: [{ translateY: -2 }],
+    backgroundColor: BRIGHT_PURPLE,
+    shadowOpacity: 0.6,
+    shadowRadius: 16,
   },
   uploadButtonText: {
     color: WHITE,
@@ -204,10 +265,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     alignItems: 'center',
     marginTop: 20,
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
     ...Platform.select({
       web: {
         cursor: 'pointer',
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
+        transition: 'all 0.3s ease',
       },
       default: {
         shadowColor: LIGHT_PURPLE,
@@ -217,6 +283,12 @@ const styles = StyleSheet.create({
         elevation: 6,
       },
     }),
+  },
+  generateButtonHover: {
+    transform: [{ translateY: -2 }],
+    backgroundColor: BRIGHT_PURPLE,
+    shadowOpacity: 0.6,
+    shadowRadius: 16,
   },
   generateButtonText: {
     color: WHITE,
@@ -251,19 +323,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: 'center',
     alignSelf: 'flex-end',
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
     ...Platform.select({
       web: {
         cursor: 'pointer',
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
+        transition: 'all 0.3s ease',
       },
       default: {
-        shadowColor: LIGHT_PURPLE,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 6,
       },
     }),
+  },
+  downloadButtonHover: {
+    transform: [{ translateY: -2 }],
+    backgroundColor: BRIGHT_PURPLE,
+    shadowOpacity: 0.6,
+    shadowRadius: 16,
   },
   downloadButtonText: {
     color: WHITE,

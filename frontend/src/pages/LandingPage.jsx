@@ -32,13 +32,26 @@ const LandingPage = () => {
     <ScrollView style={styles.homepage}>
       {/* Hero Section */}
       <LinearGradient
-        colors={['#1F1C2F', '#2D1B3D']}
+        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']}
         style={styles.heroSection}
       >
-        <Text style={styles.heroTitle}>Find Your Dream Career With AI</Text>
-        <Text style={styles.heroSubtitle}>
-          Upload your resume and get tailored job matches, and AI-written cover letters and resumes in seconds
-        </Text>
+        <View style={styles.heroVisualContainer}>
+          <View style={styles.heroCircle1} />
+          <View style={styles.heroCircle2} />
+          <View style={styles.heroCircle3} />
+        </View>
+        <View style={styles.heroContent}>
+          <View style={styles.heroBadge}>
+            <View style={styles.badgeDot} />
+            <Text style={styles.badgeText}>AI-Powered Career Platform</Text>
+          </View>
+          <Text style={styles.heroTitle}>
+            Find Your Dream Career
+            <Text style={styles.heroTitleAccent}> With AI</Text>
+          </Text>
+          <Text style={styles.heroSubtitle}>
+            Upload your resume and get tailored job matches, and AI-written cover letters and resumes in seconds
+          </Text>
         <View style={styles.heroButtons}>
           <Pressable 
             style={[
@@ -62,6 +75,7 @@ const LandingPage = () => {
           >
             <Text style={styles.secondaryButtonText}>Log In</Text>
           </Pressable>
+        </View>
         </View>
       </LinearGradient>
 

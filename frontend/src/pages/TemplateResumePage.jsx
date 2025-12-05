@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, ScrollView, TextInput, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import Header from '../components/Header';
 import styles from './TemplateResumePage.styles';
 
 const TemplateResumePage = () => {
   const router = useRouter();
+  const { mode } = useLocalSearchParams();
   const [selectedFile, setSelectedFile] = useState(null);
-  const [templateMode, setTemplateMode] = useState('template'); // 'template' or 'optimize'
+  const [templateMode, setTemplateMode] = useState(mode === 'optimize' ? 'optimize' : 'template'); // 'template' or 'optimize'
+  const [hoveredButton, setHoveredButton] = useState(null);
+  const [hoveredTemplate, setHoveredTemplate] = useState(null);
 
   const pickDocument = async () => {
     try {
@@ -41,13 +45,30 @@ const TemplateResumePage = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <LinearGradient 
+        colors={['#1F1C2F', '#2D1B3D']} 
+        style={styles.gradient}
+      >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.headerText}>
-            {templateMode === 'template' 
-              ? 'Choose a template or upload your existing resume to optimize'
-              : 'Optimize your current resume'}
-          </Text>
+          <View style={styles.headerSection}>
+            <View style={styles.headerBadge}>
+              <View style={styles.badgeDot} />
+              <Text style={styles.badgeText}>
+                {templateMode === 'template' ? 'Resume Templates' : 'Resume Optimizer'}
+              </Text>
+            </View>
+            <Text style={styles.headerTitle}>
+              {templateMode === 'template' 
+                ? 'Choose a Professional Template'
+                : 'Optimize Your Current Resume'}
+            </Text>
+            <Text style={styles.headerText}>
+              {templateMode === 'template' 
+                ? 'Select from our collection of professional templates and customize to your needs'
+                : 'Upload your resume and let AI enhance it for better ATS compatibility and impact'}
+            </Text>
+          </View>
 
           <View style={styles.panelsContainer}>
             {/* Left Panel - Input Section */}
@@ -93,7 +114,12 @@ const TemplateResumePage = () => {
                       {['Professional', 'Modern', 'Creative', 'Minimalist'].map((template, index) => (
                         <Pressable
                           key={index}
-                          style={styles.templateCard}
+                          style={[
+                            styles.templateCard,
+                            hoveredTemplate === index && styles.templateCardHover
+                          ]}
+                          onHoverIn={() => Platform.OS === 'web' && setHoveredTemplate(index)}
+                          onHoverOut={() => Platform.OS === 'web' && setHoveredTemplate(null)}
                         >
                           <View style={styles.templatePreview}>
                             <View style={styles.templateIcon}>
@@ -112,8 +138,13 @@ const TemplateResumePage = () => {
                   <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Upload Your Resume</Text>
                     <Pressable
-                      style={styles.uploadButton}
+                      style={[
+                        styles.uploadButton,
+                        hoveredButton === 'upload' && styles.uploadButtonHover
+                      ]}
                       onPress={pickDocument}
+                      onHoverIn={() => Platform.OS === 'web' && setHoveredButton('upload')}
+                      onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
                     >
                       <Text style={styles.uploadButtonText}>
                         {selectedFile ? 'Change File' : 'Upload Resume'}
@@ -130,8 +161,13 @@ const TemplateResumePage = () => {
 
               {/* Generate Resume Button */}
               <Pressable
-                style={styles.generateButton}
+                style={[
+                  styles.generateButton,
+                  hoveredButton === 'generate' && styles.generateButtonHover
+                ]}
                 onPress={handleGenerateResume}
+                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('generate')}
+                onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
                 <Text style={styles.generateButtonText}>
                   {templateMode === 'template' ? 'Generate Resume' : 'Optimize Resume'}
@@ -149,8 +185,13 @@ const TemplateResumePage = () => {
               </View>
 
               <Pressable
-                style={styles.downloadButton}
+                style={[
+                  styles.downloadButton,
+                  hoveredButton === 'download' && styles.downloadButtonHover
+                ]}
                 onPress={handleDownloadPDF}
+                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('download')}
+                onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
                 <Text style={styles.downloadButtonText}>Download PDF</Text>
               </Pressable>
@@ -158,6 +199,7 @@ const TemplateResumePage = () => {
           </View>
         </View>
       </ScrollView>
+      </LinearGradient>
     </View>
   );
 };

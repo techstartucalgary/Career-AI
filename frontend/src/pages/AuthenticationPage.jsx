@@ -62,6 +62,12 @@ export default function AuthenticationPage() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.card}>
+              {/* Visual Background Elements */}
+              <View style={styles.cardVisual}>
+                <View style={styles.cardCircle1} />
+                <View style={styles.cardCircle2} />
+              </View>
+              
               {/* Logo/Icon Section */}
               <View style={styles.logoContainer}>
                 <View style={styles.logoCircle}>

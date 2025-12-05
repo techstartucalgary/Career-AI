@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, ScrollView, TextInput, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './JobPostingResumePage.styles';
@@ -9,6 +10,7 @@ const JobPostingResumePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [selectedTags, setSelectedTags] = useState(['Student', 'AI', 'Software Development', 'Calgary']);
+  const [hoveredButton, setHoveredButton] = useState(null);
 
   const removeTag = (tagToRemove) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
@@ -27,11 +29,24 @@ const JobPostingResumePage = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.content}>
-          <Text style={styles.headerText}>
-            Search for a job posting or paste the job description below
-          </Text>
+      <LinearGradient 
+        colors={['#1F1C2F', '#2D1B3D']} 
+        style={styles.gradient}
+      >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.content}>
+            <View style={styles.headerSection}>
+              <View style={styles.headerBadge}>
+                <View style={styles.badgeDot} />
+                <Text style={styles.badgeText}>AI Resume Generator</Text>
+              </View>
+              <Text style={styles.headerTitle}>
+                Generate Resume from Job Posting
+              </Text>
+              <Text style={styles.headerText}>
+                Search for a job posting or paste the job description below
+              </Text>
+            </View>
 
           <View style={styles.panelsContainer}>
             {/* Left Panel - Input Section */}
@@ -89,8 +104,13 @@ const JobPostingResumePage = () => {
 
               {/* Generate Resume Button */}
               <Pressable
-                style={styles.generateButton}
+                style={[
+                  styles.generateButton,
+                  hoveredButton === 'generate' && styles.generateButtonHover
+                ]}
                 onPress={handleGenerateResume}
+                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('generate')}
+                onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
                 <Text style={styles.generateButtonText}>Generate Resume</Text>
               </Pressable>
@@ -106,8 +126,13 @@ const JobPostingResumePage = () => {
               </View>
 
               <Pressable
-                style={styles.downloadButton}
+                style={[
+                  styles.downloadButton,
+                  hoveredButton === 'download' && styles.downloadButtonHover
+                ]}
                 onPress={handleDownloadPDF}
+                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('download')}
+                onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
                 <Text style={styles.downloadButtonText}>Download PDF</Text>
               </Pressable>
@@ -115,6 +140,7 @@ const JobPostingResumePage = () => {
           </View>
         </View>
       </ScrollView>
+      </LinearGradient>
     </View>
   );
 };

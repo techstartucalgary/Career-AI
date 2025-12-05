@@ -1,0 +1,447 @@
+import { StyleSheet, Platform, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+const isTablet = width > 768;
+const isDesktop = width > 992;
+
+const DARK_PURPLE = '#1F1C2F';
+const LIGHT_PURPLE = '#8B7AB8';
+const BRIGHT_PURPLE = '#A78BFA';
+const WHITE = '#ffffff';
+const TEXT_LIGHT = '#D1D5DB';
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: DARK_PURPLE,
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  content: {
+    padding: isDesktop ? 40 : isTablet ? 32 : 24,
+    paddingTop: 40,
+    maxWidth: 1000,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  headerSection: {
+    alignItems: 'center',
+    marginBottom: 48,
+    position: 'relative',
+    minHeight: 180,
+    justifyContent: 'center',
+  },
+  headerVisual: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.1,
+  },
+  headerCircle1: {
+    position: 'absolute',
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    borderWidth: 2,
+    borderColor: BRIGHT_PURPLE,
+    top: -30,
+    left: -80,
+  },
+  headerCircle2: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 2,
+    borderColor: LIGHT_PURPLE,
+    bottom: -30,
+    right: -60,
+  },
+  headerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.3)',
+    marginBottom: 20,
+    gap: 8,
+    zIndex: 1,
+  },
+  badgeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: BRIGHT_PURPLE,
+  },
+  badgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: BRIGHT_PURPLE,
+    letterSpacing: 0.5,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  title: {
+    fontSize: isDesktop ? 48 : isTablet ? 40 : 32,
+    fontWeight: 'bold',
+    color: WHITE,
+    marginBottom: 16,
+    textAlign: 'center',
+    zIndex: 1,
+    fontFamily: Platform.select({
+      web: 'Georgia, serif',
+      default: 'serif',
+    }),
+    textShadowColor: LIGHT_PURPLE,
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 16,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: TEXT_LIGHT,
+    textAlign: 'center',
+    lineHeight: 24,
+    opacity: 0.9,
+    maxWidth: 600,
+  },
+  categorySection: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: WHITE,
+    marginBottom: 16,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  categoryGrid: {
+    flexDirection: isDesktop ? 'row' : isTablet ? 'row' : 'column',
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  categoryCard: {
+    flex: isDesktop ? 1 : isTablet ? 0.48 : 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2D1B3D',
+    padding: 20,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: LIGHT_PURPLE,
+    gap: 12,
+    minWidth: isTablet ? 180 : '100%',
+    ...Platform.select({
+      web: {
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+      },
+    }),
+  },
+  categoryCardActive: {
+    borderColor: BRIGHT_PURPLE,
+    backgroundColor: '#3D2B4D',
+  },
+  categoryCardHover: {
+    transform: [{ translateY: -2 }],
+    borderColor: BRIGHT_PURPLE,
+    shadowColor: BRIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  categoryIcon: {
+    width: 32,
+    height: 32,
+    position: 'relative',
+  },
+  categoryIconCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: BRIGHT_PURPLE,
+  },
+  categoryIconLine: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    width: 8,
+    height: 2,
+    backgroundColor: BRIGHT_PURPLE,
+    transform: [{ rotate: '45deg' }],
+  },
+  categoryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: TEXT_LIGHT,
+  },
+  categoryTextActive: {
+    color: WHITE,
+  },
+  infoCard: {
+    backgroundColor: '#2D1B3D',
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: LIGHT_PURPLE,
+    marginBottom: 32,
+  },
+  infoIcon: {
+    width: 40,
+    height: 40,
+    marginBottom: 16,
+    position: 'relative',
+  },
+  infoIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: BRIGHT_PURPLE,
+  },
+  infoIconLine1: {
+    position: 'absolute',
+    top: 8,
+    left: 16,
+    width: 2,
+    height: 8,
+    backgroundColor: BRIGHT_PURPLE,
+  },
+  infoIconLine2: {
+    position: 'absolute',
+    bottom: 8,
+    left: 16,
+    width: 2,
+    height: 8,
+    backgroundColor: BRIGHT_PURPLE,
+  },
+  infoTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: WHITE,
+    marginBottom: 12,
+  },
+  infoText: {
+    fontSize: 15,
+    color: TEXT_LIGHT,
+    lineHeight: 24,
+  },
+  startButton: {
+    backgroundColor: LIGHT_PURPLE,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+    alignSelf: 'center',
+    minWidth: 250,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+      },
+    }),
+  },
+  startButtonHover: {
+    transform: [{ translateY: -2 }],
+    backgroundColor: BRIGHT_PURPLE,
+    shadowOpacity: 0.6,
+    shadowRadius: 16,
+  },
+  startButtonText: {
+    color: WHITE,
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  interviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  interviewTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: WHITE,
+  },
+  categoryBadge: {
+    backgroundColor: LIGHT_PURPLE,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: '600',
+    color: WHITE,
+  },
+  questionCard: {
+    backgroundColor: '#2D1B3D',
+    borderRadius: 16,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: LIGHT_PURPLE,
+    marginBottom: 24,
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  questionIcon: {
+    width: 48,
+    height: 48,
+    marginBottom: 16,
+    position: 'relative',
+  },
+  questionIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: BRIGHT_PURPLE,
+  },
+  questionIconLine1: {
+    position: 'absolute',
+    top: 10,
+    left: 20,
+    width: 2,
+    height: 12,
+    backgroundColor: BRIGHT_PURPLE,
+  },
+  questionIconLine2: {
+    position: 'absolute',
+    bottom: 10,
+    left: 20,
+    width: 2,
+    height: 12,
+    backgroundColor: BRIGHT_PURPLE,
+  },
+  questionText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: WHITE,
+    lineHeight: 28,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  answerSection: {
+    marginBottom: 24,
+  },
+  answerLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: WHITE,
+    marginBottom: 12,
+  },
+  answerInput: {
+    backgroundColor: '#2D1B3D',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: LIGHT_PURPLE,
+    color: WHITE,
+    fontSize: 16,
+    minHeight: 200,
+    textAlignVertical: 'top',
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+        transition: 'all 0.3s ease',
+      },
+    }),
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 16,
+    justifyContent: 'center',
+  },
+  primaryButton: {
+    flex: 1,
+    backgroundColor: LIGHT_PURPLE,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 6,
+    ...Platform.select({
+      web: {
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+      },
+    }),
+  },
+  primaryButtonDisabled: {
+    backgroundColor: '#4B4B4B',
+    opacity: 0.5,
+    ...Platform.select({
+      web: {
+        cursor: 'not-allowed',
+      },
+    }),
+  },
+  primaryButtonHover: {
+    transform: [{ translateY: -2 }],
+    backgroundColor: BRIGHT_PURPLE,
+    shadowOpacity: 0.6,
+    shadowRadius: 14,
+  },
+  primaryButtonText: {
+    color: WHITE,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  secondaryButton: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: LIGHT_PURPLE,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    ...Platform.select({
+      web: {
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+      },
+    }),
+  },
+  secondaryButtonHover: {
+    transform: [{ translateY: -2 }],
+    backgroundColor: 'rgba(139, 122, 184, 0.1)',
+    borderColor: BRIGHT_PURPLE,
+  },
+  secondaryButtonText: {
+    color: WHITE,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
+
+export default styles;
+
