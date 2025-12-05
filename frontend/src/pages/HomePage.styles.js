@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     height: 20,
     marginRight: 12,
     position: 'relative',
-  },
+      },
   searchIconCircle: {
     position: 'absolute',
     width: 14,

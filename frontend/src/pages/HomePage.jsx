@@ -39,7 +39,7 @@ const HomePage = () => {
                   selectedTab === tab && styles.tabTextActive
                 ]}>
                   {tab}
-                </Text>
+          </Text>
               </Pressable>
             ))}
           </View>
@@ -53,13 +53,13 @@ const HomePage = () => {
               <View style={styles.searchIconCircle} />
               <View style={styles.searchIconLine} />
             </View>
-            <TextInput
-              style={styles.searchInput}
+              <TextInput
+                style={styles.searchInput}
               placeholder="Job Title or Keyword"
               placeholderTextColor="#6B7280"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
             <View style={styles.searchFilters}>
               <Pressable style={styles.filterChip}>
                 <Text style={styles.filterChipText}>Location</Text>
@@ -71,8 +71,8 @@ const HomePage = () => {
                   <View style={styles.filterArrowDown} />
                 </View>
               </Pressable>
-            </View>
-          </View>
+        </View>
+      </View>
 
           {/* Quick Actions Section */}
           <View style={styles.quickActions}>
@@ -105,12 +105,12 @@ const HomePage = () => {
               >
                 <Text style={styles.actionCardTitle}>Interview Prep</Text>
                 <Text style={styles.actionCardDesc}>Practice with AI-powered questions</Text>
-              </Pressable>
+          </Pressable>
             </View>
           </View>
         </View>
       </ScrollView>
-    </View>
+      </View>
   );
 };
 

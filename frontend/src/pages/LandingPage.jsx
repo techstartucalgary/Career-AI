@@ -105,11 +105,11 @@ const LandingPage = () => {
                       hoveredCard === index && styles.stepCircleHover
                     ]}
                   >
-                    <Text style={styles.stepNumber}>{step.number}</Text>
-                  </View>
-                  <Text style={styles.stepTitle}>{step.title}</Text>
-                  <Text style={styles.stepDescription}>{step.description}</Text>
+                  <Text style={styles.stepNumber}>{step.number}</Text>
                 </View>
+                <Text style={styles.stepTitle}>{step.title}</Text>
+                <Text style={styles.stepDescription}>{step.description}</Text>
+              </View>
               </Pressable>
             ))}
           </View>
@@ -135,7 +135,7 @@ const LandingPage = () => {
                   <View style={styles.iconHead} />
                   <View style={styles.iconBubble} />
                 </View>
-                </View>
+              </View>
               </Pressable>
             </View>
             <View style={styles.splitRight}>

@@ -41,7 +41,7 @@ const Header = () => {
                   <Text style={[styles.navLink, isActive && styles.navLinkActive]}>
                     {item.label}
                   </Text>
-                </Pressable>
+            </Pressable>
               );
             })}
           </View>

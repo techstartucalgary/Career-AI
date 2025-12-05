@@ -42,7 +42,7 @@ const ResumePage = () => {
                   key={option.id}
                   style={styles.optionCard}
                   onPress={() => router.push(option.route)}
-                >
+                    >
                   <Text style={styles.optionTitle}>{option.title}</Text>
                   <Text style={styles.optionDescription}>{option.description}</Text>
                 </Pressable>
@@ -51,7 +51,7 @@ const ResumePage = () => {
           </View>
         </View>
       </ScrollView>
-    </View>
+      </View>
   );
 };
 
