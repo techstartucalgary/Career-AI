@@ -81,6 +81,26 @@ const styles = StyleSheet.create({
   navLinkActive: {
     textDecorationLine: 'underline',
   },
+  buttonGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  messagesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: LIGHT_PURPLE,
+    backgroundColor: 'transparent',
+  },
+  messagesButtonText: {
+    color: WHITE,
+    fontSize: 16,
+    fontWeight: '500',
+  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
