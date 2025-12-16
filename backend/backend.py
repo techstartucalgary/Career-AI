@@ -38,7 +38,7 @@ db = clientdb[f'{db_info}']
 """
 Helper function to hash passwords for security purposes
 """
-def hash_password(pwd):
+def hash_(pwd):
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(pwd.encode('utf-8'), salt)
     return hashed.decode('utf-8')
@@ -46,7 +46,7 @@ def hash_password(pwd):
 """
 Helper function to verify a stored password against one provided by the user
 """
-def verify_password(stored_pwd, provided_pwd):
+def verify_hash(stored_pwd, provided_pwd):
 
     stored_pwd = stored_pwd.encode("utf-8")
 
@@ -80,6 +80,33 @@ async def signup(request: Request):
                 "message": "Missing information!"
             }
         )
+
+    if "@" not in email or "." not in email or " " in email:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Invalid email!"
+            }
+        )
+
+    if " " in first_name or " " in last_name:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Invalid first or last name!"
+            }
+        )
+
+    hashed_pwd = hash_(password)
+    hashed_fname = hash_(first_name)
+    hashed_lname = hash_(last_name)
+    hashed_phone = hash_(phone)
+    hashed_linkedin = hash_(linkedin)
+    hashed_github = hash_(github)
+    hashed_location = hash_(location)
+
 
 
 def get_current_user():
