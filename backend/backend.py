@@ -7,6 +7,8 @@ import json
 import pymongo
 import os
 
+from jwt import PyJWTError
+
 """
 Import bcrypt to hash passwords.
 """
@@ -26,6 +28,7 @@ Define length of tokens in hours
 import jwt
 jwt_algo = "HS256"
 jwt_expire_minutes = 60 * 2  # 2 hour token
+jwt_secret = os.environ.get("JWT_SECRET")
 
 # Create a FastAPI instance
 app = FastAPI()
@@ -66,7 +69,7 @@ def create_access_token(userID: int, role: str) -> str:
         "role": role,
     }
 
-    return jwt.encode(payload, algorithm=jwt_algo)
+    return jwt.encode(payload, jwt_secret, algorithm=jwt_algo)
 
 @app.get("/login")
 def login():
@@ -167,9 +170,29 @@ async def signup(request: Request):
         )
 
 
+"""
+Deconde/verify a JWT access token and return the user ID 
+Raises ValueError if token is invalid/expired/missing required claims
+"""
+def get_current_user(token: str) -> int:
+    try:
+        payload = jwt.decode(
+            token,
+            key=jwt_secret,
+            algorithms=[jwt_algo],
+            options={"require": ["sub", "exp", "iat"]},
+        )
+    except PyJWTError as e:
+        raise ValueError(f"Invalid or expired token: {e}")
 
-def get_current_user():
-    return {"message": "Hello, World"}
+    sub = payload.get("sub")
+    if sub is None:
+        raise ValueError("Token missing 'sub' claim")
+
+    try:
+        return int(sub)
+    except (TypeError, ValueError):
+        raise ValueError("Token 'sub' claim is not a valid integer")
 
 @app.get("/profile")
 def read_user():
