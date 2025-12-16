@@ -1,7 +1,7 @@
 """
 Backend file
 """
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Header, HTTPException
 from fastapi.responses import JSONResponse
 import json
 import pymongo
@@ -218,9 +218,26 @@ def get_current_user(token: str) -> int:
     except (TypeError, ValueError):
         raise ValueError("Token 'sub' claim is not a valid integer")
 
+
 @app.get("/profile")
-def read_user():
-    return {"message": "Hello, World"}
+def read_user(authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]  # everything after "Bearer "
+    user_id = get_current_user(token)
+
+    try:
+        col.find_one({"user_id": user_id})
+        # TODO: finish code
+    except:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Server side error!"
+            }
+        )
 
 @app.get("/jobs")
 def read_jobs():
