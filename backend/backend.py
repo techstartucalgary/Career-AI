@@ -79,6 +79,22 @@ def login():
 def logout():
     return {"message": "Hello, World"}
 
+"""
+Function that runs when user attempts to create an account 
+The user is required to input the following information:
+- email
+- first name
+- last name
+- phone number
+- linkedin
+- github 
+- location
+- password
+All of the above information excluding the email are hashed for security reasons
+The user is auto assigned an ID used by the server side 
+There are multiple checks to ensure valid parameters are provided,
+for example: email requires @ and . to be in it 
+"""
 @app.get("/signup")
 async def signup(request: Request):
     form = await request.form()
@@ -91,6 +107,7 @@ async def signup(request: Request):
     location = form.get("location")
     password = form.get("password")
 
+    """Make sure none of the information provided is blank"""
     if email is None or email == "" or first_name is None or first_name == "" or last_name is None or last_name == "" or phone is None or phone == "" or linkedin is None or linkedin == "" or location is None or location == "" or github is None or github == "" or password is None or password == "":
         return JSONResponse(
             status_code=400,
@@ -100,6 +117,7 @@ async def signup(request: Request):
             }
         )
 
+    """Ensure proper email information"""
     if "@" not in email or "." not in email or " " in email:
         return JSONResponse(
             status_code=400,
@@ -109,6 +127,7 @@ async def signup(request: Request):
             }
         )
 
+    """First and last names should not have spaces"""
     if " " in first_name or " " in last_name:
         return JSONResponse(
             status_code=400,
@@ -118,6 +137,7 @@ async def signup(request: Request):
             }
         )
 
+    """Hash the necessary information for security purposes"""
     hashed_pwd = hash_(password)
     hashed_fname = hash_(first_name)
     hashed_lname = hash_(last_name)
@@ -128,6 +148,7 @@ async def signup(request: Request):
     reg_date = datetime.utcnow().date().isoformat()  # date of account creation (now)
     role = "free_user"
 
+    """Ensure this email is not already in use"""
     try:
         user = col.find({"email": email})
         if user:
@@ -141,12 +162,14 @@ async def signup(request: Request):
     except:
         pass
 
+    """Insert information into database"""
     try:
         dic = {"email":email, "password":hashed_pwd, "first_name": hashed_fname, "last_name": hashed_lname, "phone": hashed_phone,
            "linkedin": hashed_linkedin, "github": hashed_github, "location": hashed_location, "registration_date": reg_date, "role": role}
         user = col.insert_one(dic)
-        user_id = user.inserted_id
-        access_token = create_access_token(user_id, role)
+        user_id = user.inserted_id #database generated object ID
+        access_token = create_access_token(user_id, role) #create an access token for the user, valid for two hours
+        """Return the information to client side"""
         return JSONResponse(
             status_code=201,
             content={
@@ -160,6 +183,7 @@ async def signup(request: Request):
                 }
             }
         )
+    #failed
     except:
         return JSONResponse(
             status_code=400,
