@@ -1,35 +1,80 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { View, Text, Pressable, ScrollView, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import Header from '../../src/components/Header';
+import styles from './InterviewVideoInstructionsPage.styles';
 
-export default function InterviewVideoInstructionsPage() {
+const InterviewVideoInstructionsPage = () => {
   const router = useRouter();
+  const [hoveredButton, setHoveredButton] = useState(null);
+
+  const instructions = [
+    'Test local camera and microphone',
+    'When you press Start, the simulation will start off with a question',
+    'It will listen to your response and continue with more questions related to the position',
+    "Press Start Button when you're ready"
+  ];
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(180deg, #2d254c 0%, #3c2e5e 100%)',
-    }}>
-      <div style={{
-        background: 'rgba(80, 70, 130, 0.5)',
-        borderRadius: 20,
-        padding: '48px 32px',
-        boxShadow: '0 4px 32px rgba(0,0,0,0.15)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: 700,
-      }}>
-        <h1 style={{ color: '#fff', fontSize: '2.4rem', marginBottom: 32 }}>Instructions</h1>
-        <ol style={{ color: '#e6e6fa', fontSize: '1.2rem', marginBottom: 32, width: '100%', paddingLeft: 0 }}>
-          <li style={{ marginBottom: 18, background: '#9d8be5', borderRadius: 50, padding: '12px 24px', listStyleType: 'decimal', width: '90%' }}>Test local camera and microphone</li>
-          <li style={{ marginBottom: 18, background: '#9d8be5', borderRadius: 50, padding: '12px 24px', listStyleType: 'decimal', width: '90%' }}>When you press Start, the simulation will start off with a question</li>
-          <li style={{ marginBottom: 18, background: '#9d8be5', borderRadius: 50, padding: '12px 24px', listStyleType: 'decimal', width: '90%' }}>It will listen to your response and continue with more questions related to the position</li>
-          <li style={{ marginBottom: 18, background: '#9d8be5', borderRadius: 50, padding: '12px 24px', listStyleType: 'decimal', width: '90%' }}>Press Start Button when you’re ready</li>
-        </ol>
-        <button style={{ background: '#2d254c', color: '#fff', border: 'none', borderRadius: 24, padding: '16px 48px', fontSize: '1.2rem', cursor: 'pointer', transition: 'background 0.2s' }} onClick={() => router.push('/interview')}>Continue</button>
-      </div>
-    </div>
+    <View style={styles.container}>
+      <Header />
+      <LinearGradient
+        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']}
+        style={styles.gradient}
+      >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.content}>
+            {/* Hero Section */}
+            <View style={styles.heroSection}>
+              <View style={styles.heroBackgroundCircle1} />
+              <View style={styles.heroBackgroundCircle2} />
+              <View style={styles.heroContent}>
+                <View style={styles.heroBadge}>
+                  <View style={styles.badgeDot} />
+                  <Text style={styles.badgeText}>Video Interview Simulation</Text>
+                </View>
+                <Text style={styles.heroTitle}>Instructions</Text>
+                <Text style={styles.heroSubtitle}>
+                  Get ready for your AI-powered video interview practice session
+                </Text>
+              </View>
+            </View>
+
+            {/* Instructions Card */}
+            <View style={styles.instructionsCard}>
+              <View style={styles.instructionsList}>
+                {instructions.map((instruction, index) => (
+                  <View key={index} style={styles.instructionItem}>
+                    <View style={styles.instructionNumber}>
+                      <Text style={styles.instructionNumberText}>{index + 1}</Text>
+                    </View>
+                    <Text style={styles.instructionText}>{instruction}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <Pressable
+                style={[
+                  styles.continueButton,
+                  hoveredButton && styles.continueButtonHover
+                ]}
+                onPress={() => router.push('/interview-buddy/video-interview')}
+                onHoverIn={() => Platform.OS === 'web' && setHoveredButton(true)}
+                onHoverOut={() => Platform.OS === 'web' && setHoveredButton(false)}
+              >
+                <Text style={styles.continueButtonText}>Continue</Text>
+                <View style={styles.continueButtonArrow}>
+                  <View style={styles.arrowLine} />
+                  <View style={styles.arrowHead} />
+                </View>
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </View>
   );
-}
+};
+
+export default InterviewVideoInstructionsPage;

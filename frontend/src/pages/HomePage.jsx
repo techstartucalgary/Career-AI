@@ -49,12 +49,6 @@ const HomePage = () => {
                 <Text style={styles.heroDescription}>
                   Discover personalized opportunities, create standout applications, and land your next role faster than ever
                 </Text>
-                <Pressable
-                  style={{ marginTop: 24, alignSelf: 'flex-start', backgroundColor: '#9d8be5', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 28 }}
-                  onPress={() => router.push('/interview-buddy')}
-                >
-                  <Text style={{ color: '#fff', fontSize: 18 }}>AI Interview Buddy</Text>
-                </Pressable>
               </View>
             </View>
 
