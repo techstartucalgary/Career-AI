@@ -15,7 +15,7 @@ const Header = () => {
     { label: 'Job Board', route: '/jobs'},
     { label: 'AI Resume', route: '/resume'},
     { label: 'AI Cover Letter', route: '/cover-letter'},
-    { label: 'Interview Prep', route: '/interview'},
+    { label: 'Interview Prep', route: '/interview-buddy'},
   ];
 
   return (

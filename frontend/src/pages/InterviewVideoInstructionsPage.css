@@ -1,0 +1,56 @@
+.interview-video-instructions-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #2d254c 0%, #3c2e5e 100%);
+}
+
+.interview-video-instructions-card {
+  background: rgba(80, 70, 130, 0.5);
+  border-radius: 20px;
+  padding: 48px 32px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 700px;
+}
+
+.interview-video-instructions-title {
+  color: #fff;
+  font-size: 2.4rem;
+  margin-bottom: 32px;
+}
+
+.interview-video-instructions-list {
+  color: #e6e6fa;
+  font-size: 1.2rem;
+  margin-bottom: 32px;
+  width: 100%;
+  padding-left: 0;
+}
+
+.interview-video-instructions-list li {
+  margin-bottom: 18px;
+  background: #9d8be5;
+  border-radius: 50px;
+  padding: 12px 24px;
+  list-style-type: decimal;
+  width: 90%;
+}
+
+.interview-video-instructions-continue {
+  background: #2d254c;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 16px 48px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.interview-video-instructions-continue:hover {
+  background: #6c5ca7;
+}
