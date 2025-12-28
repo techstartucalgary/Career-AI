@@ -42,8 +42,15 @@ export default function AuthenticationPage() {
     // Replace with your auth logic (Firebase, Supabase, etc.)
     await new Promise(r => setTimeout(r, 1500));
     setLoading(false);
-    // Navigate to home after successful auth
-    router.push('/home');
+    // Navigate to onboarding for new sign-ups, home for existing users
+    if (isSignUp) {
+      router.push({
+        pathname: '/onboarding',
+        params: { email: email }
+      });
+    } else {
+      router.push('/home');
+    }
   };
 
   return (
