@@ -21,7 +21,7 @@ const InterviewBuddyPage = () => {
     {
       id: 2,
       title: 'Video Simulation',
-      description: 'Lets practice online interviews with AI-powered video simulation',
+      description: 'Practice online interviews with AI-powered video simulation',
       route: '/interview-buddy/video-instructions',
       icon: 'video'
     }
@@ -83,22 +83,6 @@ const InterviewBuddyPage = () => {
                   </View>
                   <Text style={styles.optionTitle}>{option.title}</Text>
                   <Text style={styles.optionDescription}>{option.description}</Text>
-                  <Pressable
-                    style={[
-                      styles.optionButton,
-                      hoveredButton === option.id && styles.optionButtonHover
-                    ]}
-                    onHoverIn={() => Platform.OS === 'web' && setHoveredButton(option.id)}
-                    onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
-                  >
-                    <Text style={styles.optionButtonText}>
-                      {option.id === 1 ? 'Go to Questions' : 'Go to Video Simulation'}
-                    </Text>
-                    <View style={styles.optionButtonArrow}>
-                      <View style={styles.arrowLine} />
-                      <View style={styles.arrowHead} />
-                    </View>
-                  </Pressable>
                 </Pressable>
               ))}
             </View>

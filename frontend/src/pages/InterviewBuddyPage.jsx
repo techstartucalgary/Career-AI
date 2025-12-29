@@ -17,7 +17,7 @@ export default function InterviewBuddyPage() {
           </div>
           <div className="interview-buddy-btn-card">
             <h2>Video simulation</h2>
-            <p>Let’s practice online interviews</p>
+            <p>Practice online interviews</p>
             <button onClick={() => navigate('/interview-video-instructions')}>Go to Video Simulation</button>
           </div>
         </div>
