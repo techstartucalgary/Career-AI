@@ -1,14 +1,16 @@
-// screens/AuthScreen.js
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
+  View, Text, TextInput, Pressable,
   StyleSheet, KeyboardAvoidingView, Platform,
   ScrollView, ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import Header from '../components/Header';
+import styles from './AuthenticationPage.styles';
 
-export default function AuthScreen({ navigation }) {
+export default function AuthenticationPage() {
+  const router = useRouter();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,6 +18,9 @@ export default function AuthScreen({ navigation }) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [focusedInput, setFocusedInput] = useState(null);
+  const [hoveredButton, setHoveredButton] = useState(null);
+  const [hoveredSwitch, setHoveredSwitch] = useState(false);
 
   const validate = () => {
     const newErrors = {};
@@ -37,101 +42,190 @@ export default function AuthScreen({ navigation }) {
     // Replace with your auth logic (Firebase, Supabase, etc.)
     await new Promise(r => setTimeout(r, 1500));
     setLoading(false);
+    // Navigate to onboarding for new sign-ups, home for existing users
+    if (isSignUp) {
+      router.push({
+        pathname: '/onboarding',
+        params: { email: email }
+      });
+    } else {
+      router.push('/home');
+    }
   };
 
   return (
-    <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
+    <View style={styles.container}>
+      <Header />
+      <LinearGradient 
+        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']} 
+        style={styles.gradient}
       >
-            <Header />
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <View style={styles.card}>
-            <Text style={styles.logo}>🔐</Text>
-            <Text style={styles.title}>{isSignUp ? 'Create Account' : 'Welcome Back'}</Text>
-            
-            {isSignUp && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Full Name</Text>
-                <TextInput
-                  style={[styles.input, errors.name && styles.inputError]}
-                  placeholder="John Doe"
-                  value={name}
-                  onChangeText={setName}
-                />
-                {errors.name && <Text style={styles.error}>{errors.name}</Text>}
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.card}>
+              {/* Visual Background Elements */}
+              <View style={styles.cardVisual}>
+                <View style={styles.cardCircle1} />
+                <View style={styles.cardCircle2} />
               </View>
-            )}
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
-                placeholder="you@example.com"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              {errors.email && <Text style={styles.error}>{errors.email}</Text>}
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={[styles.input, errors.password && styles.inputError]}
-                placeholder="••••••••"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-              {errors.password && <Text style={styles.error}>{errors.password}</Text>}
-            </View>
-
-            {isSignUp && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Confirm Password</Text>
-                <TextInput
-                  style={[styles.input, errors.confirmPassword && styles.inputError]}
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                />
-                {errors.confirmPassword && <Text style={styles.error}>{errors.confirmPassword}</Text>}
+              
+              {/* Logo/Icon Section */}
+              <View style={styles.logoContainer}>
+                <View style={styles.logoCircle}>
+                  <View style={styles.logoStar} />
+                </View>
+                <Text style={styles.logoText}>Verexa</Text>
               </View>
-            )}
 
-            <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
-              {loading ? <ActivityIndicator color="#fff" /> : 
-                <Text style={styles.buttonText}>{isSignUp ? 'Create Account' : 'Sign In'}</Text>}
-            </TouchableOpacity>
+              {/* Title Section */}
+              <View style={styles.titleSection}>
+                <Text style={styles.title}>
+                  {isSignUp ? 'Create Your Account' : 'Welcome Back'}
+                </Text>
+                <Text style={styles.subtitle}>
+                  {isSignUp 
+                    ? 'Start your journey to find your dream career' 
+                    : 'Sign in to continue to your career journey'}
+                </Text>
+              </View>
 
-            <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
-              <Text style={styles.switchText}>
-                {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </LinearGradient>
+              {/* Form Section */}
+              <View style={styles.formSection}>
+                {isSignUp && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Full Name</Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        focusedInput === 'name' && styles.inputFocused,
+                        errors.name && styles.inputError
+                      ]}
+                      placeholder="John Doe"
+                      placeholderTextColor="#8B7AB8"
+                      value={name}
+                      onChangeText={setName}
+                      onFocus={() => setFocusedInput('name')}
+                      onBlur={() => setFocusedInput(null)}
+                    />
+                    {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+                  </View>
+                )}
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Email</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      focusedInput === 'email' && styles.inputFocused,
+                      errors.email && styles.inputError
+                    ]}
+                    placeholder="you@example.com"
+                    placeholderTextColor="#8B7AB8"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    onFocus={() => setFocusedInput('email')}
+                    onBlur={() => setFocusedInput(null)}
+                  />
+                  {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Password</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      focusedInput === 'password' && styles.inputFocused,
+                      errors.password && styles.inputError
+                    ]}
+                    placeholder="••••••••"
+                    placeholderTextColor="#8B7AB8"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    onFocus={() => setFocusedInput('password')}
+                    onBlur={() => setFocusedInput(null)}
+                  />
+                  {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+                </View>
+
+                {isSignUp && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Confirm Password</Text>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        focusedInput === 'confirmPassword' && styles.inputFocused,
+                        errors.confirmPassword && styles.inputError
+                      ]}
+                      placeholder="••••••••"
+                      placeholderTextColor="#8B7AB8"
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      secureTextEntry
+                      onFocus={() => setFocusedInput('confirmPassword')}
+                      onBlur={() => setFocusedInput(null)}
+                    />
+                    {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
+                  </View>
+                )}
+
+                {/* Submit Button */}
+                <Pressable 
+                  style={[
+                    styles.submitButton,
+                    hoveredButton === 'submit' && styles.submitButtonHover
+                  ]}
+                  onPress={handleSubmit} 
+                  disabled={loading}
+                  onHoverIn={() => Platform.OS === 'web' && setHoveredButton('submit')}
+                  onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <Text style={styles.submitButtonText}>
+                      {isSignUp ? 'Create Account' : 'Sign In'}
+                    </Text>
+                  )}
+                </Pressable>
+
+                {/* Divider */}
+                <View style={styles.divider}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>or</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                {/* Switch Mode Button */}
+                <Pressable 
+                  style={[
+                    styles.switchButton,
+                    hoveredSwitch && styles.switchButtonHover
+                  ]}
+                  onPress={() => setIsSignUp(!isSignUp)}
+                  onHoverIn={() => Platform.OS === 'web' && setHoveredSwitch(true)}
+                  onHoverOut={() => Platform.OS === 'web' && setHoveredSwitch(false)}
+                >
+                  <Text style={styles.switchText}>
+                    {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+                    <Text style={styles.switchLink}>
+                      {isSignUp ? 'Sign In' : 'Sign Up'}
+                    </Text>
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { flexGrow: 1, justifyContent: 'center', padding: 20 },
-  card: { backgroundColor: '#fff', borderRadius: 24, padding: 24 },
-  logo: { fontSize: 40, textAlign: 'center' },
-  title: { fontSize: 28, fontWeight: '700', textAlign: 'center', marginBottom: 24 },
-  inputGroup: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '600', color: '#444', marginBottom: 6 },
-  input: { padding: 14, fontSize: 16, borderRadius: 12, borderWidth: 2, borderColor: '#e0e0e0' },
-  inputError: { borderColor: '#e74c3c' },
-  error: { color: '#e74c3c', fontSize: 12, marginTop: 4 },
-  button: { backgroundColor: '#667eea', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 8 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  switchText: { textAlign: 'center', marginTop: 20, color: '#667eea' },
-});
