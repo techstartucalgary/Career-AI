@@ -72,8 +72,59 @@ def create_access_token(userID: int, role: str) -> str:
     return jwt.encode(payload, jwt_secret, algorithm=jwt_algo)
 
 @app.get("/login")
-def login():
-    return {"message": "Hello, World"}
+async def login(request: Request):
+    form = await request.form()
+    email = form.get("email")
+    password = form.get("password")
+
+    if not password or not email:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Missing email or password"
+            }
+        )
+
+    try:
+        user = col.find({"email": email})
+        user_id = user.inserted_id
+        pwd_hash = user['password']
+
+        if not verify_hash(pwd_hash, password):
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "success": False,
+                    "message": "Invalid password."
+                }
+            )
+        role = user['role']
+        access_token = create_access_token(user_id, role)
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "User logged in successfully.",
+                "data": {
+                    "user_id": user_id,
+                    "email": email,
+                    "role": role,
+                    "token": access_token
+                }
+            }
+        )
+    except:
+        print("error")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "message": "Internal server error."
+            }
+        )
+
+
 
 @app.get("/logout")
 def logout():
