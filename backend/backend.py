@@ -71,12 +71,24 @@ def create_access_token(userID: int, role: str) -> str:
 
     return jwt.encode(payload, jwt_secret, algorithm=jwt_algo)
 
+
+
+"""
+Function that runs when user attempts to login to their account 
+The user is required to input the following information:
+- email
+- password
+If the user exists and the password is correct then the login is successful
+The server side creates an access token for the session 
+"""
 @app.get("/login")
 async def login(request: Request):
+    #user input
     form = await request.form()
     email = form.get("email")
     password = form.get("password")
 
+    #missing info
     if not password or not email:
         return JSONResponse(
             status_code=400,
@@ -88,9 +100,20 @@ async def login(request: Request):
 
     try:
         user = col.find({"email": email})
-        user_id = user.inserted_id
+        #check that user exists in database
+        if user is None:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "message": "User does not exist"
+                }
+            )
+
+        user_id = user.inserted_id #the user's ID
         pwd_hash = user['password']
 
+        #check the password against the saved hash in the database
         if not verify_hash(pwd_hash, password):
             return JSONResponse(
                 status_code=401,
@@ -99,6 +122,7 @@ async def login(request: Request):
                     "message": "Invalid password."
                 }
             )
+        #user's role and create access token which is returned to client end along with other necessary info
         role = user['role']
         access_token = create_access_token(user_id, role)
         return JSONResponse(
@@ -114,6 +138,7 @@ async def login(request: Request):
                 }
             }
         )
+    #unexpected error
     except:
         print("error")
         return JSONResponse(
