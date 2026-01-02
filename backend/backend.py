@@ -152,8 +152,16 @@ async def login(request: Request):
 
 
 @app.get("/logout")
-def logout():
-    return {"message": "Hello, World"}
+def logout(authorization: str = Header(None)):
+    #TODO: client side must delete token on its end, in localStorage: localStorage.removeItem("token"); OR if in sessioNStorage: sessionStorage.removeItem("token");
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+        # nothing to do server-side unless you add a blacklist
+    return JSONResponse(
+        status_code=200,
+        content={"success": True, "message": "Logged out. Delete the token on the client."}
+    )
 
 """
 Function that runs when user attempts to create an account 
