@@ -43,11 +43,11 @@ const ResumePage = () => {
               <View style={styles.headerBadge}>
                 <View style={styles.badgeDot} />
                 <Text style={styles.badgeText}>AI Resume Builder</Text>
-              </View>
+                  </View>
               <Text style={styles.mainTitle}>How would you like to create your resume?</Text>
               <Text style={styles.subtitle}>
                 Choose the option that best fits your needs
-              </Text>
+                  </Text>
             </View>
             
             <View style={styles.optionsContainer}>
@@ -61,7 +61,7 @@ const ResumePage = () => {
                   onPress={() => router.push(option.route)}
                   onHoverIn={() => Platform.OS === 'web' && setHoveredCard(option.id)}
                   onHoverOut={() => Platform.OS === 'web' && setHoveredCard(null)}
-                >
+            >
                   <View style={styles.optionIcon}>
                     {option.icon === 'ai' && (
                       <>
@@ -76,7 +76,7 @@ const ResumePage = () => {
                         <View style={styles.iconGearInner} />
                       </>
                     )}
-                  </View>
+          </View>
                   <Text style={styles.optionTitle}>{option.title}</Text>
                   <Text style={styles.optionDescription}>{option.description}</Text>
                 </Pressable>
@@ -85,7 +85,7 @@ const ResumePage = () => {
           </View>
         </ScrollView>
       </LinearGradient>
-    </View>
+      </View>
   );
 };
 

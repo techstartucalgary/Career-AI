@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 13,
     fontWeight: '600',
-    color: BRIGHT_PURPLE,
+    color: TEXT_LIGHT,
     letterSpacing: 0.5,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
@@ -115,16 +115,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: isDesktop ? 84 : isTablet ? 64 : 50,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
-    textShadowColor: LIGHT_PURPLE,
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 24,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   heroTitleAccent: {
-    color: BRIGHT_PURPLE,
-    textShadowColor: BRIGHT_PURPLE,
+    color: TEXT_LIGHT,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
   },
   heroDescription: {
     fontSize: isDesktop ? 22 : 20,
@@ -493,10 +493,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: WHITE,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
-    textShadowColor: LIGHT_PURPLE,
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 12,
   },
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     }),
   },
   viewAllText: {
-    color: BRIGHT_PURPLE,
+    color: TEXT_LIGHT,
     fontSize: 15,
     fontWeight: '600',
     fontFamily: Platform.select({
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
   },
   featuredTagText: {
     fontSize: 13,
-    color: BRIGHT_PURPLE,
+    color: TEXT_LIGHT,
     fontWeight: '500',
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',

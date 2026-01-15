@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 13,
     fontWeight: '600',
-    color: BRIGHT_PURPLE,
+    color: TEXT_LIGHT,
     letterSpacing: 0.5,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
@@ -103,10 +103,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     zIndex: 1,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
-    textShadowColor: LIGHT_PURPLE,
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
     textShadowOffset: { width: 0, height: 4 },
     textShadowRadius: 16,
   },

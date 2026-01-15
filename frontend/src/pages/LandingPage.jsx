@@ -49,9 +49,9 @@ const LandingPage = () => {
             Find Your Dream Career
             <Text style={styles.heroTitleAccent}> With AI</Text>
           </Text>
-          <Text style={styles.heroSubtitle}>
-            Upload your resume and get tailored job matches, and AI-written cover letters and resumes in seconds
-          </Text>
+        <Text style={styles.heroSubtitle}>
+          Upload your resume and get tailored job matches, and AI-written cover letters and resumes in seconds
+        </Text>
         <View style={styles.heroButtons}>
           <Pressable 
             style={[
@@ -76,7 +76,7 @@ const LandingPage = () => {
             <Text style={styles.secondaryButtonText}>Log In</Text>
           </Pressable>
         </View>
-        </View>
+      </View>
       </LinearGradient>
 
       {/* Skip the Stress Section */}

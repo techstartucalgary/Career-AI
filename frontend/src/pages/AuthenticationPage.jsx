@@ -16,6 +16,10 @@ export default function AuthenticationPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [sex, setSex] = useState('');
+  const [gender, setGender] = useState('');
+  const [disability, setDisability] = useState('');
+  const [race, setRace] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [focusedInput, setFocusedInput] = useState(null);
@@ -53,6 +57,92 @@ export default function AuthenticationPage() {
     }
   };
 
+  // SelectField Component for dropdowns
+  const SelectField = ({ value, onValueChange, options, placeholder, focused, onFocus, onBlur }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleToggle = (e) => {
+      // Prevent event propagation to avoid double-click issues
+      if (e && e.stopPropagation) {
+        e.stopPropagation();
+      }
+      if (!isOpen) {
+        setIsOpen(true);
+        onFocus();
+      } else {
+        setIsOpen(false);
+        onBlur();
+      }
+    };
+
+    const handleSelect = (option) => {
+      onValueChange(option);
+      setIsOpen(false);
+      onBlur();
+    };
+
+    const handleClose = () => {
+      setIsOpen(false);
+      onBlur();
+    };
+
+    return (
+      <View style={[styles.selectContainer, isOpen && styles.selectContainerOpen]}>
+        <Pressable
+          style={[
+            styles.selectInput,
+            focused && styles.inputFocused,
+            isOpen && styles.selectInputOpen
+          ]}
+          onPress={handleToggle}
+          hitSlop={0}
+          accessibilityRole="button"
+          accessibilityLabel={`Toggle ${placeholder}`}
+        >
+          <Text style={[styles.selectText, !value && styles.selectPlaceholder]} numberOfLines={1}>
+            {value || placeholder}
+          </Text>
+          <View style={styles.selectArrow}>
+            <View style={[styles.arrowTriangle, isOpen && styles.arrowTriangleUp]} />
+          </View>
+        </Pressable>
+        {isOpen && (
+          <>
+            <Pressable
+              style={styles.dropdownOverlay}
+              onPress={handleClose}
+            />
+            <View style={styles.selectOptionsContainer}>
+              <ScrollView
+                style={styles.selectOptionsScroll}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+              >
+                {options.map((option, index) => (
+                  <Pressable
+                    key={index}
+                    style={[
+                      styles.selectOption,
+                      value === option && styles.selectOptionSelected
+                    ]}
+                    onPress={() => handleSelect(option)}
+                  >
+                    <Text style={[
+                      styles.selectOptionText,
+                      value === option && styles.selectOptionTextSelected
+                    ]} numberOfLines={1}>
+                      {option || placeholder}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          </>
+        )}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Header />
@@ -65,6 +155,7 @@ export default function AuthenticationPage() {
           style={styles.keyboardView}
         >
           <ScrollView 
+            style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
@@ -175,6 +266,70 @@ export default function AuthenticationPage() {
                     />
                     {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
                   </View>
+                )}
+
+                {/* Demographic Information Section */}
+                {isSignUp && (
+                  <>
+                    <View style={styles.demographicSection}>
+                      <Text style={styles.demographicTitle}>Demographic Information (Optional)</Text>
+                      <Text style={styles.demographicSubtitle}>
+                        This information helps us provide better opportunities and is kept confidential
+                      </Text>
+                    </View>
+
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Sex</Text>
+                      <SelectField
+                        value={sex}
+                        onValueChange={setSex}
+                        options={['', 'Male', 'Female', 'Intersex', 'Prefer not to say']}
+                        placeholder="Select sex"
+                        focused={focusedInput === 'sex'}
+                        onFocus={() => setFocusedInput('sex')}
+                        onBlur={() => setFocusedInput(null)}
+                      />
+                    </View>
+
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Gender</Text>
+                      <SelectField
+                        value={gender}
+                        onValueChange={setGender}
+                        options={['', 'Man', 'Woman', 'Non-binary', 'Genderqueer', 'Two-Spirit', 'Another gender', 'Prefer not to say']}
+                        placeholder="Select gender"
+                        focused={focusedInput === 'gender'}
+                        onFocus={() => setFocusedInput('gender')}
+                        onBlur={() => setFocusedInput(null)}
+                      />
+                    </View>
+
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Disability Status</Text>
+                      <SelectField
+                        value={disability}
+                        onValueChange={setDisability}
+                        options={['', 'Yes, I have a disability', 'No, I do not have a disability', 'Prefer not to say']}
+                        placeholder="Select disability status"
+                        focused={focusedInput === 'disability'}
+                        onFocus={() => setFocusedInput('disability')}
+                        onBlur={() => setFocusedInput(null)}
+                      />
+                    </View>
+
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Race/Ethnicity</Text>
+                      <SelectField
+                        value={race}
+                        onValueChange={setRace}
+                        options={['', 'American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'Native Hawaiian or Other Pacific Islander', 'White', 'Two or more races', 'Another race/ethnicity', 'Prefer not to say']}
+                        placeholder="Select race/ethnicity"
+                        focused={focusedInput === 'race'}
+                        onFocus={() => setFocusedInput('race')}
+                        onBlur={() => setFocusedInput(null)}
+                      />
+                    </View>
+                  </>
                 )}
 
                 {/* Submit Button */}

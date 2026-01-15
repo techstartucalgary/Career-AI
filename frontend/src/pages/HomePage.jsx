@@ -31,7 +31,7 @@ const HomePage = () => {
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
             {/* Hero Section with Visual Elements */}
-            <View style={styles.heroSection}>
+      <View style={styles.heroSection}>
               <View style={styles.heroVisualContainer}>
                 <View style={styles.heroCircle1} />
                 <View style={styles.heroCircle2} />
@@ -101,7 +101,7 @@ const HomePage = () => {
                       selectedTab === tab && styles.tabTextActive
                     ]}>
                       {tab}
-                    </Text>
+          </Text>
                     {selectedTab === tab && (
                       <View style={styles.tabIndicator} />
                     )}
@@ -123,15 +123,15 @@ const HomePage = () => {
                       <View style={styles.searchIconLine} />
                     </View>
                   </View>
-                  <TextInput
-                    style={styles.searchInput}
+              <TextInput
+                style={styles.searchInput}
                     placeholder="Search for your dream job..."
                     placeholderTextColor="#6B7280"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
                     onFocus={() => setFocusedSearch(true)}
                     onBlur={() => setFocusedSearch(false)}
-                  />
+              />
                   <View style={styles.searchDivider} />
                   <View style={styles.searchFilters}>
                     <Pressable style={styles.filterChip}>
@@ -154,16 +154,16 @@ const HomePage = () => {
                         <View style={styles.filterArrowUp} />
                         <View style={styles.filterArrowDown} />
                       </View>
-                    </Pressable>
-                  </View>
-                </View>
+              </Pressable>
+            </View>
+          </View>
                 <View style={styles.searchHint}>
                   <Text style={styles.searchHintText}>
                     Try: "Software Engineer in San Francisco" or "Remote Marketing Manager"
                   </Text>
                 </View>
-              </View>
-            </View>
+        </View>
+      </View>
 
             {/* Featured Opportunities Section */}
             <View style={styles.featuredSection}>
@@ -183,32 +183,32 @@ const HomePage = () => {
                     <View style={styles.featuredCardHeader}>
                       <View style={styles.featuredCompanyLogo}>
                         <View style={styles.companyLogoCircle} />
-                      </View>
+          </View>
                       <View style={styles.featuredCardContent}>
                         <Text style={styles.featuredJobTitle}>Senior Product Designer</Text>
                         <Text style={styles.featuredCompanyName}>TechCorp Inc.</Text>
-                      </View>
+        </View>
                       <View style={styles.featuredBookmark}>
                         <View style={styles.bookmarkIcon} />
-                      </View>
-                    </View>
+            </View>
+          </View>
                     <View style={styles.featuredCardFooter}>
                       <View style={styles.featuredTag}>
                         <Text style={styles.featuredTagText}>Remote</Text>
-                      </View>
+        </View>
                       <View style={styles.featuredTag}>
                         <Text style={styles.featuredTagText}>$120k - $150k</Text>
-                      </View>
+      </View>
                       <Text style={styles.featuredTime}>2 days ago</Text>
-                    </View>
-                  </View>
+        </View>
+      </View>
                 ))}
-              </View>
+            </View>
             </View>
           </View>
         </ScrollView>
       </LinearGradient>
-    </View>
+      </View>
   );
 };
 
