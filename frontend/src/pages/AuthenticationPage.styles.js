@@ -159,18 +159,22 @@ const styles = StyleSheet.create({
     }),
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 28,
     ...Platform.select({
       web: {
         position: 'relative',
         zIndex: 1,
+        overflow: 'visible',
       },
     }),
   },
   inputGroupOpen: {
     ...Platform.select({
       web: {
-        zIndex: 100,
+        zIndex: 2000,
+      },
+      default: {
+        zIndex: 2000,
       },
     }),
   },

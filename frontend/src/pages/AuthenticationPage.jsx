@@ -278,7 +278,7 @@ export default function AuthenticationPage() {
                       </Text>
                     </View>
 
-                    <View style={styles.inputGroup}>
+                    <View style={[styles.inputGroup, focusedInput === 'sex' && styles.inputGroupOpen]}>
                       <Text style={styles.label}>Sex</Text>
                       <SelectField
                         value={sex}
@@ -291,7 +291,7 @@ export default function AuthenticationPage() {
                       />
                     </View>
 
-                    <View style={styles.inputGroup}>
+                    <View style={[styles.inputGroup, focusedInput === 'gender' && styles.inputGroupOpen]}>
                       <Text style={styles.label}>Gender</Text>
                       <SelectField
                         value={gender}
@@ -304,7 +304,7 @@ export default function AuthenticationPage() {
                       />
                     </View>
 
-                    <View style={styles.inputGroup}>
+                    <View style={[styles.inputGroup, focusedInput === 'disability' && styles.inputGroupOpen]}>
                       <Text style={styles.label}>Disability Status</Text>
                       <SelectField
                         value={disability}
@@ -317,7 +317,7 @@ export default function AuthenticationPage() {
                       />
                     </View>
 
-                    <View style={styles.inputGroup}>
+                    <View style={[styles.inputGroup, focusedInput === 'race' && styles.inputGroupOpen]}>
                       <Text style={styles.label}>Race/Ethnicity</Text>
                       <SelectField
                         value={race}
