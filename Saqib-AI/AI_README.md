@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# Career-AI
-=======
 # CareerCompanion
 
 AI-powered resume tailoring system with semantic matching, iterative refinement, and ATS optimization.
@@ -336,4 +333,3 @@ Ensure `GEMINI_API_KEY` is set in your `.env` file or environment.
 ## License
 
 MIT License
->>>>>>> b588eef (AI implementation)
