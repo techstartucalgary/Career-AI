@@ -1,0 +1,40 @@
+About the job
+Job Description
+
+Position: Automation Engineer Co-op/Intern
+
+Number of Position(s): 3
+
+Duration: 4 Months
+
+Date: May - Aug, 2026
+
+Location: Hybrid in Ottawa, Canada
+
+Education Recommendations
+
+Currently enrolled in the third or fourth year of a bachelor’s degree or diploma in Computer/Software/Electrical Engineering, Information Technology, Computer Science, or a related field with an accredited school in Canada.
+
+How You Will Contribute And What You Will Learn
+
+As part of our team, you will: 
+
+Learn about Nokia's Data Center Solution 
+Gain hands-on experience with OpenStack and Kubernetes 
+Develop scripts to aid our team in the delivery of custom automation projects 
+
+Key Skills And Experience
+
+Comfortable working with Linux operating systems
+Familiar with virtualization technologies would be an asset
+Experience with Java and familiarity with programming concepts
+Scripting (bash, Perl, Python, etc.) 
+
+About Us
+
+Advancing connectivity to secure a brighter world.
+
+Nokia is a global leader in connectivity for the AI era. With expertise across fixed, mobile and transport networks, powered by the innovation of Nokia Bell Labs, we’re advancing connectivity to secure a brighter world.
+
+Learn more about life at Nokia .
+
