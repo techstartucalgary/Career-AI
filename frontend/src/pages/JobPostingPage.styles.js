@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   companyLogoText: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: BRIGHT_PURPLE,
+    color: TEXT_LIGHT,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
       default: 'sans-serif',
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   matchScore: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: BRIGHT_PURPLE,
+    color: TEXT_LIGHT,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
       default: 'sans-serif',
@@ -271,10 +271,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     lineHeight: isDesktop ? 44 : isTablet ? 40 : 36,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
-    textShadowColor: LIGHT_PURPLE,
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 12,
   },
@@ -409,10 +409,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: WHITE,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
-    textShadowColor: LIGHT_PURPLE,
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
   },

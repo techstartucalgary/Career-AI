@@ -28,10 +28,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
-    textShadowColor: 'rgba(167, 139, 250, 0.4)',
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 15,
   },

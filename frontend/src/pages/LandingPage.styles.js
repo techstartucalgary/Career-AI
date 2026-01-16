@@ -106,16 +106,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     lineHeight: isDesktop ? 84 : isTablet ? 72 : 54,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
-    textShadowColor: LIGHT_PURPLE,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 0, height: 4 },
     textShadowRadius: 24,
   },
   heroTitleAccent: {
     color: '#A78BFA',
-    textShadowColor: '#A78BFA',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
   },
   heroSubtitle: {
     fontSize: isDesktop ? 20 : 18,
@@ -217,12 +217,12 @@ const styles = StyleSheet.create({
     color: WHITE,
     marginBottom: 20,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
     ...Platform.select({
       web: {
-        textShadowColor: 'rgba(139, 122, 184, 0.2)',
+        textShadowColor: 'rgba(0, 0, 0, 0.15)',
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 15,
       },
@@ -259,12 +259,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 12,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
     ...Platform.select({
       web: {
-        textShadowColor: 'rgba(139, 122, 184, 0.2)',
+        textShadowColor: 'rgba(0, 0, 0, 0.15)',
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 15,
       },
@@ -485,8 +485,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
     ...Platform.select({
       web: {

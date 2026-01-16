@@ -29,6 +29,14 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
     paddingBottom: 60,
+    overflow: 'visible',
+  },
+  scrollView: {
+    ...Platform.select({
+      web: {
+        overflow: 'visible',
+      },
+    }),
   },
   card: {
     width: '100%',
@@ -44,7 +52,7 @@ const styles = StyleSheet.create({
     shadowRadius: 32,
     elevation: 16,
     position: 'relative',
-    overflow: 'hidden',
+    overflow: 'visible',
     ...Platform.select({
       web: {
         transition: 'all 0.3s ease',
@@ -109,10 +117,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: WHITE,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
-    textShadowColor: LIGHT_PURPLE,
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
   },
@@ -127,10 +135,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 12,
     fontFamily: Platform.select({
-      web: 'Georgia, serif',
-      default: 'serif',
+      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      default: 'sans-serif',
     }),
-    textShadowColor: LIGHT_PURPLE,
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 12,
   },
@@ -143,9 +151,32 @@ const styles = StyleSheet.create({
   },
   formSection: {
     width: '100%',
+    ...Platform.select({
+      web: {
+        position: 'relative',
+        overflow: 'visible',
+      },
+    }),
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 28,
+    ...Platform.select({
+      web: {
+        position: 'relative',
+        zIndex: 1,
+        overflow: 'visible',
+      },
+    }),
+  },
+  inputGroupOpen: {
+    ...Platform.select({
+      web: {
+        zIndex: 2000,
+      },
+      default: {
+        zIndex: 2000,
+      },
+    }),
   },
   label: {
     fontSize: 14,
@@ -275,9 +306,178 @@ const styles = StyleSheet.create({
     }),
   },
   switchLink: {
-    color: BRIGHT_PURPLE,
+    color: TEXT_LIGHT,
     fontWeight: '600',
     textDecorationLine: 'underline',
+  },
+  demographicSection: {
+    marginTop: 8,
+    marginBottom: 20,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(139, 122, 184, 0.2)',
+  },
+  demographicTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: WHITE,
+    marginBottom: 6,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  demographicSubtitle: {
+    fontSize: 13,
+    color: TEXT_LIGHT,
+    opacity: 0.8,
+    lineHeight: 18,
+  },
+  selectContainer: {
+    position: 'relative',
+    zIndex: 50,
+    overflow: 'visible',
+  },
+  selectContainerOpen: {
+    ...Platform.select({
+      web: {
+        zIndex: 1000,
+      },
+      default: {
+        zIndex: 1000,
+      },
+    }),
+  },
+  selectInput: {
+    width: '100%',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: WHITE,
+    backgroundColor: DARK_PURPLE,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: LIGHT_PURPLE,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+      },
+    }),
+  },
+  selectInputOpen: {
+    borderColor: BRIGHT_PURPLE,
+    ...Platform.select({
+      web: {
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+      },
+    }),
+  },
+  selectText: {
+    flex: 1,
+    fontSize: 16,
+    color: WHITE,
+  },
+  selectPlaceholder: {
+    color: '#8B7AB8',
+  },
+  selectArrow: {
+    width: 12,
+    height: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowTriangle: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderTopWidth: 6,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: TEXT_LIGHT,
+    borderBottomWidth: 0,
+  },
+  arrowTriangleUp: {
+    borderTopWidth: 0,
+    borderBottomWidth: 6,
+    borderBottomColor: TEXT_LIGHT,
+  },
+  dropdownOverlay: {
+    ...Platform.select({
+      web: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9998,
+        backgroundColor: 'transparent',
+      },
+      default: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 999,
+        backgroundColor: 'transparent',
+      },
+    }),
+  },
+  selectOptionsContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    marginTop: 2,
+    backgroundColor: '#2D1B3D',
+    borderRadius: 12,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderWidth: 1.5,
+    borderColor: BRIGHT_PURPLE,
+    borderTopWidth: 0,
+    maxHeight: 200,
+    ...Platform.select({
+      web: {
+        zIndex: 1001,
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)',
+      },
+      default: {
+        zIndex: 1001,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 20,
+        elevation: 12,
+      },
+    }),
+  },
+  selectOptionsScroll: {
+    maxHeight: 200,
+  },
+  selectOption: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139, 122, 184, 0.1)',
+  },
+  selectOptionSelected: {
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+  },
+  selectOptionText: {
+    fontSize: 16,
+    color: TEXT_LIGHT,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  selectOptionTextSelected: {
+    color: WHITE,
+    fontWeight: '600',
   },
 });
 
