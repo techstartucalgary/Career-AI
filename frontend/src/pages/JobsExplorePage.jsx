@@ -1,116 +1,288 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView, FlatList } from 'react-native';
+import { View, Text, Pressable, ScrollView, TextInput, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import Header from '../components/Header';
 import styles from './JobsExplorePage.styles';
 
 const JobsExplorePage = () => {
   const router = useRouter();
-  const [selectedFilterIndex, setSelectedFilterIndex] = useState(1); // student is at index 1
+  const [selectedTab, setSelectedTab] = useState('Recommended For You');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [focusedSearch, setFocusedSearch] = useState(false);
+  const [hoveredJob, setHoveredJob] = useState(null);
 
-  const filters = ['Latest', 'Student', 'Label', 'Label', 'Label']; // add labels you see relevant when we have this part figured out
+  const tabs = ['Recommended For You', 'All Jobs', 'Applied Jobs'];
 
-  // mock job data, in real app, this would come from whatever API we use
   const jobs = [
-    { id: 1, title: 'PWC', updated: 'today' },
-    { id: 2, title: 'Rogers', updated: 'yesterday' },
-    { id: 3, title: 'Title', updated: '2 days ago' },
-    { id: 4, title: 'Title', updated: 'today' },
-    { id: 5, title: 'Title', updated: 'yesterday' },
-    { id: 6, title: 'Title', updated: '2 days ago' },
-    { id: 7, title: 'Title', updated: 'today' },
-    { id: 8, title: 'Title', updated: 'yesterday' },
-    { id: 9, title: 'Title', updated: '2 days ago' },
-    { id: 10, title: 'Title', updated: 'today' },
+    {
+      id: 1,
+      company: 'Cenovus',
+      title: 'Student Data Analyst Summer, 2026',
+      location: 'Calgary, AB',
+      rate: '$28.25/hr',
+      types: ['Full-time', 'Hybrid', 'Internship'],
+      description: 'Are you looking for an exciting student opportunity full of meaningful, diverse, and challenging assignments working alongside industry leading professionals? You will be part of a driven, and collaborative team completing important projects while receiving the mentorship, knowledge, and experience to develop the skills you need to build an exciting career. Our team is on a mission to further enable Canadian Thermal Development and Production teams by implementing advanced data and analytics solutions, with a strong focus on generative AI.',
+      posted: '2 days ago',
+      matchScore: 95,
+    },
+    {
+      id: 2,
+      company: 'TechCorp',
+      title: 'Software Engineer Intern',
+      location: 'Toronto, ON',
+      rate: '$32.50/hr',
+      types: ['Full-time', 'Remote', 'Internship'],
+      description: 'Join our innovative team to build cutting-edge software solutions. Work on real-world projects, collaborate with experienced engineers, and grow your skills in a supportive environment.',
+      posted: '1 day ago',
+      matchScore: 88,
+    },
+    {
+      id: 3,
+      company: 'DataFlow Inc',
+      title: 'Junior Data Scientist',
+      location: 'Vancouver, BC',
+      rate: '$35.00/hr',
+      types: ['Full-time', 'Hybrid', 'Entry Level'],
+      description: 'Exciting opportunity for a junior data scientist to work on machine learning projects and data analytics solutions. Perfect for recent graduates looking to start their career in data science.',
+      posted: '3 days ago',
+      matchScore: 92,
+    },
   ];
 
   const handleJobPress = (jobId) => {
     router.push(`/job/${jobId}`);
   };
 
-  const renderJobCard = ({ item, index }) => {
-    const isLastInRow = (index + 1) % 3 === 0;
-    return (
-      <Pressable 
-        style={[
-          styles.jobCard,
-          isLastInRow && styles.jobCardLast
-        ]}
-        onPress={() => handleJobPress(item.id)}
-      >
-        <View style={styles.cardIconContainer}>
-          <View style={styles.cardIcon}>
-            <View style={styles.iconShape1} />
-            <View style={styles.iconShape2} />
-            <View style={styles.iconShape3} />
-          </View>
-        </View>
-        <Text style={styles.jobTitle}>{item.title}</Text>
-        <Text style={styles.jobUpdated}>Updated {item.updated}</Text>
-      </Pressable>
-    );
-  };
-
   return (
     <View style={styles.container}>
-      {/* top navigation bar */}
-      <View style={styles.navBar}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.pageTitle}>Explore Opportunities</Text>
-        <Pressable style={styles.menuButton}>
-          <Text style={styles.menuIcon}>⋮</Text>
-        </Pressable>
-      </View>
+      <Header />
+      <LinearGradient 
+        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']} 
+        style={styles.gradient}
+      >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.content}>
+            {/* Hero Section */}
+            <View style={styles.heroSection}>
+              <View style={styles.heroContent}>
+                <View style={styles.heroBadge}>
+                  <View style={styles.badgeDot} />
+                  <Text style={styles.badgeText}>AI-Powered Job Matching</Text>
+                </View>
+                <Text style={styles.heroTitle}>
+                  Discover Your Next
+                  <Text style={styles.heroTitleAccent}> Opportunity</Text>
+                </Text>
+                <Text style={styles.heroDescription}>
+                  Find jobs that match your skills, preferences, and career goals
+                </Text>
+              </View>
+            </View>
 
-      {/* filter bar */}
-      <View style={styles.filterWrapper}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterContainer}
-          contentContainerStyle={styles.filterContent}
-        >
-          {filters.map((filter, index) => (
-            <Pressable
-              key={index}
-              style={[
-                styles.filterButton,
-                selectedFilterIndex === index && styles.filterButtonSelected
-              ]}
-              onPress={() => setSelectedFilterIndex(index)}
-            >
-              {selectedFilterIndex === index && (
-                <Text style={styles.checkmark}>✓</Text>
-              )}
-              <Text
-                style={[
-                  styles.filterText,
-                  selectedFilterIndex === index && styles.filterTextSelected
-                ]}
-              >
-                {filter}
-              </Text>
-            </Pressable>
-          ))}
+            {/* Stats Bar */}
+            <View style={styles.statsBar}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{jobs.length}+</Text>
+                <Text style={styles.statLabel}>Jobs Found</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>92%</Text>
+                <Text style={styles.statLabel}>Avg Match</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>24h</Text>
+                <Text style={styles.statLabel}>Updated</Text>
+              </View>
+            </View>
+
+            {/* Filter Tabs */}
+            <View style={styles.tabsSection}>
+              <View style={styles.tabsContainer}>
+                {tabs.map((tab) => (
+                  <Pressable
+                    key={tab}
+                    style={[
+                      styles.tab,
+                      selectedTab === tab && styles.tabActive
+                    ]}
+                    onPress={() => setSelectedTab(tab)}
+                  >
+                    {tab === 'Applied Jobs' && (
+                      <View style={styles.checkmarkContainer}>
+                        <View style={styles.checkmarkLine1} />
+                        <View style={styles.checkmarkLine2} />
+                      </View>
+                    )}
+                    <Text style={[
+                      styles.tabText,
+                      selectedTab === tab && styles.tabTextActive
+                    ]}>
+                      {tab}
+                    </Text>
+                    {selectedTab === tab && (
+                      <View style={styles.tabIndicator} />
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {/* Enhanced Search Bar */}
+            <View style={styles.searchSection}>
+              <View style={[
+                styles.searchBar,
+                focusedSearch && styles.searchBarFocused
+              ]}>
+                <View style={styles.searchIconContainer}>
+                  <View style={styles.searchIcon}>
+                    <View style={styles.searchIconCircle} />
+                    <View style={styles.searchIconLine} />
+                  </View>
+                </View>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search jobs, companies, or keywords..."
+                  placeholderTextColor="#6B7280"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  onFocus={() => setFocusedSearch(true)}
+                  onBlur={() => setFocusedSearch(false)}
+                />
+                <View style={styles.searchDivider} />
+                <View style={styles.searchFilters}>
+                  <Pressable style={styles.filterChip}>
+                    <Text style={styles.filterChipText}>Location</Text>
+                    <View style={styles.filterArrowIcon}>
+                      <View style={styles.filterArrowUp} />
+                      <View style={styles.filterArrowDown} />
+                    </View>
+                  </Pressable>
+                  <Pressable style={styles.filterChip}>
+                    <Text style={styles.filterChipText}>Remote</Text>
+                    <View style={styles.filterArrowIcon}>
+                      <View style={styles.filterArrowUp} />
+                      <View style={styles.filterArrowDown} />
+                    </View>
+                  </Pressable>
+                  <Pressable style={styles.filterChip}>
+                    <Text style={styles.filterChipText}>Salary</Text>
+                    <View style={styles.filterArrowIcon}>
+                      <View style={styles.filterArrowUp} />
+                      <View style={styles.filterArrowDown} />
+                    </View>
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+
+            {/* Tailored Section */}
+            <View style={styles.tailoredSection}>
+              <View style={styles.tailoredIconContainer}>
+                <View style={styles.tailoredIcon}>
+                  <View style={styles.tailoredCircle}>
+                    <View style={styles.tailoredStar} />
+                  </View>
+                </View>
+              </View>
+              <View style={styles.tailoredContent}>
+                <Text style={styles.tailoredTitle}>Tailored Just For You</Text>
+                <Text style={styles.tailoredText}>
+                  Based on your resume, we found {jobs.length} jobs that match your skills and preferences
+                </Text>
+              </View>
+            </View>
+
+            {/* Job Listings */}
+            <View style={styles.jobsList}>
+              {jobs.map((job) => (
+                <Pressable
+                  key={job.id}
+                  style={[
+                    styles.jobCard,
+                    hoveredJob === job.id && styles.jobCardHover
+                  ]}
+                  onPress={() => handleJobPress(job.id)}
+                  onHoverIn={() => Platform.OS === 'web' && setHoveredJob(job.id)}
+                  onHoverOut={() => Platform.OS === 'web' && setHoveredJob(null)}
+                >
+                  <View style={styles.jobCardHeader}>
+                    <View style={styles.jobCardHeaderLeft}>
+                      <View style={styles.companyLogo}>
+                        <Text style={styles.companyLogoText}>
+                          {job.company.charAt(0)}
+                        </Text>
+                      </View>
+                      <View style={styles.jobCardHeaderContent}>
+                        <Text style={styles.jobCardTitle}>{job.title}</Text>
+                        <Text style={styles.jobCardCompany}>{job.company}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.jobCardHeaderRight}>
+                      <View style={styles.matchBadge}>
+                        <Text style={styles.matchScore}>{job.matchScore}%</Text>
+                        <Text style={styles.matchLabel}>Match</Text>
+                      </View>
+                      <Pressable style={styles.bookmarkButton}>
+                        <View style={styles.bookmarkIcon}>
+                          <View style={styles.bookmarkShape} />
+                        </View>
+                      </Pressable>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.jobCardDetails}>
+                    <View style={styles.jobDetailItem}>
+                      <View style={styles.detailIcon}>
+                        <View style={styles.locationIcon} />
+                      </View>
+                      <Text style={styles.jobCardLocation}>{job.location}</Text>
+                    </View>
+                    <View style={styles.jobDetailItem}>
+                      <View style={styles.detailIcon}>
+                        <View style={styles.moneyIcon} />
+                      </View>
+                      <Text style={styles.jobCardRate}>{job.rate}</Text>
+                    </View>
+                    <View style={styles.jobDetailItem}>
+                      <View style={styles.detailIcon}>
+                        <View style={styles.timeIcon} />
+                      </View>
+                      <Text style={styles.jobCardPosted}>Posted {job.posted}</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.jobTypes}>
+                    {job.types.map((type, index) => (
+                      <View key={index} style={styles.jobTypeTag}>
+                        <Text style={styles.jobTypeText}>{type}</Text>
+                      </View>
+                    ))}
+                  </View>
+                  
+                  <Text style={styles.jobCardDescription} numberOfLines={2}>
+                    {job.description}
+                  </Text>
+                  
+                  <View style={styles.jobCardFooter}>
+                    <Pressable style={styles.viewDetailsButton}>
+                      <Text style={styles.viewDetailsText}>View Details</Text>
+                      <View style={styles.viewDetailsArrow}>
+                        <View style={styles.arrowLine} />
+                        <View style={styles.arrowHead} />
+                      </View>
+                    </Pressable>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          </View>
         </ScrollView>
-      </View>
-
-      {/* jobs grid */}
-      <View style={styles.gridWrapper}>
-        <FlatList
-          data={jobs}
-          renderItem={({ item, index }) => renderJobCard({ item, index })}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={3}
-          contentContainerStyle={styles.gridContainer}
-          columnWrapperStyle={styles.gridRow}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+      </LinearGradient>
     </View>
   );
 };
 
 export default JobsExplorePage;
-

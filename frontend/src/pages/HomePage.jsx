@@ -1,132 +1,214 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, Platform } from 'react-native';
+import { View, Text, Pressable, ScrollView, TextInput, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import Header from '../components/Header';
-import './HomePage.css'; // keep for web fallback during migration
 import styles from './HomePage.styles';
 
 const HomePage = () => {
+  const router = useRouter();
+  const [selectedTab, setSelectedTab] = useState('Recommended For You');
   const [searchQuery, setSearchQuery] = useState('');
-  const [location, setLocation] = useState('');
+  const [focusedSearch, setFocusedSearch] = useState(false);
+  const [hoveredStat, setHoveredStat] = useState(null);
 
-  const handleSearch = (e) => {
-    if (e) e.preventDefault();
-    console.log('Searching for:', searchQuery, 'in', location);
-  };
+  const tabs = ['Recommended For You', 'All Jobs', 'Applied Jobs'];
 
-  const features = [
-    { icon: '🎯', title: 'AI Job Matching', desc: 'Smart algorithms match you with perfect opportunities' },
-    { icon: '📄', title: 'Resume Optimizer', desc: 'AI-powered resume analysis and improvement tips' },
-    { icon: '🚀', title: 'Career Insights', desc: 'Personalized career path recommendations' },
-    { icon: '💼', title: 'Interview Prep', desc: 'Practice with AI-driven interview questions' }
+  const stats = [
+    { label: 'Jobs Matched', value: '1,247', icon: 'briefcase' },
+    { label: 'Applications', value: '23', icon: 'document' },
+    { label: 'Interviews', value: '5', icon: 'calendar' },
+    { label: 'Success Rate', value: '87%', icon: 'star' },
   ];
 
   return (
-    <ScrollView style={styles.homepage}>
+    <View style={styles.container}>
       <Header />
-      
-      {/* hero section */}
+      <LinearGradient 
+        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']} 
+        style={styles.gradient}
+      >
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.content}>
+            {/* Hero Section with Visual Elements */}
       <View style={styles.heroSection}>
-        <LinearGradient
-          colors={['#f8f9fa', '#e9ecef']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.heroGradient}
-        />
-        <View style={styles.container}>
-          <Text style={styles.heroTitle}>Find Your Dream Career with AI</Text>
-          <Text style={styles.heroSubtitle}>
-            Leverage artificial intelligence to discover opportunities perfectly matched to your skills and aspirations.
+              <View style={styles.heroVisualContainer}>
+                <View style={styles.heroCircle1} />
+                <View style={styles.heroCircle2} />
+                <View style={styles.heroCircle3} />
+              </View>
+              <View style={styles.heroContent}>
+                <View style={styles.heroBadge}>
+                  <View style={styles.badgeDot} />
+                  <Text style={styles.badgeText}>AI-Powered Career Platform</Text>
+                </View>
+                <Text style={styles.heroTitle}>
+                  Find Your Dream Career
+                  <Text style={styles.heroTitleAccent}> With AI</Text>
+                </Text>
+                <Text style={styles.heroDescription}>
+                  Discover personalized opportunities, create standout applications, and land your next role faster than ever
+                </Text>
+              </View>
+            </View>
+
+            {/* Stats Section */}
+            <View style={styles.statsSection}>
+              {stats.map((stat, index) => (
+                <Pressable
+                  key={index}
+                  style={[
+                    styles.statCard,
+                    hoveredStat === index && styles.statCardHover
+                  ]}
+                  onHoverIn={() => Platform.OS === 'web' && setHoveredStat(index)}
+                  onHoverOut={() => Platform.OS === 'web' && setHoveredStat(null)}
+                >
+                  <View style={styles.statIconContainer}>
+                    <View style={styles.statIcon}>
+                      {stat.icon === 'briefcase' && <View style={styles.statBriefcase} />}
+                      {stat.icon === 'document' && <View style={styles.statDocument} />}
+                      {stat.icon === 'calendar' && <View style={styles.statCalendar} />}
+                      {stat.icon === 'star' && <View style={styles.statStar} />}
+                    </View>
+                  </View>
+                  <Text style={styles.statValue}>{stat.value}</Text>
+                  <Text style={styles.statLabel}>{stat.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {/* Filter Tabs with Modern Design */}
+            <View style={styles.tabsSection}>
+              <View style={styles.tabsContainer}>
+                {tabs.map((tab) => (
+                  <Pressable
+                    key={tab}
+                    style={[
+                      styles.tab,
+                      selectedTab === tab && styles.tabActive
+                    ]}
+                    onPress={() => setSelectedTab(tab)}
+                  >
+                    {tab === 'Applied Jobs' && (
+                      <View style={styles.checkmarkContainer}>
+                        <View style={styles.checkmarkLine1} />
+                        <View style={styles.checkmarkLine2} />
+                      </View>
+                    )}
+                    <Text style={[
+                      styles.tabText,
+                      selectedTab === tab && styles.tabTextActive
+                    ]}>
+                      {tab}
           </Text>
-          
-          <View style={styles.searchBar}>
-            <View style={styles.searchRow}>
+                    {selectedTab === tab && (
+                      <View style={styles.tabIndicator} />
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {/* Enhanced Search Section */}
+            <View style={styles.searchSection}>
+              <View style={styles.searchWrapper}>
+                <View style={[
+                  styles.searchBar,
+                  focusedSearch && styles.searchBarFocused
+                ]}>
+                  <View style={styles.searchIconContainer}>
+                    <View style={styles.searchIcon}>
+                      <View style={styles.searchIconCircle} />
+                      <View style={styles.searchIconLine} />
+                    </View>
+                  </View>
               <TextInput
                 style={styles.searchInput}
-                placeholder="Job title or keyword"
+                    placeholder="Search for your dream job..."
+                    placeholderTextColor="#6B7280"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
-                placeholderTextColor="#6c757d"
+                    onFocus={() => setFocusedSearch(true)}
+                    onBlur={() => setFocusedSearch(false)}
               />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Location"
-                value={location}
-                onChangeText={setLocation}
-                placeholderTextColor="#6c757d"
-              />
-              <Pressable style={styles.searchButton} onPress={handleSearch}>
-                <Text style={styles.searchButtonText}>Search Jobs</Text>
+                  <View style={styles.searchDivider} />
+                  <View style={styles.searchFilters}>
+                    <Pressable style={styles.filterChip}>
+                      <Text style={styles.filterChipText}>Location</Text>
+                      <View style={styles.filterArrowIcon}>
+                        <View style={styles.filterArrowUp} />
+                        <View style={styles.filterArrowDown} />
+                      </View>
+                    </Pressable>
+                    <Pressable style={styles.filterChip}>
+                      <Text style={styles.filterChipText}>Remote</Text>
+                      <View style={styles.filterArrowIcon}>
+                        <View style={styles.filterArrowUp} />
+                        <View style={styles.filterArrowDown} />
+                      </View>
+                    </Pressable>
+                    <Pressable style={styles.filterChip}>
+                      <Text style={styles.filterChipText}>Salary</Text>
+                      <View style={styles.filterArrowIcon}>
+                        <View style={styles.filterArrowUp} />
+                        <View style={styles.filterArrowDown} />
+                      </View>
               </Pressable>
             </View>
           </View>
+                <View style={styles.searchHint}>
+                  <Text style={styles.searchHintText}>
+                    Try: "Software Engineer in San Francisco" or "Remote Marketing Manager"
+                  </Text>
+                </View>
         </View>
       </View>
 
-      {/* features section */}
-      <View style={styles.featuresSection}>
-        <View style={styles.container}>
-          <Text style={styles.featuresTitle}>Why Choose Career AI?</Text>
-          <View style={styles.featuresRow}>
-            {features.map((feature, idx) => (
-              <View key={idx} style={styles.featureCard}>
-                <Text style={styles.featureIcon}>{feature.icon}</Text>
-                <Text style={styles.featureTitle}>{feature.title}</Text>
-                <Text style={styles.featureDesc}>{feature.desc}</Text>
+            {/* Featured Opportunities Section */}
+            <View style={styles.featuredSection}>
+              <View style={styles.featuredHeader}>
+                <Text style={styles.featuredTitle}>Featured Opportunities</Text>
+                <Pressable style={styles.viewAllButton}>
+                  <Text style={styles.viewAllText}>View All</Text>
+                  <View style={styles.viewAllArrow}>
+                    <View style={styles.arrowLine} />
+                    <View style={styles.arrowHead} />
+                  </View>
+                </Pressable>
               </View>
-            ))}
+              <View style={styles.featuredGrid}>
+                {[1, 2, 3].map((item) => (
+                  <View key={item} style={styles.featuredCard}>
+                    <View style={styles.featuredCardHeader}>
+                      <View style={styles.featuredCompanyLogo}>
+                        <View style={styles.companyLogoCircle} />
           </View>
+                      <View style={styles.featuredCardContent}>
+                        <Text style={styles.featuredJobTitle}>Senior Product Designer</Text>
+                        <Text style={styles.featuredCompanyName}>TechCorp Inc.</Text>
         </View>
-      </View>
-
-      {/* stats section */}
-      <View style={styles.statsSection}>
-        <View style={styles.container}>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>10k+</Text>
-              <Text style={styles.statLabel}>Active Jobs</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>5k+</Text>
-              <Text style={styles.statLabel}>Success Stories</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>500+</Text>
-              <Text style={styles.statLabel}>Partner Companies</Text>
+                      <View style={styles.featuredBookmark}>
+                        <View style={styles.bookmarkIcon} />
             </View>
           </View>
+                    <View style={styles.featuredCardFooter}>
+                      <View style={styles.featuredTag}>
+                        <Text style={styles.featuredTagText}>Remote</Text>
+        </View>
+                      <View style={styles.featuredTag}>
+                        <Text style={styles.featuredTagText}>$120k - $150k</Text>
+      </View>
+                      <Text style={styles.featuredTime}>2 days ago</Text>
         </View>
       </View>
-
-      {/* CTA section */}
-      <View style={styles.ctaSection}>
-        <View style={styles.container}>
-          <Text style={styles.ctaTitle}>Ready to Start Your Journey?</Text>
-          <Text style={styles.ctaSubtitle}>
-            Join thousands of professionals who found their dream careers
-          </Text>
-          <Pressable style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>Get Started Free</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* footer */}
-      <View style={styles.footer}>
-        <View style={styles.container}>
-          <View style={styles.footerRow}>
-            <View>
-              <Text style={styles.footerTitle}>Career AI</Text>
-              <Text style={styles.footerText}>Your AI-powered career companion</Text>
+                ))}
             </View>
-            <View>
-              <Text style={styles.footerCopyright}>&copy; 2025 Career AI. All rights reserved.</Text>
             </View>
           </View>
-        </View>
+        </ScrollView>
+      </LinearGradient>
       </View>
-    </ScrollView>
   );
 };
 

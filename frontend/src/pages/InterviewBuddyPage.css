@@ -1,0 +1,69 @@
+.interview-buddy-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #2d254c 0%, #3c2e5e 100%);
+}
+
+.interview-buddy-card {
+  background: rgba(80, 70, 130, 0.5);
+  border-radius: 20px;
+  padding: 48px 32px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 900px;
+}
+
+.interview-buddy-title {
+  color: #fff;
+  font-size: 2.8rem;
+  margin-bottom: 32px;
+}
+
+.interview-buddy-buttons {
+  display: flex;
+  gap: 48px;
+  width: 100%;
+  justify-content: center;
+}
+
+.interview-buddy-btn-card {
+  background: #9d8be5;
+  border-radius: 20px;
+  padding: 32px 24px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+}
+
+.interview-buddy-btn-card h2 {
+  color: #fff;
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+}
+
+.interview-buddy-btn-card p {
+  color: #e6e6fa;
+  font-size: 1rem;
+  margin-bottom: 24px;
+}
+
+.interview-buddy-btn-card button {
+  background: #4b3b7a;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.interview-buddy-btn-card button:hover {
+  background: #6c5ca7;
+}
