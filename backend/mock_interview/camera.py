@@ -3,7 +3,7 @@ import numpy as np
 import mediapipe as mp
 import time
 
-# -------------------- Mediapipe Holistic (the FIX) --------------------
+# Mediapipe Holistic 
 mp_holistic = mp.solutions.holistic
 holistic = mp_holistic.Holistic(
     refine_face_landmarks=True,      # full lips, stable
@@ -15,7 +15,7 @@ holistic = mp_holistic.Holistic(
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
-# -------------------- Webcam --------------------
+# Webcam 
 cap = cv2.VideoCapture(0)
 cap.set(3, 1280)
 cap.set(4, 720)
@@ -63,7 +63,7 @@ while True:
         l_sh = (int(l.x * w), int(l.y * h) + offset)
         cv2.line(frame, r_sh, l_sh, (0,255,255), 3)
 
-    # -------------------- FULL MOUTH --------------------
+    #FULL MOUTH 
     if results.face_landmarks:
         fl = results.face_landmarks.landmark
 
@@ -81,7 +81,7 @@ while True:
             cv2.line(frame, mouth[i], mouth[i+1], (0, 0, 255), 2)
         cv2.line(frame, mouth[-1], mouth[0], (0, 0, 255), 2)
 
-    # -------------------- HANDS WITH MEDIAPIPE, NOT CVZONE --------------------
+    # HANDS WITH MEDIAPIPE, NOT CVZONE
     # right hand
     if results.right_hand_landmarks:
         for i, lm in enumerate(results.right_hand_landmarks.landmark):
@@ -110,10 +110,10 @@ while True:
             x2, y2 = int(end.x*w), int(end.y*h)
             cv2.line(frame, (x1,y1), (x2,y2), (0,255,0), 2)
 
-    # -------------------- MIRROR FOR DISPLAY --------------------
+    #MIRROR FOR DISPLAY
     disp = cv2.flip(frame, 1)
 
-    # -------------------- LABEL HANDS AFTER FLIP --------------------
+    #LABEL HANDS AFTER FLIP
     if results.right_hand_landmarks:
         cv2.putText(disp, "Right Hand",
                     (30, 100),
