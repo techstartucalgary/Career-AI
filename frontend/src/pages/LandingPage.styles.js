@@ -532,6 +532,48 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  logoSection: {
+    paddingVertical: 40,
+    backgroundColor: DARK_PURPLE,
+    alignItems: 'center',
+  },
+  logoTitle: {
+    fontSize: 16,
+    color: WHITE,
+    opacity: 0.6,
+    marginBottom: 24,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    fontWeight: '600',
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 40,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  companyLogo: {
+    width: 120,
+    height: 60,
+    resizeMode: 'contain',
+    opacity: 0.8,
+    ...Platform.select({
+      web: {
+        filter: 'invert(1) grayscale(1) brightness(1.5)',
+        mixBlendMode: 'screen',
+        transition: 'all 0.3s ease',
+      },
+      default: {
+        tintColor: '#FFFFFF',
+      }
+    })
+  },
   // Hover styles
   primaryButtonHover: {
     ...Platform.select({
