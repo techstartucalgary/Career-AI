@@ -115,3 +115,4 @@ fabric.properties
 out
 /indiv-deliverables/
 /submissions/
+/.env
