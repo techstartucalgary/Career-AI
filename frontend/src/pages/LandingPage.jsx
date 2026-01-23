@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, Platform, StyleSheet, Image } from 'react-native';
-import amdLogo from '../assets/AMD-Logo.png';
-import awsLogo from '../assets/aws.png';
-import googleLogo from '../assets/google.png';
-import mcLogo from '../assets/mc.png';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 import AnimatedHeroBackground from '../components/AnimatedHeroBackground';
 import ScrollReveal from '../components/ScrollReveal';
+import LogoCarousel from '../components/LogoCarousel';
 import { ScrollAnimationProvider } from '../contexts/ScrollAnimationContext';
 import styles from './LandingPage.styles';
 
@@ -144,12 +141,7 @@ const LandingPage = () => {
         {/* Company Logos Section */}
         <ScrollReveal style={styles.logoSection} delay={200}>
           <Text style={styles.logoTitle}>Find jobs at companies like:</Text>
-          <View style={styles.logoContainer}>
-            <Image source={amdLogo} style={styles.companyLogo} />
-            <Image source={awsLogo} style={styles.companyLogo} />
-            <Image source={googleLogo} style={styles.companyLogo} />
-            <Image source={mcLogo} style={styles.companyLogo} />
-          </View>
+          <LogoCarousel />
         </ScrollReveal>
 
         {/* AI Career Companion Section */}
