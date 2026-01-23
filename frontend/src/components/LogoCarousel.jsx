@@ -8,20 +8,32 @@ import Animated, {
     Easing,
 } from 'react-native-reanimated';
 
-import amdLogo from '../assets/AMD-Logo.png';
+import amdLogo from '../assets/amd.png';
 import awsLogo from '../assets/aws.png';
 import googleLogo from '../assets/google.png';
 import mcLogo from '../assets/mc.png';
+import metaLogo from '../assets/meta.png';
+import netflixLogo from '../assets/netflix.png';
+import salesforceLogo from '../assets/salesforce.png';
+import adobeLogo from '../assets/adobe.png';
+import teslaLogo from '../assets/tesla.png';
+import capitaloneLogo from '../assets/capitalone.png';
 
 const LOGO_SIZE = 100;
 const LOGO_MARGIN = 40;
 const ITEM_WIDTH = LOGO_SIZE + LOGO_MARGIN * 2;
 
 const logos = [
-    { id: 'amd', source: amdLogo },
-    { id: 'aws', source: awsLogo },
     { id: 'google', source: googleLogo },
-    { id: 'mc', source: mcLogo },
+    { id: 'meta', source: metaLogo },
+    { id: 'amazon', source: awsLogo },
+    { id: 'netflix', source: netflixLogo },
+    { id: 'tesla', source: teslaLogo },
+    { id: 'salesforce', source: salesforceLogo },
+    { id: 'adobe', source: adobeLogo },
+    { id: 'amd', source: amdLogo },
+    { id: 'capitalone', source: capitaloneLogo },
+    { id: 'mckinsey', source: mcLogo },
 ];
 
 // Duplicate logos for seamless infinite scroll
