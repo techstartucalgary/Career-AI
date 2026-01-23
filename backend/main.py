@@ -190,9 +190,20 @@ async def signup(request: Request):
     github = form.get("github")
     location = form.get("location")
     password = form.get("password")
+    gender = form.get("gender")
+    indigenous = form.get("indigenous")
+    disability = form.get("disability")
+    lgbtq = form.get("lgbtq")
+    minority = form.get("minority")
+
+    genders = ["Man", "Woman", "Non-Binary", "Two-Spirit", "Another Gender", "I do not wish to answer"]
+    indigenous_l = ["Yes", "No", "I do not wish to answer"]
+    lgbtq_l = ["Yes", "No", "I do not wish to answer"]
+    disability_l = ["Yes", "No", "I do not wish to answer"]
+    vis_mino_l = ["Yes", "No", "I do not wish to answer"]
 
     """Make sure none of the information provided is blank"""
-    if email is None or email == "" or first_name is None or first_name == "" or last_name is None or last_name == "" or phone is None or phone == "" or linkedin is None or linkedin == "" or location is None or location == "" or github is None or github == "" or password is None or password == "":
+    if email is None or email == "" or first_name is None or first_name == "" or last_name is None or last_name == "" or phone is None or phone == "" or linkedin is None or linkedin == "" or location is None or location == "" or github is None or github == "" or password is None or password == "" or gender not in genders or indigenous not in indigenous_l or disability not in disability_l or minority not in vis_mino_l or lgbtq not in lgbtq_l:
         return JSONResponse(
             status_code=400,
             content={
@@ -229,6 +240,11 @@ async def signup(request: Request):
     hashed_linkedin = hash_(linkedin)
     hashed_github = hash_(github)
     hashed_location = hash_(location)
+    hashed_gender = hash_(gender)
+    hashed_indigenous = hash_(indigenous)
+    hashed_disability = hash_(disability)
+    hashed_minority = hash_(minority)
+    hashed_lgbtq = hash_(lgbtq)
     reg_date = datetime.utcnow().date().isoformat()  # date of account creation (now)
     role = "free_user"
 
@@ -249,7 +265,7 @@ async def signup(request: Request):
     """Insert information into database"""
     try:
         dic = {"email":email, "password":hashed_pwd, "first_name": hashed_fname, "last_name": hashed_lname, "phone": hashed_phone,
-           "linkedin": hashed_linkedin, "github": hashed_github, "location": hashed_location, "registration_date": reg_date, "role": role}
+           "linkedin": hashed_linkedin, "github": hashed_github, "location": hashed_location, "registration_date": reg_date, "role": role, "gender": hashed_gender, "indigenous": hashed_indigenous, "disability": hashed_disability, "minority": hashed_disability, "lgbtq": hashed_lgbtq}
         user = col.insert_one(dic)
         user_id = user.inserted_id #database generated object ID
         access_token = create_access_token(user_id, role) #create an access token for the user, valid for two hours
