@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './CoverLetterJobPostingPage.styles';
+import './JobPages.css';
 
 const CoverLetterJobPostingPage = () => {
   const router = useRouter();
@@ -29,9 +30,11 @@ const CoverLetterJobPostingPage = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <LinearGradient 
-        colors={['#1F1C2F', '#2D1B3D']} 
+      <LinearGradient
+        colors={['#0A0A0F', '#12101A', '#0A0A0F']}
         style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
@@ -54,7 +57,7 @@ const CoverLetterJobPostingPage = () => {
                 {/* Job Posting Section */}
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Job Posting</Text>
-                  
+
                   <View style={styles.searchBar}>
                     <View style={styles.searchIcon}>
                       <View style={styles.searchIconCircle} />

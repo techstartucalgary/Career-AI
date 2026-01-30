@@ -4,18 +4,24 @@ const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
-const GRAY_BACKGROUND = '#2D1B3D';
-const PREVIEW_GRAY = '#E5E7EB';
+const COLORS = {
+  bg: '#08080C',
+  bgAlt: '#0C0C12',
+  surface: '#12121A',
+  surfaceLight: '#1A1A24',
+  border: 'rgba(255,255,255,0.06)',
+  borderLight: 'rgba(255,255,255,0.1)',
+  primary: '#A78BFA',
+  white: '#FFFFFF',
+  textPrimary: 'rgba(255,255,255,0.95)',
+  textSecondary: 'rgba(255,255,255,0.6)',
+  textMuted: 'rgba(255,255,255,0.4)',
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
   },
   gradient: {
     flex: 1,
@@ -38,12 +44,12 @@ const styles = StyleSheet.create({
   headerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: 100,
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
+    borderColor: 'rgba(167, 139, 250, 0.2)',
     marginBottom: 20,
     gap: 8,
   },
@@ -51,43 +57,29 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
   },
   badgeText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: TEXT_LIGHT,
+    fontWeight: '500',
+    color: COLORS.primary,
     letterSpacing: 0.5,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   headerTitle: {
     fontSize: isDesktop ? 40 : isTablet ? 36 : 28,
-    fontWeight: 'bold',
-    color: WHITE,
+    fontWeight: '700',
+    color: COLORS.white,
     marginBottom: 12,
     textAlign: 'center',
-    fontFamily: Platform.select({
-      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      default: 'sans-serif',
-    }),
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 12,
+    letterSpacing: -0.5,
   },
   headerText: {
     fontSize: 18,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     marginBottom: 30,
     textAlign: 'center',
-    opacity: 0.9,
     maxWidth: 700,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    lineHeight: 28,
   },
   panelsContainer: {
     flexDirection: isDesktop ? 'row' : 'column',
@@ -95,58 +87,57 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   leftPanel: {
-    flex: isDesktop ? 1 : 1,
-    backgroundColor: GRAY_BACKGROUND,
+    flex: 1,
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 32,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px)',
+      },
+    }),
   },
   rightPanel: {
-    flex: isDesktop ? 1 : 1,
-    backgroundColor: GRAY_BACKGROUND,
+    flex: 1,
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 32,
     minHeight: isDesktop ? 600 : 400,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px)',
+      },
+    }),
   },
   modeToggle: {
     flexDirection: 'row',
-    backgroundColor: DARK_PURPLE,
+    gap: 12,
+    marginBottom: 30,
+    backgroundColor: COLORS.surfaceLight,
     borderRadius: 12,
     padding: 4,
-    marginBottom: 30,
-    gap: 4,
   },
   modeButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
   modeButtonActive: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
   },
   modeButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
-    color: WHITE,
-    opacity: 0.7,
+    color: COLORS.textSecondary,
   },
   modeButtonTextActive: {
-    opacity: 1,
+    color: COLORS.white,
     fontWeight: '600',
   },
   section: {
@@ -154,13 +145,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: WHITE,
+    fontWeight: '700',
+    color: COLORS.white,
     marginBottom: 16,
-    fontFamily: Platform.select({
-      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   templatesGrid: {
     flexDirection: 'row',
@@ -168,18 +155,14 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   templateCard: {
-    width: isDesktop ? '48%' : isTablet ? '48%' : '100%',
-    backgroundColor: '#2D1B3D',
+    flex: isDesktop ? 0.48 : 1,
+    minWidth: isDesktop ? 140 : '100%',
+    backgroundColor: COLORS.surfaceLight,
     borderRadius: 12,
     padding: 16,
-    borderWidth: 2,
-    borderColor: LIGHT_PURPLE,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
     alignItems: 'center',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
     ...Platform.select({
       web: {
         cursor: 'pointer',
@@ -188,51 +171,44 @@ const styles = StyleSheet.create({
     }),
   },
   templateCardHover: {
+    borderColor: COLORS.primary,
     transform: [{ translateY: -2 }],
-    borderColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    backgroundColor: '#3D2B4D',
   },
   templatePreview: {
     width: '100%',
-    aspectRatio: 0.7,
-    backgroundColor: PREVIEW_GRAY,
+    height: 120,
+    backgroundColor: COLORS.surface,
     borderRadius: 8,
+    marginBottom: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
   },
   templateIcon: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   documentIcon: {
-    width: 48,
-    height: 60,
+    width: 40,
+    height: 50,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#9CA3AF',
+    borderColor: COLORS.primary,
     backgroundColor: 'transparent',
   },
   templateName: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
-    color: WHITE,
+    color: COLORS.textPrimary,
     textAlign: 'center',
   },
   uploadButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.surfaceLight,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
     ...Platform.select({
       web: {
         cursor: 'pointer',
@@ -241,119 +217,95 @@ const styles = StyleSheet.create({
     }),
   },
   uploadButtonHover: {
-    transform: [{ translateY: -2 }],
-    backgroundColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.surface,
   },
   uploadButtonText: {
-    color: WHITE,
-    fontSize: 16,
+    color: COLORS.textPrimary,
+    fontSize: 15,
     fontWeight: '600',
   },
   fileName: {
-    fontSize: 14,
-    color: WHITE,
-    opacity: 0.7,
-    marginTop: 8,
-    fontStyle: 'italic',
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 12,
+    textAlign: 'center',
   },
   generateButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 32,
     alignItems: 'center',
     marginTop: 20,
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
     ...Platform.select({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
-      },
-      default: {
-        shadowColor: LIGHT_PURPLE,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
+        boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
       },
     }),
   },
   generateButtonHover: {
     transform: [{ translateY: -2 }],
-    backgroundColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 30px rgba(167, 139, 250, 0.4)',
+      },
+    }),
   },
   generateButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 18,
     fontWeight: '600',
   },
   previewArea: {
     flex: 1,
-    backgroundColor: PREVIEW_GRAY,
+    backgroundColor: COLORS.surfaceLight,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 400,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   previewIcon: {
     marginBottom: 16,
   },
   previewText: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   downloadButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: 'center',
     alignSelf: 'flex-end',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
     ...Platform.select({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
-      },
-      default: {
-        shadowRadius: 8,
-        elevation: 6,
+        boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
       },
     }),
   },
   downloadButtonHover: {
     transform: [{ translateY: -2 }],
-    backgroundColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 30px rgba(167, 139, 250, 0.4)',
+      },
+    }),
   },
   downloadButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
   },
 });
 
 export default styles;
-
-
-
-

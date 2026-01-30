@@ -4,18 +4,28 @@ const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
-const GRAY_BACKGROUND = '#2D1B3D';
-const PREVIEW_GRAY = '#E5E7EB';
+// Landing Page Color System
+const COLORS = {
+  bg: '#08080C',
+  bgAlt: '#0C0C12',
+  surface: '#12121A',
+  surfaceLight: '#1A1A24',
+  border: 'rgba(255,255,255,0.06)',
+  borderLight: 'rgba(255,255,255,0.1)',
+  primary: '#A78BFA',
+  primaryDark: '#8B5CF6',
+  primaryLight: '#C4B5FD',
+  accent: '#6366F1',
+  white: '#FFFFFF',
+  textPrimary: 'rgba(255,255,255,0.95)',
+  textSecondary: 'rgba(255,255,255,0.6)',
+  textMuted: 'rgba(255,255,255,0.4)',
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
   },
   gradient: {
     flex: 1,
@@ -38,12 +48,12 @@ const styles = StyleSheet.create({
   headerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: 100,
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
+    borderColor: 'rgba(167, 139, 250, 0.2)',
     marginBottom: 20,
     gap: 8,
   },
@@ -51,43 +61,35 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
+    ...Platform.select({
+      web: {
+        animation: 'pulse 2s ease-in-out infinite',
+        boxShadow: '0 0 12px rgba(167, 139, 250, 0.6)',
+      },
+    }),
   },
   badgeText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: TEXT_LIGHT,
+    fontWeight: '500',
+    color: COLORS.primary,
     letterSpacing: 0.5,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   headerTitle: {
     fontSize: isDesktop ? 40 : isTablet ? 36 : 28,
-    fontWeight: 'bold',
-    color: WHITE,
+    fontWeight: '700',
+    color: COLORS.white,
     marginBottom: 12,
     textAlign: 'center',
-    fontFamily: Platform.select({
-      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      default: 'sans-serif',
-    }),
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 12,
+    letterSpacing: -0.5,
   },
   headerText: {
     fontSize: 18,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     marginBottom: 30,
     textAlign: 'center',
-    opacity: 0.9,
     maxWidth: 700,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    lineHeight: 28,
   },
   panelsContainer: {
     flexDirection: isDesktop ? 'row' : 'column',
@@ -95,54 +97,50 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   leftPanel: {
-    flex: isDesktop ? 1 : 1,
-    backgroundColor: GRAY_BACKGROUND,
+    flex: 1,
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 32,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px)',
+      },
+    }),
   },
   rightPanel: {
-    flex: isDesktop ? 1 : 1,
-    backgroundColor: GRAY_BACKGROUND,
+    flex: 1,
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 32,
     minHeight: isDesktop ? 600 : 400,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px)',
+      },
+    }),
   },
   section: {
     marginBottom: 30,
   },
   sectionTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: WHITE,
+    fontWeight: '700',
+    color: COLORS.white,
     marginBottom: 16,
-    fontFamily: Platform.select({
-      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.surfaceLight,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: LIGHT_PURPLE,
+    borderColor: COLORS.borderLight,
   },
   searchIcon: {
     width: 20,
@@ -156,7 +154,7 @@ const styles = StyleSheet.create({
     height: 14,
     borderRadius: 7,
     borderWidth: 2,
-    borderColor: '#9CA3AF',
+    borderColor: COLORS.textMuted,
     top: 0,
     left: 0,
   },
@@ -164,14 +162,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 8,
     height: 2,
-    backgroundColor: '#9CA3AF',
+    backgroundColor: COLORS.textMuted,
     transform: [{ rotate: '45deg' }],
     bottom: 2,
     right: 2,
   },
   searchInput: {
     flex: 1,
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 16,
   },
   tagsContainer: {
@@ -183,14 +181,16 @@ const styles = StyleSheet.create({
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.3)',
     gap: 8,
   },
   tagText: {
-    color: WHITE,
+    color: COLORS.primary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -205,68 +205,64 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 12,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.primary,
     transform: [{ rotate: '45deg' }],
   },
   tagCloseLine2: {
     position: 'absolute',
     width: 12,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.primary,
     transform: [{ rotate: '-45deg' }],
   },
   jobDescriptionInput: {
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.surfaceLight,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: LIGHT_PURPLE,
-    color: WHITE,
+    borderColor: COLORS.borderLight,
+    color: COLORS.textPrimary,
     fontSize: 16,
     minHeight: 200,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   generateButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 32,
     alignItems: 'center',
     marginTop: 20,
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
     ...Platform.select({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
+        boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
       },
     }),
   },
   generateButtonHover: {
     transform: [{ translateY: -2 }],
-    backgroundColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 30px rgba(167, 139, 250, 0.4)',
+      },
+    }),
   },
   generateButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 18,
     fontWeight: '600',
   },
   previewArea: {
     flex: 1,
-    backgroundColor: PREVIEW_GRAY,
+    backgroundColor: COLORS.surfaceLight,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 400,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   previewIcon: {
     marginBottom: 16,
@@ -276,49 +272,42 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 4,
     borderWidth: 3,
-    borderColor: '#9CA3AF',
+    borderColor: COLORS.textMuted,
     backgroundColor: 'transparent',
   },
   previewText: {
     fontSize: 16,
-    color: '#6B7280',
+    color: COLORS.textSecondary,
     textAlign: 'center',
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   downloadButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: 'center',
     alignSelf: 'flex-end',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
     ...Platform.select({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
+        boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
       },
     }),
   },
   downloadButtonHover: {
     transform: [{ translateY: -2 }],
-    backgroundColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 30px rgba(167, 139, 250, 0.4)',
+      },
+    }),
   },
   downloadButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
   },
 });
 
 export default styles;
-

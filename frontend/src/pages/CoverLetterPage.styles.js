@@ -4,16 +4,28 @@ const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
+// Landing Page Color System
+const COLORS = {
+  bg: '#08080C',
+  bgAlt: '#0C0C12',
+  surface: '#12121A',
+  surfaceLight: '#1A1A24',
+  border: 'rgba(255,255,255,0.06)',
+  borderLight: 'rgba(255,255,255,0.1)',
+  primary: '#A78BFA',
+  primaryDark: '#8B5CF6',
+  primaryLight: '#C4B5FD',
+  accent: '#6366F1',
+  white: '#FFFFFF',
+  textPrimary: 'rgba(255,255,255,0.95)',
+  textSecondary: 'rgba(255,255,255,0.6)',
+  textMuted: 'rgba(255,255,255,0.4)',
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
   },
   gradient: {
     flex: 1,
@@ -44,7 +56,7 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    opacity: 0.1,
+    opacity: 0.05,
   },
   headerCircle1: {
     position: 'absolute',
@@ -52,7 +64,7 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 150,
     borderWidth: 2,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     top: -50,
     left: -100,
   },
@@ -62,19 +74,20 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 100,
     borderWidth: 2,
-    borderColor: LIGHT_PURPLE,
+    borderColor: COLORS.primary,
     bottom: -50,
     right: -50,
+    opacity: 0.6,
   },
   headerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: 100,
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
+    borderColor: 'rgba(167, 139, 250, 0.2)',
     marginBottom: 24,
     gap: 8,
     zIndex: 1,
@@ -83,43 +96,29 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
   },
   badgeText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: TEXT_LIGHT,
+    fontWeight: '500',
+    color: COLORS.primary,
     letterSpacing: 0.5,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   mainTitle: {
     fontSize: isDesktop ? 48 : isTablet ? 40 : 32,
-    fontWeight: 'bold',
-    color: WHITE,
+    fontWeight: '700',
+    color: COLORS.white,
     marginBottom: 16,
     textAlign: 'center',
     zIndex: 1,
-    fontFamily: Platform.select({
-      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      default: 'sans-serif',
-    }),
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 16,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 18,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     textAlign: 'center',
-    opacity: 0.9,
     zIndex: 1,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    lineHeight: 28,
   },
   optionsContainer: {
     flexDirection: isDesktop ? 'row' : isTablet ? 'row' : 'column',
@@ -130,32 +129,30 @@ const styles = StyleSheet.create({
   },
   optionCard: {
     flex: isDesktop ? 1 : isTablet ? 0.48 : 1,
-    backgroundColor: '#2D1B3D',
-    borderRadius: 16,
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
     padding: 32,
-    borderWidth: 2,
-    borderColor: LIGHT_PURPLE,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     minWidth: isTablet ? 280 : '100%',
     maxWidth: isDesktop ? 380 : '100%',
     alignItems: 'center',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
     ...Platform.select({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
+        backdropFilter: 'blur(20px)',
       },
     }),
   },
   optionCardHover: {
     transform: [{ translateY: -4 }],
-    borderColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    backgroundColor: '#3D2B4D',
+    borderColor: COLORS.primary,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 12px 32px rgba(167, 139, 250, 0.2)',
+      },
+    }),
   },
   optionIcon: {
     width: 64,
@@ -169,7 +166,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderWidth: 3,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     transform: [{ rotate: '45deg' }],
   },
   iconDocument: {
@@ -177,7 +174,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 2,
     borderWidth: 2,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     position: 'absolute',
     left: 4,
     top: 8,
@@ -193,14 +190,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 10,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: BRIGHT_PURPLE,
+    borderTopColor: COLORS.primary,
   },
   iconGear: {
     width: 32,
     height: 32,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     position: 'absolute',
     right: 4,
     bottom: 8,
@@ -213,29 +210,20 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
   },
   optionTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: WHITE,
+    color: COLORS.white,
     marginBottom: 12,
     textAlign: 'center',
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   optionDescription: {
     fontSize: 15,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     lineHeight: 24,
     textAlign: 'center',
-    opacity: 0.9,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
 });
 
