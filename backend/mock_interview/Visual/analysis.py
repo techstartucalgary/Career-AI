@@ -97,103 +97,150 @@ class MovementAnalyzer:
         self._nod_last_sign = None
         self._nod_last_peak_t = 0.0
 
-        self.nod_count = 0
-        self.nod_window_start = time.time()
-        self._nod_last_sign = None
-        self._nod_last_peak_t = 0.0
-
 # SEGMENT 3: landmark read utilities
 
-def _pose_xy(self, results, idx):
-    if not results or not results.pose_landmarks:
-        return None
-    lm = results.pose_landmarks.landmark[idx]
-    return (lm.x, lm.y)
+    def _pose_xy(self, results, idx):
+        if not results or not results.pose_landmarks:
+            return None
+        lm = results.pose_landmarks.landmark[idx]
+        return (lm.x, lm.y)
 
-def _pose_z(self, results, idx):
-    if not results or not results.pose_landmarks:
-        return None
-    return results.pose_landmarks.landmark[idx].z
+    def _pose_z(self, results, idx):
+        if not results or not results.pose_landmarks:
+            return None
+        return results.pose_landmarks.landmark[idx].z
 
-def _face_xy(self, results, idx):
-    if not results or not results.face_landmarks:
-        return None
-    lm = results.face_landmarks.landmark[idx]
-    return (lm.x, lm.y)
+    def _face_xy(self, results, idx):
+        if not results or not results.face_landmarks:
+            return None
+        lm = results.face_landmarks.landmark[idx]
+        return (lm.x, lm.y)
 
-def _hand_lm(self, hand_landmarks, idx):
-    if not hand_landmarks:
-        return None
-    lm = hand_landmarks.landmark[idx]
-    return (lm.x, lm.y, getattr(lm, "z", 0.0))
+    def _hand_lm(self, hand_landmarks, idx):
+        if not hand_landmarks:
+            return None
+        lm = hand_landmarks.landmark[idx]
+        return (lm.x, lm.y, getattr(lm, "z", 0.0))
 
 
-# SEGMENT 4: core feature extractors
+    # SEGMENT 4: core feature extractors
 
-def _shoulders(self, results):
-    # PoseLandmark indices: LEFT_SHOULDER=11, RIGHT_SHOULDER=12
-    l = self._pose_xy(results, 11)
-    r = self._pose_xy(results, 12)
-    if not l or not r:
-        return None
-    return l, r
+    def _shoulders(self, results):
+        # PoseLandmark indices: LEFT_SHOULDER=11, RIGHT_SHOULDER=12
+        l = self._pose_xy(results, 11)
+        r = self._pose_xy(results, 12)
+        if not l or not r:
+            return None
+        return l, r
 
-def _nose(self, results):
-    # PoseLandmark.NOSE = 0
-    return self._pose_xy(results, 0)
+    def _nose(self, results):
+        # PoseLandmark.NOSE = 0
+        return self._pose_xy(results, 0)
 
-def _mouth_opening(self, results):
-    # Face mesh: 13/14 is a stable lip center pair
-    top = self._face_xy(results, 13)
-    bot = self._face_xy(results, 14)
-    if not top or not bot:
-        return None
-    return dist(top, bot)
+    def _mouth_opening(self, results):
+        # Face mesh: 13/14 is a stable lip center pair
+        top = self._face_xy(results, 13)
+        bot = self._face_xy(results, 14)
+        if not top or not bot:
+            return None
+        return dist(top, bot)
 
-def _eye_contact_proxy(self, results):
-    # nose centered between shoulders
-    sh = self._shoulders(results)
-    nose = self._nose(results)
-    if not sh or not nose:
-        return None
+    def _eye_contact_proxy(self, results):
+        # nose centered between shoulders
+        sh = self._shoulders(results)
+        nose = self._nose(results)
+        if not sh or not nose:
+            return None
 
-    l, r = sh
-    mid_x = (l[0] + r[0]) / 2.0
-    span = abs(l[0] - r[0])
-    if span < 1e-6:
-        return None
+        l, r = sh
+        mid_x = (l[0] + r[0]) / 2.0
+        span = abs(l[0] - r[0])
+        if span < 1e-6:
+            return None
 
-    off = abs(nose[0] - mid_x) / span
-    return off < 0.18
+        off = abs(nose[0] - mid_x) / span
+        return off < 0.18
 
-def _gesture_energy(self, t, left_wrist, right_wrist):
-    if self.t_prev is None:
-        return None
+    def _gesture_energy(self, t, left_wrist, right_wrist):
+        if self.t_prev is None:
+            return None
 
-    dt = max(1e-3, t - self.t_prev)
-    total = 0.0
-    used = False
+        dt = max(1e-3, t - self.t_prev)
+        total = 0.0
+        used = False
 
-    for key, p in [("left_wrist", left_wrist), ("right_wrist", right_wrist)]:
-        prev = self.prev.get(key)
-        if p and prev:
-            total += dist(p, prev) / dt
-            used = True
+        for key, p in [("left_wrist", left_wrist), ("right_wrist", right_wrist)]:
+            prev = self.prev.get(key)
+            if p and prev:
+                total += dist(p, prev) / dt
+                used = True
 
-    return total if used else None
+        return total if used else None
+    
+    def _fidget_score(self, t, nose):
+        if self.t_prev is None:
+            return None
+        dt = max(1e-3, t - self.t_prev)
+        prev = self.prev.get("nose")
+        if not nose or not prev:
+            return None
+        return dist(nose, prev) / dt
 
-def _gesture_energy(self, t, left_wrist, right_wrist):
-    if self.t_prev is None:
-        return None
+    def update(self, results, frame_bgr, frame_w, frame_h, is_speaking=None, now=None):
+        t = time.time() if now is None else now
+        self.frames += 1
 
-    dt = max(1e-3, t - self.t_prev)
-    total = 0.0
-    used = False
+        nose = self._nose(results)
 
-    for key, p in [("left_wrist", left_wrist), ("right_wrist", right_wrist)]:
-        prev = self.prev.get(key)
-        if p and prev:
-            total += dist(p, prev) / dt
-            used = True
+        left_wrist = self._pose_xy(results, 15)
+        right_wrist = self._pose_xy(results, 16)
 
-    return total if used else None
+        mouth_open = self._mouth_opening(results)
+        mouth_open = self.ema["mouth_open"].update(mouth_open)
+
+        eye_contact = self._eye_contact_proxy(results)
+        if eye_contact is True:
+            self.eye_contact_frames += 1
+
+        if is_speaking is True:
+            self.speak_frames += 1
+            if eye_contact is True:
+                self.speak_eye_frames += 1
+        elif is_speaking is False:
+            self.listen_frames += 1
+            if eye_contact is True:
+                self.listen_eye_frames += 1
+
+        eye_speaking_ratio = self.speak_eye_frames / max(1, self.speak_frames) if self.speak_frames else None
+        eye_listening_ratio = self.listen_eye_frames / max(1, self.listen_frames) if self.listen_frames else None
+
+        if self.t_prev is None:
+            self.stare_streak_sec = 0.0
+        else:
+            dt = max(1e-3, t - self.t_prev)
+            if eye_contact is True:
+                self.stare_streak_sec += dt
+            elif eye_contact is False:
+                self.stare_streak_sec = 0.0
+
+        energy = self._gesture_energy(t, left_wrist, right_wrist)
+        energy = self.ema["gesture_energy"].update(energy)
+        fidget = self._fidget_score(t, nose)
+        fidget = self.ema["fidget"].update(fidget)
+
+
+        self.prev["nose"] = nose
+        self.prev["left_wrist"] = left_wrist
+        self.prev["right_wrist"] = right_wrist
+        self.t_prev = t
+
+        return {
+            "has_pose": bool(results and results.pose_landmarks),
+            "has_face": bool(results and results.face_landmarks),
+            "mouth_open": mouth_open,
+            "eye_contact": eye_contact,
+            "eye_contact_speaking_ratio": eye_speaking_ratio,
+            "eye_contact_listening_ratio": eye_listening_ratio,
+            "stare_streak_sec": self.stare_streak_sec,
+            "gesture_energy": energy,
+        }
