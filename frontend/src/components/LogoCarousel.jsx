@@ -16,8 +16,8 @@ import metaLogo from '../assets/meta.png';
 import netflixLogo from '../assets/netflix.png';
 import salesforceLogo from '../assets/salesforce.png';
 import adobeLogo from '../assets/adobe.png';
-import teslaLogo from '../assets/tesla.png';
-import capitaloneLogo from '../assets/capitalone.png';
+// import teslaLogo from '../assets/tesla.png';
+// import capitaloneLogo from '../assets/capitalone.png';
 
 const LOGO_SIZE = 100;
 const LOGO_MARGIN = 40;
@@ -28,11 +28,11 @@ const logos = [
     { id: 'meta', source: metaLogo },
     { id: 'amazon', source: awsLogo },
     { id: 'netflix', source: netflixLogo },
-    { id: 'tesla', source: teslaLogo },
+    // { id: 'tesla', source: teslaLogo },
     { id: 'salesforce', source: salesforceLogo },
     { id: 'adobe', source: adobeLogo },
     { id: 'amd', source: amdLogo },
-    { id: 'capitalone', source: capitaloneLogo },
+    // { id: 'capitalone', source: capitaloneLogo },
     { id: 'mckinsey', source: mcLogo },
 ];
 
