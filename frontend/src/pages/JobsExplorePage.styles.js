@@ -4,16 +4,28 @@ const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
+// Landing Page Color System
+const COLORS = {
+  bg: '#08080C',
+  bgAlt: '#0C0C12',
+  surface: '#12121A',
+  surfaceLight: '#1A1A24',
+  border: 'rgba(255,255,255,0.06)',
+  borderLight: 'rgba(255,255,255,0.1)',
+  primary: '#A78BFA',
+  primaryDark: '#8B5CF6',
+  primaryLight: '#C4B5FD',
+  accent: '#6366F1',
+  white: '#FFFFFF',
+  textPrimary: 'rgba(255,255,255,0.95)',
+  textSecondary: 'rgba(255,255,255,0.6)',
+  textMuted: 'rgba(255,255,255,0.4)',
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
   },
   gradient: {
     flex: 1,
@@ -40,12 +52,12 @@ const styles = StyleSheet.create({
   heroBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: 100,
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
+    borderColor: 'rgba(167, 139, 250, 0.2)',
     marginBottom: 20,
     gap: 8,
   },
@@ -53,86 +65,73 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
+    ...Platform.select({
+      web: {
+        animation: 'pulse 2s ease-in-out infinite',
+        boxShadow: '0 0 12px rgba(167, 139, 250, 0.6)',
+      },
+    }),
   },
   badgeText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: TEXT_LIGHT,
+    fontWeight: '500',
+    color: COLORS.primary,
     letterSpacing: 0.5,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   heroTitle: {
     fontSize: isDesktop ? 56 : isTablet ? 48 : 36,
-    fontWeight: 'bold',
-    color: WHITE,
+    fontWeight: '700',
+    color: COLORS.white,
     marginBottom: 16,
     textAlign: 'center',
     lineHeight: isDesktop ? 64 : isTablet ? 56 : 44,
-    fontFamily: Platform.select({
-      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      default: 'sans-serif',
-    }),
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 20,
+    letterSpacing: -1,
   },
   heroTitleAccent: {
-    color: TEXT_LIGHT,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    color: COLORS.primary,
   },
   heroDescription: {
     fontSize: 18,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     textAlign: 'center',
-    opacity: 0.9,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    lineHeight: 28,
   },
   statsBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2D1B3D',
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 24,
     marginBottom: 40,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.2)',
+    borderWidth: 1,
+    borderColor: COLORS.border,
     gap: 32,
     flexWrap: 'wrap',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px)',
+      },
+    }),
   },
   statItem: {
     alignItems: 'center',
   },
   statValue: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: TEXT_LIGHT,
+    fontWeight: '700',
+    color: COLORS.primary,
     marginBottom: 4,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   statLabel: {
     fontSize: 14,
-    color: TEXT_LIGHT,
-    opacity: 0.8,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    color: COLORS.textSecondary,
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: 'rgba(139, 122, 184, 0.3)',
+    backgroundColor: COLORS.border,
   },
   tabsSection: {
     marginBottom: 32,
@@ -149,10 +148,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 16,
-    backgroundColor: 'rgba(139, 122, 184, 0.1)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     gap: 10,
     position: 'relative',
     minWidth: 180,
@@ -164,25 +163,21 @@ const styles = StyleSheet.create({
     }),
   },
   tabActive: {
-    backgroundColor: LIGHT_PURPLE,
-    borderColor: LIGHT_PURPLE,
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  tabText: {
-    color: TEXT_LIGHT,
-    fontSize: 15,
-    fontWeight: '500',
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
+      },
     }),
   },
+  tabText: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    fontWeight: '500',
+  },
   tabTextActive: {
-    color: WHITE,
+    color: COLORS.white,
     fontWeight: '600',
   },
   tabIndicator: {
@@ -193,7 +188,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 3,
     borderRadius: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
   },
   checkmarkContainer: {
     width: 18,
@@ -206,7 +201,7 @@ const styles = StyleSheet.create({
     bottom: 6,
     width: 8,
     height: 2.5,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     transform: [{ rotate: '-45deg' }],
   },
   checkmarkLine2: {
@@ -215,7 +210,7 @@ const styles = StyleSheet.create({
     bottom: 4,
     width: 10,
     height: 2.5,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     transform: [{ rotate: '45deg' }],
   },
   searchSection: {
@@ -226,32 +221,26 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: WHITE,
-    borderRadius: 20,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
     paddingHorizontal: 24,
     paddingVertical: 18,
     width: '100%',
     maxWidth: 1000,
-    borderWidth: 2,
-    borderColor: 'rgba(139, 122, 184, 0.2)',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     ...Platform.select({
       web: {
         transition: 'all 0.3s ease',
+        backdropFilter: 'blur(20px)',
       },
     }),
   },
   searchBarFocused: {
-    borderColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.3,
-    shadowRadius: 28,
+    borderColor: COLORS.primary,
     ...Platform.select({
       web: {
-        boxShadow: `0 12px 40px rgba(167, 139, 250, 0.4)`,
+        boxShadow: '0 8px 30px rgba(167, 139, 250, 0.2)',
       },
     }),
   },
@@ -269,7 +258,7 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 3,
-    borderColor: '#6B7280',
+    borderColor: COLORS.textMuted,
     top: 0,
     left: 0,
   },
@@ -277,24 +266,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 10,
     height: 3,
-    backgroundColor: '#6B7280',
+    backgroundColor: COLORS.textMuted,
     transform: [{ rotate: '45deg' }],
     bottom: 2,
     right: 2,
   },
   searchInput: {
     flex: 1,
-    color: '#1F2937',
+    color: COLORS.textPrimary,
     fontSize: 17,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   searchDivider: {
     width: 1,
     height: 32,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: COLORS.border,
     marginHorizontal: 20,
   },
   searchFilters: {
@@ -304,10 +289,12 @@ const styles = StyleSheet.create({
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.surfaceLight,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
     gap: 8,
     ...Platform.select({
       web: {
@@ -317,13 +304,9 @@ const styles = StyleSheet.create({
     }),
   },
   filterChipText: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 14,
-    fontWeight: '600',
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    fontWeight: '500',
   },
   filterArrowIcon: {
     width: 12,
@@ -341,7 +324,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 4,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: WHITE,
+    borderBottomColor: COLORS.textPrimary,
   },
   filterArrowDown: {
     position: 'absolute',
@@ -354,18 +337,23 @@ const styles = StyleSheet.create({
     borderTopWidth: 4,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: WHITE,
+    borderTopColor: COLORS.textPrimary,
   },
   tailoredSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2D1B3D',
-    borderRadius: 20,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
     padding: 24,
     marginBottom: 40,
-    borderWidth: 1.5,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
+    borderWidth: 1,
+    borderColor: COLORS.border,
     gap: 20,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px)',
+      },
+    }),
   },
   tailoredIconContainer: {
     width: 64,
@@ -383,7 +371,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     borderWidth: 3,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -391,7 +379,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderWidth: 2,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     transform: [{ rotate: '45deg' }],
   },
   tailoredContent: {
@@ -400,53 +388,37 @@ const styles = StyleSheet.create({
   tailoredTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: WHITE,
+    color: COLORS.white,
     marginBottom: 6,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   tailoredText: {
     fontSize: 15,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     lineHeight: 22,
-    opacity: 0.9,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   jobsList: {
     gap: 24,
   },
   jobCard: {
-    backgroundColor: '#2D1B3D',
-    borderRadius: 24,
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
     padding: 28,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.2)',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     ...Platform.select({
       web: {
         transition: 'all 0.3s ease',
         cursor: 'pointer',
+        backdropFilter: 'blur(20px)',
       },
     }),
   },
   jobCardHover: {
     transform: [{ translateY: -4 }],
-    borderColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.3,
-    shadowRadius: 24,
-    backgroundColor: '#3D2B4D',
+    borderColor: COLORS.primary,
     ...Platform.select({
       web: {
-        boxShadow: `0 12px 32px rgba(167, 139, 250, 0.3)`,
+        boxShadow: '0 12px 32px rgba(167, 139, 250, 0.2)',
       },
     }),
   },
@@ -466,20 +438,16 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 16,
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   companyLogoText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: TEXT_LIGHT,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   jobCardHeaderContent: {
     flex: 1,
@@ -487,21 +455,12 @@ const styles = StyleSheet.create({
   jobCardTitle: {
     fontSize: 22,
     fontWeight: '600',
-    color: WHITE,
+    color: COLORS.white,
     marginBottom: 6,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   jobCardCompany: {
     fontSize: 16,
-    color: TEXT_LIGHT,
-    opacity: 0.8,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    color: COLORS.textSecondary,
   },
   jobCardHeaderRight: {
     alignItems: 'flex-end',
@@ -518,21 +477,12 @@ const styles = StyleSheet.create({
   },
   matchScore: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: TEXT_LIGHT,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   matchLabel: {
     fontSize: 11,
-    color: TEXT_LIGHT,
-    opacity: 0.7,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    color: COLORS.textSecondary,
   },
   bookmarkButton: {
     width: 40,
@@ -552,7 +502,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 2,
     borderTopWidth: 2,
     borderBottomWidth: 8,
-    borderColor: TEXT_LIGHT,
+    borderColor: COLORS.textSecondary,
     borderTopLeftRadius: 2,
     borderTopRightRadius: 2,
     opacity: 0.6,
@@ -578,14 +528,14 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: TEXT_LIGHT,
+    borderColor: COLORS.textSecondary,
     opacity: 0.6,
   },
   moneyIcon: {
     width: 16,
     height: 16,
     borderWidth: 2,
-    borderColor: TEXT_LIGHT,
+    borderColor: COLORS.textSecondary,
     transform: [{ rotate: '45deg' }],
     opacity: 0.6,
   },
@@ -594,35 +544,20 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: TEXT_LIGHT,
+    borderColor: COLORS.textSecondary,
     opacity: 0.6,
   },
   jobCardLocation: {
     fontSize: 15,
-    color: TEXT_LIGHT,
-    opacity: 0.8,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    color: COLORS.textSecondary,
   },
   jobCardRate: {
     fontSize: 15,
-    color: TEXT_LIGHT,
-    opacity: 0.8,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    color: COLORS.textSecondary,
   },
   jobCardPosted: {
     fontSize: 15,
-    color: TEXT_LIGHT,
-    opacity: 0.8,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    color: COLORS.textSecondary,
   },
   jobTypes: {
     flexDirection: 'row',
@@ -631,32 +566,23 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   jobTypeTag: {
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
+    borderColor: 'rgba(167, 139, 250, 0.2)',
   },
   jobTypeText: {
     fontSize: 13,
-    color: TEXT_LIGHT,
+    color: COLORS.primary,
     fontWeight: '500',
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   jobCardDescription: {
     fontSize: 15,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     lineHeight: 22,
-    opacity: 0.85,
     marginBottom: 20,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   jobCardFooter: {
     flexDirection: 'row',
@@ -669,7 +595,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 12,
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     ...Platform.select({
       web: {
         transition: 'all 0.3s ease',
@@ -678,13 +604,9 @@ const styles = StyleSheet.create({
     }),
   },
   viewDetailsText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 15,
     fontWeight: '600',
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   viewDetailsArrow: {
     width: 16,
@@ -697,7 +619,7 @@ const styles = StyleSheet.create({
     top: 7,
     width: 12,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
   },
   arrowHead: {
     position: 'absolute',
@@ -710,7 +632,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 6,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
-    borderLeftColor: WHITE,
+    borderLeftColor: COLORS.white,
   },
 });
 
