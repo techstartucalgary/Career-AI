@@ -1,0 +1,17 @@
+## Setup & Run
+
+### Backend (Terminal 1 - Python 3.11 required)
+```bash
+cd backend;
+python -m venv .venv311;
+.venv311\Scripts\activate;
+pip install -r requirements.txt;
+uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+
+### Frontend (Terminal 2)
+```bash
+cd frontend;
+npm install;
+npm run dev:expo;
+```
