@@ -12,8 +12,8 @@ import numpy as np
 from typing import List, Tuple, Dict, Set, Optional
 import re
 import spacy
-from config import SEMANTIC_MODEL, SEMANTIC_SIMILARITY_THRESHOLD, SEMANTIC_WEAK_MATCH_THRESHOLD
-from models import SemanticAnalysisResult
+from .config import SEMANTIC_MODEL, SEMANTIC_SIMILARITY_THRESHOLD, SEMANTIC_WEAK_MATCH_THRESHOLD
+from .models import SemanticAnalysisResult
 
 
 # Phrases to filter out from job descriptions - company marketing fluff, not actual requirements

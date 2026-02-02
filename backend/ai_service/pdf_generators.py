@@ -10,8 +10,8 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from datetime import datetime
-from models import ResumeData, CoverLetter, Header
-from config import MIN_GPA_DISPLAY
+from .models import ResumeData, CoverLetter, Header
+from .config import MIN_GPA_DISPLAY
 
 
 class PDFGenerator:

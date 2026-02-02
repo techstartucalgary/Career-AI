@@ -1,11 +1,14 @@
 """
 Backend file
 """
-from fastapi import FastAPI, Request, Header, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, Header, HTTPException, UploadFile, File, Form
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import json
 import pymongo
 import os
+import tempfile
+from pathlib import Path
 
 from jwt import PyJWTError
 
@@ -33,11 +36,26 @@ jwt_secret = os.environ.get("JWT_SECRET")
 # Create a FastAPI instance
 app = FastAPI()
 
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include AI routes
+app.include_router(ai_router)
+
 database = os.environ.get("DATABASE")
 clientdb = pymongo.MongoClient(f"{database}")
 db_info = os.environ.get("DATABASE_INFO")
 db = clientdb[f'{db_info}']
 col = db["users"]
+
+# Import AI routes
+from ai_routes import router as ai_router
 
 """
 Helper function to hash passwords for security purposes

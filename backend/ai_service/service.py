@@ -6,11 +6,10 @@ Backend developers should use this as the primary interface.
 """
 
 from typing import Dict, List, Optional, Tuple
-from models import ResumeData, CoverLetter, CoverLetterTone, CompanyResearch, SemanticAnalysisResult
-from parser import ResumeParser
-from ai_service import AIService
-from semantic_matcher import SemanticMatcher
-from pdf_generators import PDFGenerator
+from .models import ResumeData, CoverLetter, CoverLetterTone, CompanyResearch, SemanticAnalysisResult
+from .parser import ResumeParser
+from .ai_service import AIService
+from .pdf_generators import PDFGenerator
 
 
 class ResumeTailoringService:
@@ -51,7 +50,11 @@ class ResumeTailoringService:
         self.pdf_generator = PDFGenerator()
         
         # Semantic matching is optional (but recommended)
-        self.semantic_matcher = SemanticMatcher() if enable_semantic_matching else None
+        if enable_semantic_matching:
+            from .semantic_matcher import SemanticMatcher
+            self.semantic_matcher = SemanticMatcher()
+        else:
+            self.semantic_matcher = None
         self.use_semantic = enable_semantic_matching
     
     # ============================================================

@@ -8,8 +8,8 @@ import re
 from typing import List, Dict, Tuple, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
-from models import ResumeData, CoverLetter, CoverLetterTone, CompanyResearch, SemanticAnalysisResult
-from config import (
+from .models import ResumeData, CoverLetter, CoverLetterTone, CompanyResearch, SemanticAnalysisResult
+from .config import (
     GEMINI_API_KEY, GEMINI_MODEL, GEMINI_TEMPERATURE, GEMINI_TIMEOUT, GEMINI_MAX_RETRIES,
     CONTEXT_JOB_DESCRIPTION, CONTEXT_RESUME_TEXT, CONTEXT_RESUME_JSON,
     CONTEXT_COVER_LETTER_JD, CONTEXT_COVER_LETTER_RESUME,

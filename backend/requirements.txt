@@ -1,2 +1,16 @@
 fastapi
+uvicorn[standard]
+python-multipart
 pymongo
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+pyjwt
+langchain-google-genai
+langchain-core
+langchain-community
+sentence-transformers
+pypdf
+reportlab
+pydantic
+python-dotenv
