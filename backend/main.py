@@ -36,6 +36,9 @@ jwt_secret = os.environ.get("JWT_SECRET")
 # Create a FastAPI instance
 app = FastAPI()
 
+# Import AI routes
+from ai_routes import router as ai_router
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -53,9 +56,6 @@ clientdb = pymongo.MongoClient(f"{database}")
 db_info = os.environ.get("DATABASE_INFO")
 db = clientdb[f'{db_info}']
 col = db["users"]
-
-# Import AI routes
-from ai_routes import router as ai_router
 
 """
 Helper function to hash passwords for security purposes

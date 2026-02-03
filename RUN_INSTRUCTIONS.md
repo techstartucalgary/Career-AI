@@ -5,7 +5,7 @@
 cd backend;
 python -m venv .venv311;
 .venv311\Scripts\activate;
-pip install -r requirements.txt;
+pip install -r requirements.txt; # You can skip this step if its not your first time running the program
 uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 

@@ -10,8 +10,24 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from datetime import datetime
+import re
 from .models import ResumeData, CoverLetter, Header
 from .config import MIN_GPA_DISPLAY
+
+
+def clean_markdown_text(text: str) -> str:
+    """Remove markdown formatting characters from text"""
+    if not text:
+        return text
+    # Remove bold markdown (**text** or __text__)
+    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
+    text = re.sub(r'__(.+?)__', r'\1', text)
+    # Remove italic markdown (*text* or _text_)
+    text = re.sub(r'\*(.+?)\*', r'\1', text)
+    text = re.sub(r'_(.+?)_', r'\1', text)
+    # Remove any remaining asterisks
+    text = text.replace('*', '')
+    return text.strip()
 
 
 class PDFGenerator:
@@ -132,7 +148,8 @@ class PDFGenerator:
 
             # Body
             for paragraph in cover_letter.paragraphs:
-                story.append(Paragraph(paragraph, styles['body']))
+                clean_paragraph = clean_markdown_text(paragraph)
+                story.append(Paragraph(clean_paragraph, styles['body']))
 
             # Closing
             story.append(Paragraph("Sincerely,", styles['closing']))
@@ -336,7 +353,8 @@ class PDFGenerator:
 
             # Bullets
             for bullet in exp.bullets:
-                story.append(Paragraph(f"• {bullet}", styles['bullet']))
+                clean_bullet = clean_markdown_text(bullet)
+                story.append(Paragraph(f"• {clean_bullet}", styles['bullet']))
 
             story.append(Spacer(1, 0.06 * inch))
 
@@ -365,7 +383,8 @@ class PDFGenerator:
             story.append(table)
 
             for bullet in proj.bullets:
-                story.append(Paragraph(f"• {bullet}", styles['bullet']))
+                clean_bullet = clean_markdown_text(bullet)
+                story.append(Paragraph(f"• {clean_bullet}", styles['bullet']))
 
             story.append(Spacer(1, 0.06 * inch))
 

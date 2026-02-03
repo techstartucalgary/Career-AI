@@ -288,6 +288,24 @@ const styles = StyleSheet.create({
       default: 'sans-serif',
     }),
   },
+  progressBarContainer: {
+    width: '80%',
+    height: 8,
+    backgroundColor: 'rgba(107, 114, 128, 0.2)',
+    borderRadius: 4,
+    marginTop: 16,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#10B981',
+    borderRadius: 4,
+    ...Platform.select({
+      web: {
+        transition: 'width 0.3s ease',
+      },
+    }),
+  },
   downloadButton: {
     backgroundColor: LIGHT_PURPLE,
     borderRadius: 12,

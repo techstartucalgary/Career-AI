@@ -18,6 +18,8 @@ const JobPostingResumePage = () => {
   const [generatedResume, setGeneratedResume] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [progressStep, setProgressStep] = useState('');
+  const [progress, setProgress] = useState(0);
 
   const removeTag = (tagToRemove) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
@@ -52,14 +54,21 @@ const JobPostingResumePage = () => {
 
     setIsLoading(true);
     setError(null);
+    setProgress(0);
+    setProgressStep('Starting...');
     
     try {
-      const result = await tailorResume(selectedFile, jobDescription);
+      const result = await tailorResume(selectedFile, jobDescription, {}, (data) => {
+        setProgressStep(data.step);
+        setProgress(data.progress);
+      });
       setGeneratedResume(result);
     } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
+      setProgress(0);
+      setProgressStep('');
     }
   };
 
@@ -201,7 +210,11 @@ const JobPostingResumePage = () => {
                   {isLoading ? (
                     <>
                       <ActivityIndicator size="large" color="#10B981" />
-                      <Text style={[styles.previewText, { marginTop: 16 }]}>Generating your tailored resume...</Text>
+                      <Text style={[styles.previewText, { marginTop: 16, fontWeight: '600' }]}>{progressStep}</Text>
+                      <View style={styles.progressBarContainer}>
+                        <View style={[styles.progressBar, { width: `${progress}%` }]} />
+                      </View>
+                      <Text style={[styles.previewText, { marginTop: 8, fontSize: 14 }]}>{progress}%</Text>
                     </>
                   ) : generatedResume && generatedResume.pdf_base64 ? (
                     <PDFViewer pdfBase64={generatedResume.pdf_base64} />

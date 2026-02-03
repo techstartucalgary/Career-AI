@@ -28,7 +28,7 @@ export const analyzeResume = async (resumeFile, jobDescription) => {
   return response.json();
 };
 
-export const tailorResume = async (resumeFile, jobDescription, userAnswers = {}) => {
+export const tailorResume = async (resumeFile, jobDescription, userAnswers = {}, onProgress) => {
   const formData = new FormData();
   
   // Convert file to blob for web compatibility
@@ -48,10 +48,42 @@ export const tailorResume = async (resumeFile, jobDescription, userAnswers = {})
     const errorText = await response.text();
     throw new Error(`Failed to tailor resume: ${errorText}`);
   }
-  return response.json();
+
+  // Handle streaming response
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let result = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const text = decoder.decode(value);
+    const lines = text.split('\n');
+    
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const data = JSON.parse(line.substring(6));
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        if (data.step && onProgress) {
+          onProgress(data);
+        }
+        
+        if (data.success) {
+          result = data;
+        }
+      }
+    }
+  }
+
+  return result;
 };
 
-export const generateCoverLetter = async (resumeFile, jobDescription) => {
+export const generateCoverLetter = async (resumeFile, jobDescription, onProgress) => {
   const formData = new FormData();
   
   // Convert file to blob for web compatibility
@@ -70,7 +102,39 @@ export const generateCoverLetter = async (resumeFile, jobDescription) => {
     const errorText = await response.text();
     throw new Error(`Failed to generate cover letter: ${errorText}`);
   }
-  return response.json();
+
+  // Handle streaming response
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let result = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const text = decoder.decode(value);
+    const lines = text.split('\n');
+    
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const data = JSON.parse(line.substring(6));
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        if (data.step && onProgress) {
+          onProgress(data);
+        }
+        
+        if (data.success) {
+          result = data;
+        }
+      }
+    }
+  }
+
+  return result;
 };
 
 // Helper function to convert base64 PDF to blob and download
