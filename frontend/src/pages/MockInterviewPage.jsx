@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, TextInput, Platform } from 'react-na
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import styles from './MockInterviewPage.styles';
+import { THEME } from '../styles/theme';
 
 const MockInterviewPage = () => {
   const [interviewStarted, setInterviewStarted] = useState(false);
@@ -65,7 +66,7 @@ const MockInterviewPage = () => {
     <View style={styles.container}>
       <Header />
       <LinearGradient 
-        colors={['#1F1C2F', '#2D1B3D']} 
+        colors={THEME.gradients.page}
         style={styles.gradient}
       >
         <ScrollView 

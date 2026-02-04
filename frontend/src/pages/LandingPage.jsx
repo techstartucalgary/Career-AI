@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Pressable, ScrollView, Platform, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import Header from '../components/Header';
 import styles from './LandingPage.styles';
 import './LandingPage.css';
 
@@ -238,6 +239,7 @@ const LandingPage = () => {
 
   return (
     <ScrollView style={styles.homepage} showsVerticalScrollIndicator={false}>
+      <Header />
       {/* Hero Section */}
       <View style={styles.heroSection}>
         {/* Animated Background */}

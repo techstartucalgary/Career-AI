@@ -1,15 +1,11 @@
 import { StyleSheet, Platform, Dimensions } from 'react-native';
+import { THEME } from '../../styles/theme';
 
 const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
-const GRAY_BACKGROUND = '#2D1B3D';
+const { colors: COLORS } = THEME;
 
 const styles = StyleSheet.create({
   container: {
@@ -24,7 +20,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: isDesktop ? 48 : isTablet ? 40 : 32,
     fontWeight: 'bold',
-    color: WHITE,
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: 16,
     fontFamily: Platform.select({
@@ -37,7 +33,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: isDesktop ? 18 : 16,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     textAlign: 'center',
     maxWidth: 600,
     lineHeight: 24,
@@ -46,15 +42,16 @@ const styles = StyleSheet.create({
   formCard: {
     width: '100%',
     maxWidth: 1000,
-    backgroundColor: 'rgba(45, 27, 61, 0.8)',
+    backgroundColor: COLORS.surface,
     borderRadius: 24,
     padding: isDesktop ? 48 : isTablet ? 40 : 32,
     borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.4)',
+    borderColor: COLORS.border,
     marginBottom: 40,
     ...Platform.select({
       web: {
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
+        backdropFilter: 'blur(28px)',
       },
       default: {
         shadowColor: '#000',
@@ -80,7 +77,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: WHITE,
+    color: COLORS.textPrimary,
     marginBottom: 16,
   },
   inputWithButton: {
@@ -90,13 +87,13 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: 'rgba(139, 122, 184, 0.1)',
+    backgroundColor: COLORS.bgAlt,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    color: WHITE,
+    borderColor: COLORS.borderLight,
+    color: COLORS.white,
     fontSize: 16,
     ...Platform.select({
       web: {
@@ -105,11 +102,11 @@ const styles = StyleSheet.create({
     }),
   },
   inputFocused: {
-    borderColor: BRIGHT_PURPLE,
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    borderColor: COLORS.primary,
+    backgroundColor: 'rgba(167, 139, 250, 0.08)',
     ...Platform.select({
       web: {
-        boxShadow: '0 0 0 3px rgba(167, 139, 250, 0.2)',
+        boxShadow: '0 0 0 3px rgba(167, 139, 250, 0.18)',
       },
     }),
   },
@@ -117,17 +114,17 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
-        boxShadow: '0 2px 8px rgba(167, 139, 250, 0.4)',
+        boxShadow: '0 2px 8px rgba(167, 139, 250, 0.25)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.4,
         shadowRadius: 8,
@@ -136,7 +133,7 @@ const styles = StyleSheet.create({
     }),
   },
   addButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 24,
     fontWeight: 'bold',
     lineHeight: 24,
@@ -149,7 +146,7 @@ const styles = StyleSheet.create({
   tag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
     borderRadius: 20,
     paddingVertical: 8,
     paddingLeft: 16,
@@ -157,7 +154,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tagText: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -176,7 +173,7 @@ const styles = StyleSheet.create({
     }),
   },
   tagRemoveText: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: 'bold',
     lineHeight: 16,
@@ -199,7 +196,7 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: LIGHT_PURPLE,
+    borderColor: COLORS.borderLight,
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
@@ -210,14 +207,14 @@ const styles = StyleSheet.create({
     }),
   },
   checkboxChecked: {
-    backgroundColor: BRIGHT_PURPLE,
-    borderColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
     ...Platform.select({
       web: {
         boxShadow: '0 0 8px rgba(167, 139, 250, 0.4)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.4,
         shadowRadius: 8,
@@ -234,7 +231,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 4,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     top: 6,
     left: 2,
     transform: [{ rotate: '45deg' }],
@@ -243,14 +240,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 8,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     top: 4,
     left: 4,
     transform: [{ rotate: '-45deg' }],
   },
   checkboxLabel: {
     fontSize: 16,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     flex: 1,
   },
   navigation: {
@@ -261,47 +258,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: isDesktop ? 48 : 0,
   },
   backButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 32,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
     ...Platform.select({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
+        backdropFilter: 'blur(10px)',
       },
       default: {
-        shadowColor: LIGHT_PURPLE,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.25,
         shadowRadius: 8,
         elevation: 6,
       },
     }),
   },
   backButtonHover: {
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: 'rgba(167, 139, 250, 0.10)',
     transform: [{ translateY: -2 }],
     ...Platform.select({
       web: {
-        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.6)',
+        borderColor: COLORS.primary,
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
-        elevation: 8,
+        shadowOpacity: 0.3,
       },
     }),
   },
   backButtonText: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 32,
@@ -309,10 +305,10 @@ const styles = StyleSheet.create({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
+        boxShadow: '0 4px 15px rgba(167, 139, 250, 0.25)',
       },
       default: {
-        shadowColor: LIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -321,22 +317,22 @@ const styles = StyleSheet.create({
     }),
   },
   saveButtonHover: {
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primaryDark,
     transform: [{ translateY: -2 }],
     ...Platform.select({
       web: {
-        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.6)',
+        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.35)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
-        shadowOpacity: 0.5,
+        shadowColor: COLORS.primary,
+        shadowOpacity: 0.4,
         shadowRadius: 10,
-        elevation: 8,
+        elevation: 7,
       },
     }),
   },
   saveButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
   },

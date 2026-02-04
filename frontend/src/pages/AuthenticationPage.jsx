@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './AuthenticationPage.styles';
+import { THEME } from '../styles/theme';
 
 export default function AuthenticationPage() {
   const router = useRouter();
@@ -46,14 +47,14 @@ export default function AuthenticationPage() {
     // Replace with your auth logic (Firebase, Supabase, etc.)
     await new Promise(r => setTimeout(r, 1500));
     setLoading(false);
-    // Navigate to onboarding for new sign-ups, home for existing users
+    // Navigate to onboarding for new sign-ups, Job Board for existing users
     if (isSignUp) {
       router.push({
         pathname: '/onboarding',
         params: { email: email }
       });
     } else {
-      router.push('/home');
+      router.push('/jobs');
     }
   };
 
@@ -61,18 +62,13 @@ export default function AuthenticationPage() {
   const SelectField = ({ value, onValueChange, options, placeholder, focused, onFocus, onBlur }) => {
     const [isOpen, setIsOpen] = useState(false);
 
-    const handleToggle = (e) => {
-      // Prevent event propagation to avoid double-click issues
-      if (e && e.stopPropagation) {
-        e.stopPropagation();
-      }
-      if (!isOpen) {
-        setIsOpen(true);
-        onFocus();
-      } else {
-        setIsOpen(false);
-        onBlur();
-      }
+    const handleToggle = () => {
+      setIsOpen((prev) => {
+        const next = !prev;
+        if (next) onFocus();
+        else onBlur();
+        return next;
+      });
     };
 
     const handleSelect = (option) => {
@@ -94,7 +90,8 @@ export default function AuthenticationPage() {
             focused && styles.inputFocused,
             isOpen && styles.selectInputOpen
           ]}
-          onPress={handleToggle}
+          // RN-web sometimes requires 2 clicks with onPress due to focus/press ordering.
+          onPressIn={handleToggle}
           hitSlop={0}
           accessibilityRole="button"
           accessibilityLabel={`Toggle ${placeholder}`}
@@ -146,15 +143,15 @@ export default function AuthenticationPage() {
   return (
     <View style={styles.container}>
       <Header />
-      <LinearGradient 
-        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']} 
+      <LinearGradient
+        colors={THEME.gradients.page}
         style={styles.gradient}
       >
-        <KeyboardAvoidingView 
+        <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
         >
-          <ScrollView 
+          <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -165,7 +162,7 @@ export default function AuthenticationPage() {
                 <View style={styles.cardCircle1} />
                 <View style={styles.cardCircle2} />
               </View>
-              
+
               {/* Logo/Icon Section */}
               <View style={styles.logoContainer}>
                 <View style={styles.logoCircle}>
@@ -180,8 +177,8 @@ export default function AuthenticationPage() {
                   {isSignUp ? 'Create Your Account' : 'Welcome Back'}
                 </Text>
                 <Text style={styles.subtitle}>
-                  {isSignUp 
-                    ? 'Start your journey to find your dream career' 
+                  {isSignUp
+                    ? 'Start your journey to find your dream career'
                     : 'Sign in to continue to your career journey'}
                 </Text>
               </View>
@@ -333,12 +330,12 @@ export default function AuthenticationPage() {
                 )}
 
                 {/* Submit Button */}
-                <Pressable 
+                <Pressable
                   style={[
                     styles.submitButton,
                     hoveredButton === 'submit' && styles.submitButtonHover
                   ]}
-                  onPress={handleSubmit} 
+                  onPress={handleSubmit}
                   disabled={loading}
                   onHoverIn={() => Platform.OS === 'web' && setHoveredButton('submit')}
                   onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
@@ -360,7 +357,7 @@ export default function AuthenticationPage() {
                 </View>
 
                 {/* Switch Mode Button */}
-                <Pressable 
+                <Pressable
                   style={[
                     styles.switchButton,
                     hoveredSwitch && styles.switchButtonHover

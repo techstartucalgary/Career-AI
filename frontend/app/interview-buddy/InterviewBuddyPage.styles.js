@@ -1,20 +1,16 @@
 import { StyleSheet, Platform, Dimensions } from 'react-native';
+import { THEME } from '../../src/styles/theme';
 
 const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
-const GRAY_BACKGROUND = '#2D1B3D';
+const { colors: COLORS } = THEME;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
   },
   gradient: {
     flex: 1,
@@ -37,9 +33,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: 24,
     paddingVertical: 60,
-    backgroundColor: 'rgba(45, 27, 61, 0.6)',
+    backgroundColor: 'rgba(18, 18, 26, 0.7)',
     borderWidth: 1,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
+    borderColor: COLORS.border,
     ...Platform.select({
       web: {
         boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
@@ -67,7 +63,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: 'rgba(167, 139, 250, 0.08)',
+    backgroundColor: 'rgba(99, 102, 241, 0.08)',
     bottom: -80,
     right: -80,
   },
@@ -92,12 +88,12 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
   },
   badgeText: {
     fontSize: 13,
     fontWeight: '600',
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     letterSpacing: 0.5,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
@@ -107,7 +103,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: isDesktop ? 64 : isTablet ? 52 : 40,
     fontWeight: 'bold',
-    color: WHITE,
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: 16,
     fontFamily: Platform.select({
@@ -120,7 +116,7 @@ const styles = StyleSheet.create({
   },
   heroSubtitle: {
     fontSize: isDesktop ? 22 : 18,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: isDesktop ? 32 : 28,
     maxWidth: 700,
@@ -136,11 +132,11 @@ const styles = StyleSheet.create({
   optionCard: {
     flex: isDesktop ? 1 : undefined,
     width: isDesktop ? undefined : '100%',
-    backgroundColor: 'rgba(45, 27, 61, 0.8)',
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 32,
     borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.4)',
+    borderColor: COLORS.border,
     alignItems: 'center',
     ...Platform.select({
       web: {
@@ -159,13 +155,13 @@ const styles = StyleSheet.create({
   },
   optionCardHover: {
     transform: [{ translateY: -8 }, { scale: 1.02 }],
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     ...Platform.select({
       web: {
-        boxShadow: '0 8px 30px rgba(167, 139, 250, 0.5)',
+        boxShadow: '0 8px 30px rgba(167, 139, 250, 0.25)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOpacity: 0.5,
         shadowRadius: 25,
         elevation: 15,
@@ -185,7 +181,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 4,
     borderWidth: 3,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     position: 'absolute',
     top: 0,
     left: 0,
@@ -197,7 +193,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 20,
     borderWidth: 2,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     borderRadius: 8,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
@@ -208,7 +204,7 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 6,
     borderWidth: 3,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     position: 'absolute',
     top: 0,
     left: 0,
@@ -222,7 +218,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 12,
     borderTopWidth: 8,
     borderBottomWidth: 8,
-    borderLeftColor: BRIGHT_PURPLE,
+    borderLeftColor: COLORS.primary,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
     borderRightWidth: 0,
@@ -230,7 +226,7 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: isDesktop ? 28 : isTablet ? 24 : 22,
     fontWeight: 'bold',
-    color: WHITE,
+    color: COLORS.textPrimary,
     marginBottom: 12,
     textAlign: 'center',
     fontFamily: Platform.select({
@@ -240,82 +236,13 @@ const styles = StyleSheet.create({
   },
   optionDescription: {
     fontSize: 16,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: 24,
     opacity: 0.9,
   },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: LIGHT_PURPLE,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    gap: 10,
-    ...Platform.select({
-      web: {
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
-      },
-      default: {
-        shadowColor: LIGHT_PURPLE,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
-      },
-    }),
-  },
-  optionButtonHover: {
-    backgroundColor: BRIGHT_PURPLE,
-    transform: [{ translateY: -2 }],
-    ...Platform.select({
-      web: {
-        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.6)',
-      },
-      default: {
-        shadowColor: BRIGHT_PURPLE,
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
-        elevation: 8,
-      },
-    }),
-  },
-  optionButtonText: {
-    color: WHITE,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  optionButtonArrow: {
-    width: 16,
-    height: 16,
-    position: 'relative',
-  },
-  arrowLine: {
-    position: 'absolute',
-    top: 7,
-    left: 0,
-    width: 10,
-    height: 2,
-    backgroundColor: WHITE,
-  },
-  arrowHead: {
-    position: 'absolute',
-    top: 4,
-    right: 0,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderTopWidth: 4,
-    borderBottomWidth: 4,
-    borderLeftColor: WHITE,
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
-    borderRightWidth: 0,
-  },
+  // Note: optionButton styles were unused in the JSX; removed to keep styles lean.
 });
 
 export default styles;

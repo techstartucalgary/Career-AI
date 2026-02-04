@@ -3,6 +3,7 @@ import { View, Text, Pressable, Platform, ActivityIndicator } from 'react-native
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../../src/components/Header';
+import { THEME } from '../../src/styles/theme';
 import styles from './VideoInterviewPage.styles';
 
 // Web video component
@@ -130,7 +131,7 @@ const VideoInterviewPage = () => {
       <View style={styles.container}>
         <Header />
         <LinearGradient
-          colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']}
+          colors={THEME.gradients.page}
           style={styles.gradient}
         >
           <View style={styles.previewContainer}>
@@ -215,7 +216,7 @@ const VideoInterviewPage = () => {
       <View style={styles.container}>
         <Header />
         <LinearGradient
-          colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']}
+          colors={THEME.gradients.page}
           style={styles.gradient}
         >
           <View style={styles.loadingContainer}>
@@ -292,7 +293,7 @@ const VideoInterviewPage = () => {
     <View style={styles.container}>
       <Header />
       <LinearGradient
-        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']}
+        colors={THEME.gradients.page}
         style={styles.gradient}
       >
         <View style={styles.interviewContainer}>

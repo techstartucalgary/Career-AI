@@ -1,20 +1,16 @@
 import { StyleSheet, Platform, Dimensions } from 'react-native';
+import { THEME } from '../../src/styles/theme';
 
 const { width, height } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
-const GRAY_BACKGROUND = '#2D1B3D';
+const { colors: COLORS } = THEME;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
   },
   gradient: {
     flex: 1,
@@ -36,7 +32,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 40,
     borderWidth: 2,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
+    borderColor: COLORS.border,
     ...Platform.select({
       web: {
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)',
@@ -104,21 +100,21 @@ const styles = StyleSheet.create({
   selectButton: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: COLORS.borderLight,
   },
   controlButtonHover: {
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     backgroundColor: 'rgba(167, 139, 250, 0.1)',
   },
   startButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     borderWidth: 0,
     ...Platform.select({
       web: {
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
+        boxShadow: '0 4px 15px rgba(167, 139, 250, 0.25)',
       },
       default: {
-        shadowColor: LIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -127,14 +123,14 @@ const styles = StyleSheet.create({
     }),
   },
   startButtonHover: {
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primaryDark,
     transform: [{ translateY: -2 }],
     ...Platform.select({
       web: {
-        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.6)',
+        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.35)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOpacity: 0.5,
         shadowRadius: 10,
         elevation: 8,
@@ -151,7 +147,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 18,
     borderWidth: 2,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
     borderRadius: 6,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
@@ -161,17 +157,17 @@ const styles = StyleSheet.create({
     width: 20,
     height: 16,
     borderWidth: 2,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
     borderRadius: 3,
     position: 'relative',
   },
   controlButtonText: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '500',
   },
   startButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 18,
     fontWeight: '600',
   },
@@ -184,13 +180,13 @@ const styles = StyleSheet.create({
     paddingTop: 100,
   },
   loadingCard: {
-    backgroundColor: 'rgba(45, 27, 61, 0.8)',
+    backgroundColor: COLORS.surface,
     borderRadius: 24,
     padding: isDesktop ? 56 : isTablet ? 48 : 40,
     width: '100%',
     maxWidth: 700,
     borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.4)',
+    borderColor: COLORS.border,
     ...Platform.select({
       web: {
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
@@ -207,7 +203,7 @@ const styles = StyleSheet.create({
   loadingTitle: {
     fontSize: isDesktop ? 48 : isTablet ? 40 : 32,
     fontWeight: 'bold',
-    color: WHITE,
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: 40,
     fontFamily: Platform.select({
@@ -230,21 +226,21 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(139, 122, 184, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(139, 122, 184, 0.4)',
+    borderColor: COLORS.border,
   },
   loadingCheckmarkActive: {
-    backgroundColor: BRIGHT_PURPLE,
-    borderColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
     ...Platform.select({
       web: {
         boxShadow: '0 2px 8px rgba(167, 139, 250, 0.4)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.4,
         shadowRadius: 8,
@@ -261,7 +257,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 6,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     top: 12,
     left: 4,
     transform: [{ rotate: '45deg' }],
@@ -270,7 +266,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 10,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     top: 10,
     left: 6,
     transform: [{ rotate: '-45deg' }],
@@ -278,7 +274,7 @@ const styles = StyleSheet.create({
   loadingItemText: {
     flex: 1,
     fontSize: isDesktop ? 20 : 18,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     lineHeight: 28,
   },
   // Interview Screen Styles
@@ -318,11 +314,11 @@ const styles = StyleSheet.create({
   questionsContainer: {
     flex: isDesktop ? 1 : undefined,
     width: isDesktop ? undefined : '100%',
-    backgroundColor: 'rgba(45, 27, 61, 0.8)',
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: isDesktop ? 32 : isTablet ? 28 : 24,
     borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.4)',
+    borderColor: COLORS.border,
     ...Platform.select({
       web: {
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
@@ -341,7 +337,7 @@ const styles = StyleSheet.create({
   },
   questionBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -350,7 +346,7 @@ const styles = StyleSheet.create({
         boxShadow: '0 2px 10px rgba(167, 139, 250, 0.4)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.4,
         shadowRadius: 10,
@@ -359,17 +355,17 @@ const styles = StyleSheet.create({
     }),
   },
   questionBadgeText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 14,
     fontWeight: '600',
   },
   questionCard: {
-    backgroundColor: 'rgba(139, 122, 184, 0.15)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: 16,
     padding: 24,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
+    borderColor: COLORS.border,
     flexDirection: 'row',
     gap: 16,
   },
@@ -377,7 +373,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -388,13 +384,13 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
   },
   questionIconLine1: {
     position: 'absolute',
     width: 6,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     top: 12,
     left: 4,
     transform: [{ rotate: '45deg' }],
@@ -403,7 +399,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 10,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
     top: 10,
     left: 6,
     transform: [{ rotate: '-45deg' }],
@@ -411,7 +407,7 @@ const styles = StyleSheet.create({
   questionText: {
     flex: 1,
     fontSize: isDesktop ? 20 : 18,
-    color: WHITE,
+    color: COLORS.textPrimary,
     lineHeight: 28,
     fontWeight: '500',
   },
@@ -420,25 +416,25 @@ const styles = StyleSheet.create({
   },
   answerLabel: {
     fontSize: 16,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     marginBottom: 12,
     fontWeight: '500',
   },
   answerInputContainer: {
-    backgroundColor: 'rgba(139, 122, 184, 0.1)',
+    backgroundColor: 'rgba(255,255,255,0.02)',
     borderRadius: 12,
     padding: 20,
     minHeight: 150,
     borderWidth: 1,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
+    borderColor: COLORS.border,
   },
   answerInput: {
     fontSize: 16,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     lineHeight: 24,
   },
   answerInputActive: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     opacity: 1,
   },
   answerInputPlaceholder: {
@@ -463,25 +459,25 @@ const styles = StyleSheet.create({
   skipButton: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: COLORS.borderLight,
   },
   interviewButtonHover: {
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     backgroundColor: 'rgba(167, 139, 250, 0.1)',
   },
   skipButtonText: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '500',
   },
   submitButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     ...Platform.select({
       web: {
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
+        boxShadow: '0 4px 15px rgba(167, 139, 250, 0.25)',
       },
       default: {
-        shadowColor: LIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -490,14 +486,14 @@ const styles = StyleSheet.create({
     }),
   },
   submitButtonHover: {
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primaryDark,
     transform: [{ translateY: -2 }],
     ...Platform.select({
       web: {
-        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.6)',
+        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.35)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOpacity: 0.5,
         shadowRadius: 10,
         elevation: 8,
@@ -505,7 +501,7 @@ const styles = StyleSheet.create({
     }),
   },
   submitButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
   },

@@ -1,9 +1,12 @@
 import { StyleSheet, Platform } from 'react-native';
+import { THEME } from '../src/styles/theme';
+
+const { colors: COLORS } = THEME;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1F1C2F',
+    backgroundColor: COLORS.bg,
   },
   gradient: {
     flex: 1,
@@ -30,18 +33,18 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 3,
     borderWidth: 2,
-    borderColor: '#8B7AB8',
+    borderColor: COLORS.borderLight,
     backgroundColor: 'transparent',
   },
   stepIndicatorActive: {
-    backgroundColor: '#A78BFA',
-    borderColor: '#A78BFA',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
     ...Platform.select({
       web: {
         boxShadow: '0 0 8px rgba(167, 139, 250, 0.6)',
       },
       default: {
-        shadowColor: '#A78BFA',
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.6,
         shadowRadius: 8,
@@ -50,8 +53,8 @@ const styles = StyleSheet.create({
     }),
   },
   stepIndicatorCompleted: {
-    backgroundColor: '#8B7AB8',
-    borderColor: '#8B7AB8',
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderColor: 'rgba(255,255,255,0.14)',
   },
 });
 

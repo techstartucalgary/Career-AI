@@ -1,20 +1,16 @@
 import { StyleSheet, Platform, Dimensions } from 'react-native';
+import { THEME } from '../styles/theme';
 
 const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
-const ERROR_RED = '#EF4444';
+const { colors: COLORS } = THEME;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
   },
   gradient: {
     flex: 1,
@@ -41,14 +37,14 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 520,
-    backgroundColor: '#2D1B3D',
+    backgroundColor: COLORS.surface,
     borderRadius: 28,
     padding: isDesktop ? 52 : isTablet ? 44 : 36,
     borderWidth: 1.5,
-    borderColor: LIGHT_PURPLE,
-    shadowColor: LIGHT_PURPLE,
+    borderColor: COLORS.borderLight,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.35,
     shadowRadius: 32,
     elevation: 16,
     position: 'relative',
@@ -56,6 +52,7 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: {
         transition: 'all 0.3s ease',
+        backdropFilter: 'blur(28px)',
       },
     }),
   },
@@ -71,7 +68,7 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 150,
     borderWidth: 2,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     top: -100,
     right: -100,
   },
@@ -81,7 +78,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 100,
     borderWidth: 2,
-    borderColor: LIGHT_PURPLE,
+    borderColor: 'rgba(255,255,255,0.12)',
     bottom: -80,
     left: -80,
   },
@@ -93,13 +90,13 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bgAlt,
     borderWidth: 3,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    shadowColor: LIGHT_PURPLE,
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -109,13 +106,13 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderWidth: 2,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
     transform: [{ rotate: '45deg' }],
   },
   logoText: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: WHITE,
+    color: COLORS.white,
     fontFamily: Platform.select({
       web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       default: 'sans-serif',
@@ -131,7 +128,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: isDesktop ? 32 : isTablet ? 28 : 24,
     fontWeight: 'bold',
-    color: WHITE,
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: 12,
     fontFamily: Platform.select({
@@ -144,7 +141,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     opacity: 0.9,
@@ -181,7 +178,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: WHITE,
+    color: COLORS.textPrimary,
     marginBottom: 8,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
@@ -193,11 +190,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: WHITE,
-    backgroundColor: DARK_PURPLE,
+    color: COLORS.white,
+    backgroundColor: COLORS.bgAlt,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: LIGHT_PURPLE,
+    borderColor: COLORS.borderLight,
     ...Platform.select({
       web: {
         outlineStyle: 'none',
@@ -206,23 +203,23 @@ const styles = StyleSheet.create({
     }),
   },
   inputFocused: {
-    borderColor: BRIGHT_PURPLE,
-    shadowColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
     elevation: 4,
     ...Platform.select({
       web: {
-        boxShadow: `0 0 0 3px ${BRIGHT_PURPLE}40`,
+        boxShadow: `0 0 0 3px rgba(167, 139, 250, 0.25)`,
       },
     }),
   },
   inputError: {
-    borderColor: ERROR_RED,
+    borderColor: COLORS.danger,
   },
   errorText: {
-    color: ERROR_RED,
+    color: COLORS.danger,
     fontSize: 12,
     marginTop: 6,
     fontFamily: Platform.select({
@@ -232,14 +229,14 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     width: '100%',
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
     marginBottom: 24,
-    shadowColor: LIGHT_PURPLE,
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -253,12 +250,12 @@ const styles = StyleSheet.create({
   },
   submitButtonHover: {
     transform: [{ translateY: -2 }],
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primaryDark,
     shadowOpacity: 0.6,
     shadowRadius: 16,
   },
   submitButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
     fontFamily: Platform.select({
@@ -274,11 +271,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.borderLight,
     opacity: 0.3,
   },
   dividerText: {
-    color: TEXT_LIGHT,
+    color: COLORS.textMuted,
     fontSize: 14,
     paddingHorizontal: 16,
     opacity: 0.7,
@@ -297,7 +294,7 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -1 }],
   },
   switchText: {
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     fontFamily: Platform.select({
@@ -306,7 +303,7 @@ const styles = StyleSheet.create({
     }),
   },
   switchLink: {
-    color: TEXT_LIGHT,
+    color: COLORS.textPrimary,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
@@ -315,12 +312,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingTop: 24,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(139, 122, 184, 0.2)',
+    borderTopColor: COLORS.border,
   },
   demographicTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: WHITE,
+    color: COLORS.textPrimary,
     marginBottom: 6,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
@@ -329,7 +326,7 @@ const styles = StyleSheet.create({
   },
   demographicSubtitle: {
     fontSize: 13,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     opacity: 0.8,
     lineHeight: 18,
   },
@@ -341,10 +338,10 @@ const styles = StyleSheet.create({
   selectContainerOpen: {
     ...Platform.select({
       web: {
-        zIndex: 1000,
+        zIndex: 11000,
       },
       default: {
-        zIndex: 1000,
+        zIndex: 11000,
       },
     }),
   },
@@ -353,11 +350,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: WHITE,
-    backgroundColor: DARK_PURPLE,
+    color: COLORS.white,
+    backgroundColor: COLORS.bgAlt,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: LIGHT_PURPLE,
+    borderColor: COLORS.borderLight,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -370,7 +367,7 @@ const styles = StyleSheet.create({
     }),
   },
   selectInputOpen: {
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     ...Platform.select({
       web: {
         borderBottomLeftRadius: 0,
@@ -381,10 +378,10 @@ const styles = StyleSheet.create({
   selectText: {
     flex: 1,
     fontSize: 16,
-    color: WHITE,
+    color: COLORS.white,
   },
   selectPlaceholder: {
-    color: '#8B7AB8',
+    color: COLORS.textMuted,
   },
   selectArrow: {
     width: 12,
@@ -400,13 +397,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 6,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: TEXT_LIGHT,
+    borderTopColor: COLORS.textSecondary,
     borderBottomWidth: 0,
   },
   arrowTriangleUp: {
     borderTopWidth: 0,
     borderBottomWidth: 6,
-    borderBottomColor: TEXT_LIGHT,
+    borderBottomColor: COLORS.textSecondary,
   },
   dropdownOverlay: {
     ...Platform.select({
@@ -416,7 +413,8 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: 9998,
+        // Must sit behind the options list so option clicks work on web.
+        zIndex: 10900,
         backgroundColor: 'transparent',
       },
       default: {
@@ -432,21 +430,21 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     marginTop: 2,
-    backgroundColor: '#2D1B3D',
+    backgroundColor: COLORS.surface,
     borderRadius: 12,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     borderWidth: 1.5,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     borderTopWidth: 0,
     maxHeight: 200,
     ...Platform.select({
       web: {
-        zIndex: 1001,
+        zIndex: 11000,
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)',
       },
       default: {
-        zIndex: 1001,
+        zIndex: 1000,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.4,
@@ -462,21 +460,21 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(139, 122, 184, 0.1)',
+    borderBottomColor: COLORS.border,
   },
   selectOptionSelected: {
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
   },
   selectOptionText: {
     fontSize: 16,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
       default: 'sans-serif',
     }),
   },
   selectOptionTextSelected: {
-    color: WHITE,
+    color: COLORS.white,
     fontWeight: '600',
   },
 });
