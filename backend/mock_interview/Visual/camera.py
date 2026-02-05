@@ -5,6 +5,7 @@ import time
 
 
 from analysis import MovementAnalyzer
+from feedback import feedback_from_metrics
 analyzer = MovementAnalyzer()
 metrics_log = []
 
@@ -55,6 +56,7 @@ while True:
     h, w = frame.shape[:2]
     is_speaking = None  
     metrics = analyzer.update(results, frame, w, h, is_speaking=is_speaking)
+    fb = feedback_from_metrics(metrics)
     metrics_log.append(metrics)     
     ms = metrics.get("movement_score")
     fz = metrics.get("fidget")
@@ -157,6 +159,15 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
+# DEV ONLY FEED BACKCK OVERLAY
+disp = cv2.flip(frame, 1)
+
+cv2.putText(disp, f"Movement: {fb['indicators']['movement']['state']}",
+            (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+
+if fb["tips"]:
+    cv2.putText(disp, fb["tips"][0],
+                (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
 
 cap.release()
 cv2.destroyAllWindows()
