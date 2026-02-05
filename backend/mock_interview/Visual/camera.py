@@ -3,6 +3,13 @@ import numpy as np
 import mediapipe as mp
 import time
 
+
+from analysis import MovementAnalyzer
+analyzer = MovementAnalyzer()
+metrics_log = []
+
+
+
 # Mediapipe Holistic 
 mp_holistic = mp.solutions.holistic
 holistic = mp_holistic.Holistic(
@@ -44,6 +51,25 @@ while True:
     # Run holistic
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = holistic.process(rgb)
+
+    h, w = frame.shape[:2]
+    is_speaking = None  
+    metrics = analyzer.update(results, frame, w, h, is_speaking=is_speaking)
+    metrics_log.append(metrics)     
+    ms = metrics.get("movement_score")
+    fz = metrics.get("fidget")
+    ec = metrics.get("eye_contact")
+
+    if ms is not None:
+        cv2.putText(frame, f"move: {ms:.2f}", (30, 40),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,255,255), 2)
+    if fz is not None:
+        cv2.putText(frame, f"fidget: {fz:.2f}", (30, 80),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,255,255), 2)
+    if ec is not None:
+        cv2.putText(frame, f"eye: {str(ec)}", (30, 120),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,255,255), 2)
+
 
     # -------------------- POSE --------------------
     if results.pose_landmarks:
@@ -126,7 +152,7 @@ while True:
                     cv2.FONT_HERSHEY_SIMPLEX,
                     1.2, (255,0,255), 3)
 
-    cv2.imshow("Holistic Tracking (No Crashes)", disp)
+    cv2.imshow("Holistic Tracking", disp)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break

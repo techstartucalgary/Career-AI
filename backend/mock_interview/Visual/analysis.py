@@ -1,9 +1,7 @@
 import math
 import time
 
-
 # SEGMENT 1: small helpers
-
 
 def clamp(x, a, b):
     return a if x < a else b if x > b else x
@@ -123,7 +121,7 @@ class MovementAnalyzer:
         return (lm.x, lm.y, getattr(lm, "z", 0.0))
 
 
-    # SEGMENT 4: core feature extractors
+# SEGMENT 4: core feature extractors
 
     def _shoulders(self, results):
         # PoseLandmark indices: LEFT_SHOULDER=11, RIGHT_SHOULDER=12
@@ -220,19 +218,33 @@ class MovementAnalyzer:
             dt = max(1e-3, t - self.t_prev)
             if eye_contact is True:
                 self.stare_streak_sec += dt
-            elif eye_contact is False:
+            else:
                 self.stare_streak_sec = 0.0
 
         energy = self._gesture_energy(t, left_wrist, right_wrist)
         energy = self.ema["gesture_energy"].update(energy)
         fidget = self._fidget_score(t, nose)
         fidget = self.ema["fidget"].update(fidget)
+        # normalize (very rough for now)
+        e = clamp(energy or 0.0, 0.0, 5.0) / 5.0
+        f = clamp(fidget or 0.0, 0.0, 5.0) / 5.0
 
+        movement_score = 0.6 * e + 0.4 * f
 
         self.prev["nose"] = nose
         self.prev["left_wrist"] = left_wrist
         self.prev["right_wrist"] = right_wrist
         self.t_prev = t
+
+        if self.frames % 30 == 0:
+            print({
+                "energy": energy,
+                "fidget": fidget,
+                "movement": movement_score,
+                "eye_contact": eye_contact,
+                "stare_sec": self.stare_streak_sec,
+            })
+
 
         return {
             "has_pose": bool(results and results.pose_landmarks),
@@ -243,4 +255,7 @@ class MovementAnalyzer:
             "eye_contact_listening_ratio": eye_listening_ratio,
             "stare_streak_sec": self.stare_streak_sec,
             "gesture_energy": energy,
+            "fidget": fidget,
+            "movement_score": movement_score,
         }
+    
