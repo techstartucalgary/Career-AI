@@ -3,7 +3,6 @@ import numpy as np
 import mediapipe as mp
 import time
 
-
 from analysis import MovementAnalyzer
 from feedback import feedback_from_metrics
 analyzer = MovementAnalyzer()
@@ -141,6 +140,16 @@ while True:
     #MIRROR FOR DISPLAY
     disp = cv2.flip(frame, 1)
 
+    # DEV ONLY FEEDBACK OVERLAY (live)
+    m_state = fb["indicators"]["movement"]["state"]
+    cv2.putText(disp, f"Movement: {m_state}", (30, 40),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+
+    if fb["tips"]:
+        cv2.putText(disp, fb["tips"][0], (30, 90),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
+
+
     #LABEL HANDS AFTER FLIP
     if results.right_hand_landmarks:
         cv2.putText(disp, "Right Hand",
@@ -159,15 +168,6 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
-# DEV ONLY FEED BACKCK OVERLAY
-disp = cv2.flip(frame, 1)
-
-cv2.putText(disp, f"Movement: {fb['indicators']['movement']['state']}",
-            (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
-
-if fb["tips"]:
-    cv2.putText(disp, fb["tips"][0],
-                (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
 
 cap.release()
 cv2.destroyAllWindows()
