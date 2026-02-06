@@ -1,2 +1,8 @@
 fastapi
+uvicorn[standard]
 pymongo
+bcrypt
+pyjwt
+python-multipart
+pydantic[email]
+python-dotenv

@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './AuthenticationPage.styles';
+import { apiFetch, setAuthToken } from '../services/api';
 
 export default function AuthenticationPage() {
   const router = useRouter();
@@ -25,6 +26,7 @@ export default function AuthenticationPage() {
   const [focusedInput, setFocusedInput] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredSwitch, setHoveredSwitch] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const validate = () => {
     const newErrors = {};
@@ -43,17 +45,47 @@ export default function AuthenticationPage() {
   const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true);
-    // Replace with your auth logic (Firebase, Supabase, etc.)
-    await new Promise(r => setTimeout(r, 1500));
-    setLoading(false);
-    // Navigate to onboarding for new sign-ups, home for existing users
-    if (isSignUp) {
-      router.push({
-        pathname: '/onboarding',
-        params: { email: email }
-      });
-    } else {
-      router.push('/home');
+    setFormError('');
+    try {
+      if (isSignUp) {
+        const response = await apiFetch('/signup', {
+          method: 'POST',
+          body: JSON.stringify({
+            email,
+            password,
+            name,
+            demographics: {
+              sex,
+              gender,
+              disability,
+              race,
+            },
+          }),
+        });
+        if (response && response.data && response.data.token) {
+          setAuthToken(response.data.token);
+        }
+        router.push({
+          pathname: '/onboarding',
+          params: { email: email }
+        });
+      } else {
+        const response = await apiFetch('/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        });
+        if (response && response.data && response.data.token) {
+          setAuthToken(response.data.token);
+        }
+        router.push('/home');
+      }
+    } catch (error) {
+      setFormError(error.message || 'Authentication failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -146,15 +178,15 @@ export default function AuthenticationPage() {
   return (
     <View style={styles.container}>
       <Header />
-      <LinearGradient 
-        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']} 
+      <LinearGradient
+        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']}
         style={styles.gradient}
       >
-        <KeyboardAvoidingView 
+        <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
         >
-          <ScrollView 
+          <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -165,7 +197,7 @@ export default function AuthenticationPage() {
                 <View style={styles.cardCircle1} />
                 <View style={styles.cardCircle2} />
               </View>
-              
+
               {/* Logo/Icon Section */}
               <View style={styles.logoContainer}>
                 <View style={styles.logoCircle}>
@@ -180,8 +212,8 @@ export default function AuthenticationPage() {
                   {isSignUp ? 'Create Your Account' : 'Welcome Back'}
                 </Text>
                 <Text style={styles.subtitle}>
-                  {isSignUp 
-                    ? 'Start your journey to find your dream career' 
+                  {isSignUp
+                    ? 'Start your journey to find your dream career'
                     : 'Sign in to continue to your career journey'}
                 </Text>
               </View>
@@ -333,7 +365,8 @@ export default function AuthenticationPage() {
                 )}
 
                 {/* Submit Button */}
-                <Pressable 
+                {formError ? <Text style={styles.errorText}>{formError}</Text> : null}
+                <Pressable
                   style={[
                     styles.submitButton,
                     hoveredButton === 'submit' && styles.submitButtonHover
