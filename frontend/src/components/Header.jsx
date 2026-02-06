@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useMessages } from '../contexts/MessagesContext';
-import './Header.css';
 import styles from './Header.styles';
 
 const Header = () => {
