@@ -22,12 +22,16 @@ class EMA:
 
     def update(self, x):
         if x is None:
+            if self.v is None:
+                return None
+            self.v = lerp(self.v, 0.0, self.alpha)  # decay toward calm
             return self.v
         if self.v is None:
             self.v = x
         else:
             self.v = lerp(self.v, x, self.alpha)
         return self.v
+
     
     
 # SEGMENT 2: analyzer class
@@ -131,6 +135,13 @@ class MovementAnalyzer:
             return None
         return l, r
 
+    def _distance_proxy(self, results):
+        sh = self._shoulders(results)
+        if not sh:
+            return None
+        l, r = sh
+        return abs(l[0] - r[0])  # bigger = closer
+
     def _nose(self, results):
         # PoseLandmark.NOSE = 0
         return self._pose_xy(results, 0)
@@ -221,15 +232,25 @@ class MovementAnalyzer:
             else:
                 self.stare_streak_sec = 0.0
 
+        dist_proxy = self._distance_proxy(results)
+        dist_proxy = self.ema["lean"].update(dist_proxy)  # reuse an EMA or add a new one
+
+        sh = self._shoulders(results)
+        span = abs(sh[0][0] - sh[1][0]) if sh else None
+
         energy = self._gesture_energy(t, left_wrist, right_wrist)
         energy = self.ema["gesture_energy"].update(energy)
+        
+        if energy is not None and span and span > 1e-6:
+            energy = energy / span
+
         fidget = self._fidget_score(t, nose)
         fidget = self.ema["fidget"].update(fidget)
         # normalize (very rough for now)
-        e = clamp(energy or 0.0, 0.0, 5.0) / 5.0
-        f = clamp(fidget or 0.0, 0.0, 5.0) / 5.0
+        e = clamp(energy or 0.0, 0.0, 1.5) / 1.5
+        f = clamp(fidget or 0.0, 0.0, 1.5) / 1.5
 
-        movement_score = 0.6 * e + 0.4 * f
+        movement_score = 0.75 * e + 0.25 * f
 
         self.prev["nose"] = nose
         self.prev["left_wrist"] = left_wrist
