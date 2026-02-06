@@ -12,8 +12,8 @@ import numpy as np
 from typing import List, Tuple, Dict, Set, Optional
 import re
 import spacy
-from config import SEMANTIC_MODEL, SEMANTIC_SIMILARITY_THRESHOLD, SEMANTIC_WEAK_MATCH_THRESHOLD
-from models import SemanticAnalysisResult
+from .config import SEMANTIC_MODEL, SEMANTIC_SIMILARITY_THRESHOLD, SEMANTIC_WEAK_MATCH_THRESHOLD
+from .models import SemanticAnalysisResult
 
 
 # Phrases to filter out from job descriptions - company marketing fluff, not actual requirements
@@ -588,7 +588,7 @@ class SemanticMatcher:
 
         return True
 
-    def _extract_key_phrases(self, text: str, max_phrases: int = 50) -> List[str]:
+    def _extract_key_phrases(self, text: str, max_phrases: int = 15) -> List[str]:
         """
         Extract important phrases from text using spaCy NLP.
 
@@ -732,11 +732,16 @@ class SemanticMatcher:
         Returns:
             SemanticAnalysisResult with gaps, matches, and overall score
         """
+        import time
+        start_time = time.time()
         print("\n🔍 Running semantic analysis (with NLP & skill taxonomy)...")
 
         # Extract key phrases from both texts using spaCy NLP
+        phrase_start = time.time()
         job_phrases = self._extract_key_phrases(job_description)
         resume_phrases = self._extract_key_phrases(resume_text)
+        phrase_time = time.time() - phrase_start
+        print(f"  ⏱️  Phrase extraction: {phrase_time:.1f}s")
 
         # Also extract known skills for taxonomy matching
         job_skills = set(self.taxonomy.extract_known_skills(job_description))
@@ -755,12 +760,18 @@ class SemanticMatcher:
         print(f"  Found {len(job_skills)} job skills, {len(resume_skills)} resume skills in taxonomy")
 
         # Convert to embeddings (vectors)
+        embed_start = time.time()
         job_embeddings = self.get_embeddings(job_phrases)
         resume_embeddings = self.get_embeddings(resume_phrases)
+        embed_time = time.time() - embed_start
+        print(f"  ⏱️  Embedding generation: {embed_time:.1f}s")
 
         # Calculate similarity matrix
         # Shape: (len(job_phrases), len(resume_phrases))
+        sim_start = time.time()
         similarity_matrix = cosine_similarity(job_embeddings, resume_embeddings)
+        sim_time = time.time() - sim_start
+        print(f"  ⏱️  Similarity calculation: {sim_time:.1f}s")
 
         # Analyze each job requirement
         gaps = []
@@ -885,11 +896,13 @@ class SemanticMatcher:
             top_matching_skills=top_matching
         )
         
+        total_time = time.time() - start_time
         print(f"  ✓ Match Score: {overall_match:.1%}")
         print(f"  ✓ Coverage: {coverage:.1%}")
         print(f"  ✓ Strong Matches: {len(matches)}")
         print(f"  ✓ Gaps Found: {len([g for g in gaps if g['status'] == 'missing'])}")
-        
+        print(f"  ⏱️  Total semantic analysis: {total_time:.1f}s")
+
         return result
     
     def find_related_skills(

@@ -1,8 +1,8 @@
 """
 Backend file
 """
-from fastapi import FastAPI, Request, Header, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, Header, HTTPException, UploadFile, File, Form
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import pymongo
@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+import tempfile
+from pathlib import Path
 
 from jwt import PyJWTError
 from pydantic import BaseModel, EmailStr
@@ -41,13 +43,20 @@ jwt_secret = os.environ.get("JWT_SECRET", "dev-secret")
 # Create a FastAPI instance
 app = FastAPI()
 
+# Import AI routes
+from ai_routes import router as ai_router
+
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"] ,
-    allow_headers=["*"] ,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+# Include AI routes
+app.include_router(ai_router)
 
 database = os.environ.get("DATABASE")
 try:
@@ -237,15 +246,31 @@ The user is auto assigned an ID used by the server side
 There are multiple checks to ensure valid parameters are provided,
 for example: email requires @ and . to be in it 
 """
-@app.post("/signup")
-async def signup(payload: SignupRequest):
-    email = payload.email
-    password = payload.password
-    name = (payload.name or "").strip()
-    demographics = payload.demographics.dict() if payload.demographics else {}
+@app.get("/signup")
+async def signup(request: Request):
+    form = await request.form()
+    email = form.get("email")
+    first_name = form.get("first_name")
+    last_name = form.get("last_name")
+    phone = form.get("phone")
+    linkedin = form.get("linkedin")
+    github = form.get("github")
+    location = form.get("location")
+    password = form.get("password")
+    gender = form.get("gender")
+    indigenous = form.get("indigenous")
+    disability = form.get("disability")
+    lgbtq = form.get("lgbtq")
+    minority = form.get("minority")
+
+    genders = ["Man", "Woman", "Non-Binary", "Two-Spirit", "Another Gender", "I do not wish to answer"]
+    indigenous_l = ["Yes", "No", "I do not wish to answer"]
+    lgbtq_l = ["Yes", "No", "I do not wish to answer"]
+    disability_l = ["Yes", "No", "I do not wish to answer"]
+    vis_mino_l = ["Yes", "No", "I do not wish to answer"]
 
     """Make sure none of the information provided is blank"""
-    if email is None or email == "" or password is None or password == "":
+    if email is None or email == "" or first_name is None or first_name == "" or last_name is None or last_name == "" or phone is None or phone == "" or linkedin is None or linkedin == "" or location is None or location == "" or github is None or github == "" or password is None or password == "" or gender not in genders or indigenous not in indigenous_l or disability not in disability_l or minority not in vis_mino_l or lgbtq not in lgbtq_l:
         return JSONResponse(
             status_code=400,
             content={
@@ -256,6 +281,17 @@ async def signup(payload: SignupRequest):
 
     """Hash the necessary information for security purposes"""
     hashed_pwd = hash_(password)
+    hashed_fname = hash_(first_name)
+    hashed_lname = hash_(last_name)
+    hashed_phone = hash_(phone)
+    hashed_linkedin = hash_(linkedin)
+    hashed_github = hash_(github)
+    hashed_location = hash_(location)
+    hashed_gender = hash_(gender)
+    hashed_indigenous = hash_(indigenous)
+    hashed_disability = hash_(disability)
+    hashed_minority = hash_(minority)
+    hashed_lgbtq = hash_(lgbtq)
     reg_date = datetime.utcnow().date().isoformat()  # date of account creation (now)
     role = "free_user"
 
@@ -283,26 +319,8 @@ async def signup(payload: SignupRequest):
 
     """Insert information into database"""
     try:
-        dic = {
-            "email": email,
-            "password": hashed_pwd,
-            "registration_date": reg_date,
-            "role": role,
-            "profile": {
-                "first_name": first_name,
-                "last_name": last_name,
-            },
-            "demographics": demographics,
-            "job_preferences": {
-                "positions": [],
-                "locations": [],
-                "work_arrangement": "any",
-            },
-            "resume": {
-                "resume_file_name": "",
-                "extracted_data": {},
-            },
-        }
+        dic = {"email":email, "password":hashed_pwd, "first_name": hashed_fname, "last_name": hashed_lname, "phone": hashed_phone,
+           "linkedin": hashed_linkedin, "github": hashed_github, "location": hashed_location, "registration_date": reg_date, "role": role, "gender": hashed_gender, "indigenous": hashed_indigenous, "disability": hashed_disability, "minority": hashed_disability, "lgbtq": hashed_lgbtq}
         user = col.insert_one(dic)
         user_id = user.inserted_id  # database generated object ID
         access_token = create_access_token(user_id, role)  # create an access token for the user, valid for two hours

@@ -53,8 +53,8 @@ class Education(BaseModel):
 
     @validator('gpa')
     def validate_gpa(cls, v):
-        if v is not None and (v < 0 or v > 4.0):
-            raise ValueError('GPA must be between 0 and 4.0')
+        if v is not None and (v < 0 or v > 10.0):
+            raise ValueError('GPA must be between 0 and 10.0')
         return v
 
 
@@ -62,8 +62,8 @@ class Experience(BaseModel):
     """Work experience entry"""
     title: str
     company: str
-    start_date: str
-    end_date: str
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
     location: Optional[str] = ""
     bullets: List[str]
 
@@ -158,7 +158,12 @@ class ResumeData(BaseModel):
         if self.experience:
             sections.append("\nEXPERIENCE")
             for exp in self.experience:
-                sections.append(f"\n{exp.title} at {exp.company} ({exp.start_date} - {exp.end_date})")
+                date_range = ""
+                if exp.start_date or exp.end_date:
+                    start = exp.start_date or "Unknown"
+                    end = exp.end_date or "Present"
+                    date_range = f" ({start} - {end})"
+                sections.append(f"\n{exp.title} at {exp.company}{date_range}")
                 for bullet in exp.bullets:
                     sections.append(f"  • {bullet}")
 
