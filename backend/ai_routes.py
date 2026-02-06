@@ -69,101 +69,82 @@ async def tailor_resume(
     job_description: str = Form(...),
     user_answers: str = Form(default="{}")
 ):
-    """Generate tailored resume from job description with streaming progress"""
+    """
+    Generate tailored resume from job description with streaming progress.
+
+    FAST MODE: Optimized for speed (target: <40 seconds)
+    - Skips semantic analysis
+    - Skips question generation
+    - Skips iterative refinement
+    - Minimal UI delays (0.3s instead of 1.5s)
+    """
     async def generate_with_progress():
+        import time
+        start_time = time.time()
+
         try:
             if not job_description:
                 yield f"data: {json.dumps({'error': 'Missing job_description'})}\n\n"
                 return
-            
+
             # Parse user answers
             answers = json.loads(user_answers) if user_answers else {}
-            
+
             # Save uploaded file temporarily
             temp_dir = tempfile.gettempdir()
             temp_file_path = Path(temp_dir) / f"resume_{datetime.now().timestamp()}.pdf"
-            
+
             with open(temp_file_path, "wb") as buffer:
                 buffer.write(await resume_file.read())
-            
-            # Step 1: Parse resume
-            yield f"data: {json.dumps({'step': 'Reading through your resume...', 'progress': 5})}\n\n"
-            await asyncio.sleep(1.5)
-            yield f"data: {json.dumps({'step': 'Extracting work experience and skills', 'progress': 10})}\n\n"
-            await asyncio.sleep(1.5)
+
+            # Step 1: Parse resume (~8-10s)
+            yield f"data: {json.dumps({'step': 'Reading your resume...', 'progress': 10})}\n\n"
+            await asyncio.sleep(0.3)
             resume = ai_service.parse_resume(str(temp_file_path))
-            
-            # Step 2: Analyze job fit
-            yield f"data: {json.dumps({'step': 'Understanding job requirements...', 'progress': 18})}\n\n"
-            await asyncio.sleep(1.5)
-            yield f"data: {json.dumps({'step': 'Comparing your skills to job needs', 'progress': 25})}\n\n"
-            await asyncio.sleep(1.5)
-            yield f"data: {json.dumps({'step': 'Identifying skill gaps and strengths', 'progress': 32})}\n\n"
-            await asyncio.sleep(1.5)
-            semantic_analysis = ai_service.analyze_job_fit(resume, job_description)
-            
-            # Step 3: Generate questions
-            yield f"data: {json.dumps({'step': 'Finding opportunities to highlight impact', 'progress': 40})}\n\n"
-            await asyncio.sleep(1.5)
-            yield f"data: {json.dumps({'step': 'Considering how to align with company culture', 'progress': 45})}\n\n"
-            await asyncio.sleep(1.5)
-            questions, _ = ai_service.generate_enhancement_questions(
-                resume, job_description, semantic_analysis
-            )
-            
-            # Step 4: Tailor resume
-            yield f"data: {json.dumps({'step': 'Rewriting experience to match job keywords', 'progress': 52})}\n\n"
-            await asyncio.sleep(1.5)
-            yield f"data: {json.dumps({'step': 'Emphasizing relevant accomplishments', 'progress': 60})}\n\n"
-            await asyncio.sleep(1.5)
-            yield f"data: {json.dumps({'step': 'Restructuring bullet points for clarity', 'progress': 67})}\n\n"
-            await asyncio.sleep(1.5)
+            yield f"data: {json.dumps({'step': 'Resume parsed successfully', 'progress': 35})}\n\n"
+
+            # Step 2: Tailor resume directly (~15-20s) - SKIP semantic & questions
+            yield f"data: {json.dumps({'step': 'Tailoring to job requirements...', 'progress': 45})}\n\n"
+            await asyncio.sleep(0.3)
             tailored_resume = ai_service.tailor_resume(
-                resume, job_description, answers, questions, semantic_analysis
+                resume, job_description, answers, questions=[], semantic_analysis=None
             )
-            
-            # Step 5: Refine
-            yield f"data: {json.dumps({'step': 'Polishing language and removing redundancy', 'progress': 75})}\n\n"
-            await asyncio.sleep(1.5)
-            yield f"data: {json.dumps({'step': 'Ensuring ATS compatibility', 'progress': 82})}\n\n"
-            await asyncio.sleep(1.5)
-            refined_resume, feedback = ai_service.refine_resume(
-                tailored_resume, job_description, max_iterations=2
-            )
-            
-            # Step 6: Generate PDF
-            yield f"data: {json.dumps({'step': 'Formatting professional layout', 'progress': 90})}\n\n"
-            await asyncio.sleep(1.5)
-            yield f"data: {json.dumps({'step': 'Generating final PDF document', 'progress': 95})}\n\n"
-            await asyncio.sleep(1.5)
+            yield f"data: {json.dumps({'step': 'Resume tailored', 'progress': 85})}\n\n"
+
+            # Step 3: Generate PDF (~0.5s)
+            yield f"data: {json.dumps({'step': 'Generating PDF...', 'progress': 90})}\n\n"
+            await asyncio.sleep(0.3)
             output_path = Path(temp_dir) / f"tailored_resume_{datetime.now().timestamp()}.pdf"
-            ai_service.generate_resume_pdf(refined_resume, str(output_path))
-            
+            ai_service.generate_resume_pdf(tailored_resume, str(output_path))
+
             # Clean up temp input file
             temp_file_path.unlink()
-            
+
             # Read PDF and encode
             with open(output_path, "rb") as pdf_file:
                 pdf_bytes = pdf_file.read()
-            
+
             pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
-            
+
+            total_time = time.time() - start_time
+            print(f"⏱️  API /resume/tailor completed in {total_time:.1f}s")
+
             # Final result
             result = {
                 "success": True,
-                "resume_text": refined_resume.to_text(),
-                "resume_data": refined_resume.dict(),
+                "resume_text": tailored_resume.to_text(),
+                "resume_data": tailored_resume.dict(),
                 "pdf_base64": pdf_base64,
-                "feedback": feedback,
+                "feedback": {"status": "fast_mode", "time": f"{total_time:.1f}s"},
                 "progress": 100
             }
             yield f"data: {json.dumps(result)}\n\n"
-            
+
         except Exception as e:
             error_details = traceback.format_exc()
             print(f"Error in tailor_resume: {error_details}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
-    
+
     return StreamingResponse(generate_with_progress(), media_type="text/event-stream")
 
 

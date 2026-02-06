@@ -438,51 +438,15 @@ Generate 5-8 targeted questions. JSON:"""
 
         original_data = json.loads(resume.json())
 
-        # Extract keywords explicitly for targeted optimization
-        extracted_keywords = self._extract_priority_keywords(job_description)
-        keywords_str = ", ".join(extracted_keywords[:15])
+        # NO keyword extraction - we don't want the LLM adding keywords from job description
 
-        # Build semantic context for targeted bullet enhancement
-        semantic_context = ""
-        bullets_to_prioritize = ""
-        if semantic_analysis:
-            semantic_context = self._build_rich_semantic_context(semantic_analysis)
+        prompt = f"""You are an expert resume writer. Your ONLY job is to make existing bullet points clearer and more impactful.
 
-            # Identify specific bullets to prioritize based on weak matches
-            weak_bullets = []
-            for gap in semantic_analysis.gaps:
-                if gap.get('status') == 'weak':
-                    weak_bullets.append({
-                        'requirement': gap.get('job_requirement', '')[:80],
-                        'current_bullet': gap.get('best_match', '')[:80],
-                        'similarity': gap.get('similarity', 0),
-                        'target': 0.80
-                    })
+TASK: ONLY improve the WORDING of existing bullet points. DO NOT add ANY new skills, technologies, or tools.
 
-            if weak_bullets:
-                bullets_to_prioritize = f"""
-=== PRIORITY BULLETS TO ENHANCE ===
-These bullets have weak matches and should be prioritized for enhancement:
-{json.dumps(weak_bullets[:5], indent=2)}
-
-For each weak bullet above:
-- Boost similarity from current level to 80%+
-- Add relevant keywords from the job requirement
-- Add metrics if possible
-"""
-
-        prompt = f"""You are an expert resume writer optimizing a resume for ATS systems and hiring managers.
-
-TASK: Enhance resume bullet points using chain-of-thought reasoning, semantic analysis, and keyword optimization.
-
-=== PRIORITY KEYWORDS TO INCORPORATE ===
-{keywords_str}
-
-{semantic_context}
-
-{bullets_to_prioritize}
-
-=== JOB DESCRIPTION ===
+=== JOB DESCRIPTION (READ ONLY - DO NOT COPY ANYTHING FROM HERE) ===
+The job description below is ONLY for understanding what the employer values.
+DO NOT add any technologies, skills, or tools mentioned here to the resume.
 {job_description[:CONTEXT_JOB_DESCRIPTION]}
 
 === CURRENT RESUME (JSON) ===
@@ -491,59 +455,81 @@ TASK: Enhance resume bullet points using chain-of-thought reasoning, semantic an
 === CANDIDATE'S ADDITIONAL INFO ===
 {qa_context}
 
-=== ENHANCEMENT PROCESS (Think step by step) ===
+=== ENHANCEMENT PROCESS ===
 
-Step 1: ADDRESS SEMANTIC GAPS FIRST
-- Focus on the WEAK MATCHES identified above
-- These bullets need the most improvement
-- Boost their similarity to job requirements from current level to 80%+
+🚨 ABSOLUTE RULES - VIOLATION MEANS FAILURE 🚨
 
-Step 2: IDENTIFY KEYWORD GAPS
-For each priority keyword, check if it's already in the resume:
-- Present: Keep and strengthen
-- Missing but candidate has experience: ADD naturally
-- Missing and no evidence: Skip (don't fabricate)
+1. NEVER ADD NEW TECHNOLOGIES/SKILLS
+   - If job mentions "Ruby on Rails" but resume doesn't → DO NOT ADD IT
+   - If job mentions "AWS" but resume doesn't → DO NOT ADD IT
+   - If job mentions "Docker" but resume doesn't → DO NOT ADD IT
+   - ONLY enhance what's ALREADY in the resume
 
-Step 3: ENHANCE EACH BULLET
-For each bullet point:
-a) Does it have metrics? If not and user provided some, add them
-b) Does it use a strong action verb? If not, upgrade it
-c) Can a priority keyword be added naturally? If yes, add it
-d) Is it ATS-friendly? Remove jargon, be specific
-e) Does it address a semantic gap? If yes, prioritize enhancement
+2. NEVER FABRICATE EXPERIENCE
+   - DO NOT invent projects, roles, or responsibilities
+   - DO NOT add technologies from job description
+   - DO NOT claim skills the candidate doesn't have
 
-Step 4: APPLY USER ANSWERS CORRECTLY
-- Check "[Applies to: ...]" tag for each answer
-- ONLY add info to the matching experience/project
-- NEVER cross-contaminate between roles
+3. ONLY ENHANCE EXISTING CONTENT
+   - Make existing bullets stronger with better words
+   - Add metrics from user answers ONLY
+   - Improve clarity and impact of EXISTING achievements
+   - Use synonyms and better phrasing for what's already there
 
-=== FEW-SHOT EXAMPLES ===
+4. BULLET COUNT LIMIT
+   - Maximum 4 bullets per experience entry
+   - Maximum 4 bullets per project entry
+   - If original has more, keep the 4 strongest/most relevant
+   - NEVER exceed 4 bullets per entry
 
-EXAMPLE 1 - Adding Metrics:
-BEFORE: "Improved application performance"
+=== WHAT YOU CAN DO ===
+
+✅ Improve action verbs: "Made" → "Engineered", "Did" → "Implemented"
+✅ Add metrics from user answers: "Improved speed" → "Improved speed by 40%"
+✅ Clarify existing content: "worked with database" → "optimized PostgreSQL queries"
+✅ Reorder words for impact: "Used Python to build X" → "Built X using Python"
+✅ Remove filler words: "Responsible for managing" → "Managed"
+✅ Emphasize relevant existing skills more prominently
+
+=== WHAT YOU CANNOT DO ===
+
+❌ Add technologies not in original resume
+❌ Add skills from job description that candidate doesn't have
+❌ Invent new responsibilities or projects
+❌ Add more than 4 bullets to any entry
+❌ Change facts, dates, companies, titles, or education
+
+=== EXAMPLES ===
+
+EXAMPLE 1 - Action Verb Improvement (CORRECT):
+ORIGINAL: "Was responsible for database optimization"
+ENHANCED: "Optimized database queries reducing latency by 50%"
+WHY CORRECT: Only improved existing content, didn't add new tech
+
+EXAMPLE 2 - Adding False Info (WRONG - DO NOT DO THIS):
+ORIGINAL: "Built web application using Python"
+Job mentions: "Ruby on Rails experience required"
+WRONG: "Built web applications using Python and Ruby on Rails"
+WHY WRONG: Added Ruby on Rails which wasn't in original - THIS IS FABRICATION
+
+EXAMPLE 3 - Metrics from User Answer (CORRECT):
+ORIGINAL: "Improved application performance"
 User Answer: "Reduced load time from 3s to 0.8s"
-AFTER: "Optimized application performance, reducing page load time from 3s to 0.8s (73% improvement)"
+ENHANCED: "Improved application performance, reducing load time from 3s to 0.8s (73% improvement)"
+WHY CORRECT: Only added verifiable metrics from user
 
-EXAMPLE 2 - Keyword Integration:
-Priority Keywords: ["machine learning", "Python", "data pipelines"]
-BEFORE: "Built data processing system"
-AFTER: "Engineered scalable data pipelines in Python for machine learning model training"
-
-EXAMPLE 3 - Action Verb Upgrade:
-BEFORE: "Was responsible for database management"
-AFTER: "Architected and maintained PostgreSQL databases serving 10M+ daily queries"
-
-EXAMPLE 4 - Correct Answer Application:
-Answer: "[Applies to: Software Engineer at TechCorp] Led team of 5 engineers"
-TechCorp bullet: ADD leadership info
-Other roles: DO NOT add this info
+EXAMPLE 4 - Bullet Count Limit (CORRECT):
+ORIGINAL has 6 bullets
+ENHANCED: Keep only the 4 strongest, most relevant bullets
+WHY CORRECT: Respects the 4-bullet maximum limit
 
 === CRITICAL CONSTRAINTS ===
 1. PRESERVE STRUCTURE: Exactly {len(original_data['experience'])} experiences, {len(original_data['projects'])} projects
 2. PRESERVE IDENTITY: Never change titles, companies, names, dates, schools, degrees, locations
 3. ONLY MODIFY: Bullet point text within each entry
-4. NEVER FABRICATE: Only use info from original resume or user answers
-5. ANSWER FIDELITY: Apply answers only to their designated "[Applies to:]" target
+4. MAX 4 BULLETS: Each experience/project can have AT MOST 4 bullets
+5. NO NEW SKILLS: Do not add technologies, tools, or skills from job description
+6. VERIFY EVERYTHING: Every skill/technology in output must exist in original resume or user answers
 
 === OUTPUT FORMAT ===
 Return ONLY valid JSON matching the input schema exactly.
@@ -552,7 +538,14 @@ Start with {{"header":
 JSON:"""
 
         try:
+            import time
+            start_time = time.time()
+
+            print("  ⏱️  Calling LLM for tailoring...")
             response = self.llm.invoke([HumanMessage(content=prompt)])
+            llm_time = time.time() - start_time
+            print(f"  ⏱️  LLM response received in {llm_time:.1f}s")
+
             json_text = self._extract_json(response.content)
             data = json.loads(json_text)
 
@@ -586,8 +579,102 @@ JSON:"""
                     print(f"  ⚠ Warning: Project {i + 1} name changed, reverting")
                     data['projects'][i] = orig
 
+            # CRITICAL: Cap bullets at 4 maximum per entry
+            print("  🔒 Enforcing 4-bullet maximum...")
+            for i, exp in enumerate(data['experience']):
+                if len(exp['bullets']) > 4:
+                    print(f"    ⚠ Experience {i+1} had {len(exp['bullets'])} bullets, trimming to 4")
+                    data['experience'][i]['bullets'] = exp['bullets'][:4]
+
+            for i, proj in enumerate(data['projects']):
+                if len(proj['bullets']) > 4:
+                    print(f"    ⚠ Project {i+1} had {len(proj['bullets'])} bullets, trimming to 4")
+                    data['projects'][i]['bullets'] = proj['bullets'][:4]
+
+            # CRITICAL: FORCE skills section to remain EXACTLY as original
+            # The LLM keeps fabricating skills - we CANNOT trust it
+            print("  🔒 FORCING original skills section (no modifications allowed)...")
+            data['skills'] = original_data['skills']
+
+            # CRITICAL: Validate bullets don't contain fabricated technologies
+            print("  🔍 Scanning bullets for fabricated technologies...")
+
+            # Build whitelist of technologies from original resume
+            original_full_text = json.dumps(original_data).lower()
+
+            # Common tech terms that should ONLY appear if in original
+            tech_terms = {
+                'python', 'java', 'javascript', 'typescript', 'ruby', 'rails', 'react', 'angular',
+                'vue', 'node', 'django', 'flask', 'spring', 'express', 'sql', 'mysql', 'postgresql',
+                'postgres', 'mongodb', 'redis', 'elasticsearch', 'docker', 'kubernetes', 'aws',
+                'azure', 'gcp', 'git', 'github', 'gitlab', 'jenkins', 'ci/cd', 'terraform',
+                'html', 'css', 'sass', 'webpack', 'npm', 'yarn', 'graphql', 'rest', 'api',
+                'machine learning', 'ml', 'ai', 'tensorflow', 'pytorch', 'pandas', 'numpy',
+                'c++', 'c#', 'golang', 'rust', 'swift', 'kotlin', 'php', 'perl', 'scala',
+                'hadoop', 'spark', 'kafka', 'rabbitmq', 'nginx', 'apache', 'linux', 'unix',
+                'agile', 'scrum', 'jira', 'confluence', 'figma', 'sketch', 'adobe'
+            }
+
+            # Find which tech terms are in the ORIGINAL resume
+            original_tech = {term for term in tech_terms if term in original_full_text}
+            print(f"    Original tech found: {original_tech if original_tech else 'None'}")
+
+            # Check each experience bullet for fabricated tech
+            fabrication_detected = False
+            for i, exp in enumerate(data['experience']):
+                cleaned_bullets = []
+                for bullet in exp['bullets']:
+                    bullet_lower = bullet.lower()
+                    bullet_has_fabrication = False
+
+                    for term in tech_terms:
+                        if term in bullet_lower and term not in original_full_text:
+                            print(f"    ❌ FABRICATION: '{term}' in Experience {i+1} bullet - NOT in original!")
+                            bullet_has_fabrication = True
+                            fabrication_detected = True
+                            break
+
+                    if bullet_has_fabrication:
+                        # Use original bullet instead
+                        if i < len(original_data['experience']) and len(original_data['experience'][i]['bullets']) > len(cleaned_bullets):
+                            cleaned_bullets.append(original_data['experience'][i]['bullets'][len(cleaned_bullets)])
+                            print(f"      → Reverting to original bullet")
+                    else:
+                        cleaned_bullets.append(bullet)
+
+                data['experience'][i]['bullets'] = cleaned_bullets[:4]  # Also enforce 4 max
+
+            # Check projects too
+            for i, proj in enumerate(data['projects']):
+                cleaned_bullets = []
+                for bullet in proj['bullets']:
+                    bullet_lower = bullet.lower()
+                    bullet_has_fabrication = False
+
+                    for term in tech_terms:
+                        if term in bullet_lower and term not in original_full_text:
+                            print(f"    ❌ FABRICATION: '{term}' in Project {i+1} bullet - NOT in original!")
+                            bullet_has_fabrication = True
+                            fabrication_detected = True
+                            break
+
+                    if bullet_has_fabrication:
+                        if i < len(original_data['projects']) and len(original_data['projects'][i]['bullets']) > len(cleaned_bullets):
+                            cleaned_bullets.append(original_data['projects'][i]['bullets'][len(cleaned_bullets)])
+                            print(f"      → Reverting to original bullet")
+                    else:
+                        cleaned_bullets.append(bullet)
+
+                data['projects'][i]['bullets'] = cleaned_bullets[:4]
+
+            if fabrication_detected:
+                print("  ⚠️  FABRICATION WAS DETECTED AND BLOCKED")
+            else:
+                print("  ✓ No fabrication detected")
+
             tailored = ResumeData(**data)
-            print("  ✓ Resume tailored successfully")
+            total_time = time.time() - start_time
+            print(f"  ✓ Resume tailored successfully in {total_time:.1f}s")
             return tailored
 
         except Exception as e:

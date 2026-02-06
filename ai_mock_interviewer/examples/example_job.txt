@@ -1,0 +1,62 @@
+Senior Software Engineer - Backend
+TechCorp
+San Francisco, CA (Hybrid)
+
+About TechCorp:
+TechCorp is a leading technology company building innovative solutions for enterprise customers. We serve over 10,000 businesses worldwide and process billions of transactions annually.
+
+About the Role:
+We're looking for a Senior Software Engineer to join our backend team and help build scalable, reliable systems that power our core products. You'll work on high-impact projects, collaborate with cross-functional teams, and mentor other engineers.
+
+Responsibilities:
+- Design and implement scalable backend services and APIs
+- Build and maintain microservices architecture handling millions of requests
+- Optimize database queries and improve system performance
+- Collaborate with frontend engineers, product managers, and designers
+- Participate in code reviews and maintain high code quality standards
+- Mentor junior engineers and contribute to team growth
+- Participate in on-call rotation for production support
+
+Required Qualifications:
+- 5+ years of professional software development experience
+- Strong proficiency in one or more backend languages (Node.js, Python, Java, Go)
+- Experience with distributed systems and microservices architecture
+- Deep understanding of databases (SQL and NoSQL)
+- Experience with cloud platforms (AWS, GCP, or Azure)
+- Strong problem-solving and debugging skills
+- Excellent communication and collaboration skills
+
+Preferred Qualifications:
+- Experience with container orchestration (Docker, Kubernetes)
+- Knowledge of caching strategies (Redis, Memcached)
+- Experience with message queues (RabbitMQ, Kafka)
+- Contributions to open-source projects
+- Experience leading technical projects
+- Startup experience
+
+Technical Stack:
+- Languages: Node.js, Python, TypeScript
+- Databases: PostgreSQL, MongoDB, Redis
+- Cloud: AWS (EC2, S3, RDS, Lambda)
+- Tools: Docker, Kubernetes, GitHub Actions
+- Monitoring: DataDog, Sentry
+
+What We Offer:
+- Competitive salary ($150K - $200K) + equity
+- Comprehensive health, dental, and vision insurance
+- 401(k) matching
+- Flexible work arrangements (hybrid)
+- Professional development budget
+- Collaborative and inclusive work environment
+
+Interview Process:
+1. Phone screen (30 min)
+2. Technical interview (60 min)
+3. System design interview (60 min)
+4. Behavioral interview (45 min)
+5. Team fit interview (30 min)
+
+To Apply:
+Please submit your resume and a brief cover letter explaining why you're interested in this role.
+
+TechCorp is an equal opportunity employer. We celebrate diversity and are committed to creating an inclusive environment for all employees.

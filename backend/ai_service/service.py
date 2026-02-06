@@ -38,18 +38,19 @@ class ResumeTailoringService:
         service.generate_resume_pdf(tailored, "output.pdf")
     """
     
-    def __init__(self, enable_semantic_matching: bool = True):
+    def __init__(self, enable_semantic_matching: bool = False):
         """
         Initialize the service with all required modules.
-        
+
         Args:
-            enable_semantic_matching: Whether to use semantic analysis (default: True)
+            enable_semantic_matching: Whether to use semantic analysis (default: False for speed)
         """
         self.parser = ResumeParser()
         self.ai_service = AIService()
         self.pdf_generator = PDFGenerator()
-        
-        # Semantic matching is optional (but recommended)
+
+        # Semantic matching is optional - DISABLED BY DEFAULT for speed
+        # Enable only if you need detailed gap analysis
         if enable_semantic_matching:
             from .semantic_matcher import SemanticMatcher
             self.semantic_matcher = SemanticMatcher()
@@ -469,8 +470,9 @@ class ResumeTailoringService:
         company_name: Optional[str] = None,
         position: Optional[str] = None,
         cover_letter_path: Optional[str] = None,
-        enable_refinement: bool = True,
-        max_refinement_iterations: int = 2
+        enable_refinement: bool = False,
+        max_refinement_iterations: int = 2,
+        skip_questions: bool = True  # Skip question generation by default for speed
     ) -> Dict[str, any]:
         """
         Complete end-to-end workflow for backend integration.
@@ -509,34 +511,48 @@ class ResumeTailoringService:
                 'cover_letter_pdf_generated': bool
             }
         """
+        import time
+        workflow_start = time.time()
         results = {}
-        
+
         # 1. Parse resume
         print("\n" + "=" * 70)
         print("RESUME TAILORING WORKFLOW")
         print("=" * 70)
-        
+
+        step_start = time.time()
         resume = self.parse_resume(resume_pdf_path)
         results['resume'] = resume
+        print(f"⏱️  Step 1 (Parse): {time.time() - step_start:.1f}s")
         
         # 2. Semantic analysis
+        step_start = time.time()
         semantic_analysis = None
         if self.use_semantic:
             semantic_analysis = self.analyze_job_fit(resume, job_description)
             results['semantic_analysis'] = semantic_analysis
-        
-        # 3. Generate questions
-        questions, analysis = self.generate_enhancement_questions(
-            resume, 
-            job_description, 
-            semantic_analysis
-        )
+        print(f"⏱️  Step 2 (Semantic): {time.time() - step_start:.1f}s")
+
+        # 3. Generate questions (SKIP by default for speed)
+        step_start = time.time()
+        questions = []
+        analysis = "Questions skipped for speed"
+        if not skip_questions:
+            questions, analysis = self.generate_enhancement_questions(
+                resume,
+                job_description,
+                semantic_analysis
+            )
+            print(f"⏱️  Step 3 (Questions): {time.time() - step_start:.1f}s")
+        else:
+            print(f"⏱️  Step 3 (Questions): SKIPPED for speed")
         results['questions'] = questions
         results['analysis'] = analysis
-        
+
         print(f"\n📊 Analysis: {analysis}")
-        
+
         # 4. Tailor resume (using semantic analysis for targeted enhancement)
+        step_start = time.time()
         user_answers = user_answers or {}
         tailored_resume = self.tailor_resume(
             resume,
@@ -545,22 +561,27 @@ class ResumeTailoringService:
             questions,
             semantic_analysis  # Pass semantic analysis for targeted bullet enhancement
         )
+        print(f"⏱️  Step 4 (Tailor): {time.time() - step_start:.1f}s")
 
         # 5. Iterative refinement (if enabled)
         results['refinement_feedback'] = None
         if enable_refinement:
+            step_start = time.time()
             tailored_resume, refinement_feedback = self.refine_resume(
                 tailored_resume,
                 job_description,
                 max_iterations=max_refinement_iterations
             )
             results['refinement_feedback'] = refinement_feedback
+            print(f"⏱️  Step 5 (Refinement): {time.time() - step_start:.1f}s")
 
         results['tailored_resume'] = tailored_resume
 
         # 6. Generate resume PDF
+        step_start = time.time()
         resume_success = self.generate_resume_pdf(tailored_resume, output_resume_path)
         results['resume_pdf_generated'] = resume_success
+        print(f"⏱️  Step 6 (PDF): {time.time() - step_start:.1f}s")
         
         if resume_success:
             print(f"\n✓ Tailored resume saved: {output_resume_path}")
@@ -591,8 +612,95 @@ class ResumeTailoringService:
                 if cl_success:
                     print(f"✓ Cover letter saved: {cl_path}")
         
+        total_workflow_time = time.time() - workflow_start
         print("\n" + "=" * 70)
         print("WORKFLOW COMPLETE")
+        print(f"⏱️  TOTAL TIME: {total_workflow_time:.1f}s ({total_workflow_time/60:.1f} minutes)")
         print("=" * 70 + "\n")
-        
+
+        return results
+
+    def fast_tailor(
+        self,
+        resume_pdf_path: str,
+        job_description: str,
+        output_resume_path: str,
+        user_answers: Optional[Dict[int, str]] = None
+    ) -> Dict[str, any]:
+        """
+        FAST tailoring workflow - optimized for speed (target: <30 seconds).
+
+        This skips:
+        - Semantic analysis (saves ~15s)
+        - Question generation (saves ~8s)
+        - Iterative refinement (saves ~20s)
+
+        Only runs:
+        1. Parse resume (~8s)
+        2. Tailor resume (~15s)
+        3. Generate PDF (~0.5s)
+
+        Args:
+            resume_pdf_path: Path to original resume PDF
+            job_description: Job posting text
+            output_resume_path: Where to save tailored resume
+            user_answers: Optional pre-collected answers (if you have them)
+
+        Returns:
+            Dict with results:
+            {
+                'resume': ResumeData,
+                'tailored_resume': ResumeData,
+                'resume_pdf_generated': bool,
+                'total_time': float
+            }
+        """
+        import time
+        workflow_start = time.time()
+        results = {}
+
+        print("\n" + "=" * 70)
+        print("⚡ FAST RESUME TAILORING (Target: <30s)")
+        print("=" * 70)
+
+        # 1. Parse resume
+        step_start = time.time()
+        resume = self.parse_resume(resume_pdf_path)
+        results['resume'] = resume
+        parse_time = time.time() - step_start
+        print(f"⏱️  Step 1 (Parse): {parse_time:.1f}s")
+
+        # 2. Tailor resume directly (skip questions and semantic)
+        step_start = time.time()
+        user_answers = user_answers or {}
+        tailored_resume = self.tailor_resume(
+            resume,
+            job_description,
+            user_answers,
+            questions=[],  # No questions
+            semantic_analysis=None  # No semantic analysis
+        )
+        results['tailored_resume'] = tailored_resume
+        tailor_time = time.time() - step_start
+        print(f"⏱️  Step 2 (Tailor): {tailor_time:.1f}s")
+
+        # 3. Generate PDF
+        step_start = time.time()
+        resume_success = self.generate_resume_pdf(tailored_resume, output_resume_path)
+        results['resume_pdf_generated'] = resume_success
+        pdf_time = time.time() - step_start
+        print(f"⏱️  Step 3 (PDF): {pdf_time:.1f}s")
+
+        if resume_success:
+            print(f"\n✓ Tailored resume saved: {output_resume_path}")
+
+        total_workflow_time = time.time() - workflow_start
+        results['total_time'] = total_workflow_time
+
+        print("\n" + "=" * 70)
+        status = "✅ TARGET MET!" if total_workflow_time < 40 else "⚠️ OVER TARGET"
+        print(f"⚡ FAST WORKFLOW COMPLETE - {status}")
+        print(f"⏱️  TOTAL TIME: {total_workflow_time:.1f}s")
+        print("=" * 70 + "\n")
+
         return results
