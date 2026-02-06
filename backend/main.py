@@ -112,8 +112,20 @@ class Demographics(BaseModel):
 class SignupRequest(BaseModel):
     email: EmailStr
     password: str
-    name: Optional[str] = None
+    name: str
     demographics: Optional[Demographics] = None
+    
+    # TODO: Re-enable when frontend collects these fields
+    # first_name: str
+    # last_name: str
+    # phone: str
+    # linkedin: str
+    # github: str
+    # location: str
+    # indigenous: str
+    # disability: str
+    # lgbtq: str
+    # minority: str
 
 
 
@@ -246,62 +258,88 @@ The user is auto assigned an ID used by the server side
 There are multiple checks to ensure valid parameters are provided,
 for example: email requires @ and . to be in it 
 """
-@app.get("/signup")
-async def signup(request: Request):
-    form = await request.form()
-    email = form.get("email")
-    first_name = form.get("first_name")
-    last_name = form.get("last_name")
-    phone = form.get("phone")
-    linkedin = form.get("linkedin")
-    github = form.get("github")
-    location = form.get("location")
-    password = form.get("password")
-    gender = form.get("gender")
-    indigenous = form.get("indigenous")
-    disability = form.get("disability")
-    lgbtq = form.get("lgbtq")
-    minority = form.get("minority")
+@app.post("/signup")
+async def signup(data: SignupRequest):
+    email = data.email
+    password = data.password
+    name = data.name
+    
+    # Split name into first/last
+    name_parts = name.strip().split(maxsplit=1)
+    first_name = name_parts[0] if name_parts else ""
+    last_name = name_parts[1] if len(name_parts) > 1 else ""
+    
+    # Extract demographics if provided
+    demographics = data.demographics
+    sex = demographics.sex if demographics else None
+    gender = demographics.gender if demographics else None
+    disability = demographics.disability if demographics else None
+    race = demographics.race if demographics else None
+    
+    # TODO: Re-enable these fields when frontend collects them
+    # phone = data.phone
+    # linkedin = data.linkedin
+    # github = data.github
+    # location = data.location
+    # indigenous = data.indigenous
+    # lgbtq = data.lgbtq
+    # minority = data.minority
 
-    genders = ["Man", "Woman", "Non-Binary", "Two-Spirit", "Another Gender", "I do not wish to answer"]
-    indigenous_l = ["Yes", "No", "I do not wish to answer"]
-    lgbtq_l = ["Yes", "No", "I do not wish to answer"]
-    disability_l = ["Yes", "No", "I do not wish to answer"]
-    vis_mino_l = ["Yes", "No", "I do not wish to answer"]
-
-    """Make sure none of the information provided is blank"""
-    if email is None or email == "" or first_name is None or first_name == "" or last_name is None or last_name == "" or phone is None or phone == "" or linkedin is None or linkedin == "" or location is None or location == "" or github is None or github == "" or password is None or password == "" or gender not in genders or indigenous not in indigenous_l or disability not in disability_l or minority not in vis_mino_l or lgbtq not in lgbtq_l:
+    """Validate required fields"""
+    if not all([email, password, name]):
         return JSONResponse(
             status_code=400,
             content={
                 "success": False,
-                "message": "Missing information!"
+                "message": "Missing required information!"
             }
         )
+    
+    # TODO: Re-enable field validation when frontend collects additional fields
+    # genders = ["Man", "Woman", "Non-Binary", "Two-Spirit", "Another Gender", "I do not wish to answer"]
+    # indigenous_l = ["Yes", "No", "I do not wish to answer"]
+    # lgbtq_l = ["Yes", "No", "I do not wish to answer"]
+    # disability_l = ["Yes", "No", "I do not wish to answer"]
+    # vis_mino_l = ["Yes", "No", "I do not wish to answer"]
+    # 
+    # if not all([phone, linkedin, location, github]):
+    #     return JSONResponse(
+    #         status_code=400,
+    #         content={
+    #             "success": False,
+    #             "message": "Missing required information!"
+    #         }
+    #     )
+    # 
+    # if gender not in genders or indigenous not in indigenous_l or disability not in disability_l or minority not in vis_mino_l or lgbtq not in lgbtq_l:
+    #     return JSONResponse(
+    #         status_code=400,
+    #         content={
+    #             "success": False,
+    #             "message": "Invalid selection for gender or demographic fields!"
+    #         }
+    #     )
 
     """Hash the necessary information for security purposes"""
     hashed_pwd = hash_(password)
     hashed_fname = hash_(first_name)
     hashed_lname = hash_(last_name)
-    hashed_phone = hash_(phone)
-    hashed_linkedin = hash_(linkedin)
-    hashed_github = hash_(github)
-    hashed_location = hash_(location)
-    hashed_gender = hash_(gender)
-    hashed_indigenous = hash_(indigenous)
-    hashed_disability = hash_(disability)
-    hashed_minority = hash_(minority)
-    hashed_lgbtq = hash_(lgbtq)
-    reg_date = datetime.utcnow().date().isoformat()  # date of account creation (now)
+    hashed_sex = hash_(sex) if sex else None
+    hashed_gender = hash_(gender) if gender else None
+    hashed_disability = hash_(disability) if disability else None
+    hashed_race = hash_(race) if race else None
+    
+    # TODO: Re-enable when frontend collects these fields
+    # hashed_phone = hash_(phone)
+    # hashed_linkedin = hash_(linkedin)
+    # hashed_github = hash_(github)
+    # hashed_location = hash_(location)
+    # hashed_indigenous = hash_(indigenous)
+    # hashed_lgbtq = hash_(lgbtq)
+    # hashed_minority = hash_(minority)
+    
+    reg_date = datetime.utcnow().date().isoformat()
     role = "free_user"
-
-    """Split name into first/last for profile"""
-    first_name = ""
-    last_name = ""
-    if name:
-        parts = name.split()
-        first_name = parts[0]
-        last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
 
     """Ensure this email is not already in use"""
     try:
@@ -319,9 +357,35 @@ async def signup(request: Request):
 
     """Insert information into database"""
     try:
-        dic = {"email":email, "password":hashed_pwd, "first_name": hashed_fname, "last_name": hashed_lname, "phone": hashed_phone,
-           "linkedin": hashed_linkedin, "github": hashed_github, "location": hashed_location, "registration_date": reg_date, "role": role, "gender": hashed_gender, "indigenous": hashed_indigenous, "disability": hashed_disability, "minority": hashed_disability, "lgbtq": hashed_lgbtq}
-        user = col.insert_one(dic)
+        user_data = {
+            "email": email,
+            "password": hashed_pwd,
+            "first_name": hashed_fname,
+            "last_name": hashed_lname,
+            "registration_date": reg_date,
+            "role": role
+        }
+        
+        # TODO: Re-enable when frontend collects these fields
+        # user_data["phone"] = hashed_phone
+        # user_data["linkedin"] = hashed_linkedin
+        # user_data["github"] = hashed_github
+        # user_data["location"] = hashed_location
+        # user_data["indigenous"] = hashed_indigenous
+        # user_data["lgbtq"] = hashed_lgbtq
+        # user_data["minority"] = hashed_minority
+        
+        # Add demographics if provided
+        if hashed_sex:
+            user_data["sex"] = hashed_sex
+        if hashed_gender:
+            user_data["gender"] = hashed_gender
+        if hashed_disability:
+            user_data["disability"] = hashed_disability
+        if hashed_race:
+            user_data["race"] = hashed_race
+        
+        user = col.insert_one(user_data)
         user_id = user.inserted_id  # database generated object ID
         access_token = create_access_token(user_id, role)  # create an access token for the user, valid for two hours
         """Return the information to client side"""

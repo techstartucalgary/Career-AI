@@ -117,7 +117,8 @@ out
 /submissions/
 /.env
 /.vscode/
-/.venv311/
+.venv/
+.venv311/
 __pycache__/
 *.pyc
 *.pyo
