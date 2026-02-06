@@ -74,10 +74,15 @@ class MovementAnalyzer:
             "eye_jitter": EMA(0.25),
             "smile": EMA(0.25),
             "neg_expr": EMA(0.25),
+            "slouch": EMA(0.25),
+            "distance": EMA(0.25),
+
         }
 
         self.frames = 0
         self.eye_contact_frames = 0
+        self.eye_ok_run = 0
+
 
         self.speak_frames = 0
         self.speak_eye_frames = 0
@@ -93,6 +98,7 @@ class MovementAnalyzer:
 
         self.stare_streak_sec = 0.0
         self.reading_streak_sec = 0.0
+        
 
         self.nod_count = 0
         self.nod_window_start = time.time()
@@ -168,7 +174,17 @@ class MovementAnalyzer:
             return None
 
         off = abs(nose[0] - mid_x) / span
-        return off < 0.18
+        return off < 0.12
+
+    def _iris_center(self, results, side="l"):
+        if not results or not results.face_landmarks:
+            return None
+        lm = results.face_landmarks.landmark
+        # FaceMesh iris landmark indices
+        idxs = [468, 469, 470, 471] if side == "l" else [473, 474, 475, 476]
+        xs = [lm[i].x for i in idxs]
+        ys = [lm[i].y for i in idxs]
+        return (sum(xs) / len(xs), sum(ys) / len(ys))
 
     def _gesture_energy(self, t, left_wrist, right_wrist):
         if self.t_prev is None:
@@ -194,6 +210,23 @@ class MovementAnalyzer:
         if not nose or not prev:
             return None
         return dist(nose, prev) / dt
+    
+    def _shoulder_slope(self, results):
+        sh = self._shoulders(results)
+        if not sh:
+            return None
+        l, r = sh
+        return (l[1] - r[1])  # + means left shoulder lower than right
+
+    def _slouch_proxy(self, results):
+        sh = self._shoulders(results)
+        nose = self._nose(results)
+        if not sh or not nose:
+            return None
+        l, r = sh
+        mid_y = (l[1] + r[1]) / 2.0
+        return nose[1] - mid_y  # bigger = nose lower relative to shoulders (slouch/lean down)
+
 
     def update(self, results, frame_bgr, frame_w, frame_h, is_speaking=None, now=None):
         t = time.time() if now is None else now
@@ -205,9 +238,36 @@ class MovementAnalyzer:
         right_wrist = self._pose_xy(results, 16)
 
         mouth_open = self._mouth_opening(results)
+        pupil_l = self._iris_center(results, "l")
+        pupil_r = self._iris_center(results, "r")
+        slope = self._shoulder_slope(results)
+        slope = self.ema["shoulder_slope"].update(slope)
+
+        slouch = self._slouch_proxy(results)
+        slouch = self.ema["lean"].update(slouch)
+
+        dist_proxy = self._distance_proxy(results)
+        dist_proxy = self.ema["distance"].update(dist_proxy)
+
+        slope = self._shoulder_slope(results)
+        slope = self.ema["shoulder_slope"].update(slope)
+
+        slouch = self._slouch_proxy(results)
+        slouch = self.ema["slouch"].update(slouch)
+
+
         mouth_open = self.ema["mouth_open"].update(mouth_open)
 
         eye_contact = self._eye_contact_proxy(results)
+
+        if eye_contact is True:
+            self.eye_ok_run += 1
+        elif eye_contact is False:
+            self.eye_ok_run = 0
+
+        if eye_contact is not None:
+            eye_contact = True if self.eye_ok_run >= 3 else False
+
         if eye_contact is True:
             self.eye_contact_frames += 1
 
@@ -246,7 +306,13 @@ class MovementAnalyzer:
 
         fidget = self._fidget_score(t, nose)
         fidget = self.ema["fidget"].update(fidget)
-        # normalize (very rough for now)
+
+        if energy is not None and energy < 0.12:
+            energy = 0.0
+        if fidget is not None and fidget < 0.08:
+            fidget = 0.0
+
+        # normalize 
         e = clamp(energy or 0.0, 0.0, 1.5) / 1.5
         f = clamp(fidget or 0.0, 0.0, 1.5) / 1.5
 
@@ -278,5 +344,13 @@ class MovementAnalyzer:
             "gesture_energy": energy,
             "fidget": fidget,
             "movement_score": movement_score,
+            "distance_proxy": dist_proxy,
+            "shoulder_span": span,
+            "pupil_l": pupil_l,
+            "pupil_r": pupil_r,
+            "distance_proxy": dist_proxy,
+            "shoulder_slope": slope,
+            "slouch_proxy": slouch,
+
         }
     
