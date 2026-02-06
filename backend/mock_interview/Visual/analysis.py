@@ -76,7 +76,10 @@ class MovementAnalyzer:
             "neg_expr": EMA(0.25),
             "slouch": EMA(0.25),
             "distance": EMA(0.25),
-
+            "center": EMA(0.25),
+            "torso_ang": EMA(0.25),
+            "torso_sep": EMA(0.25),
+            "framing": EMA(0.25),
         }
 
         self.frames = 0
@@ -130,6 +133,21 @@ class MovementAnalyzer:
         lm = hand_landmarks.landmark[idx]
         return (lm.x, lm.y, getattr(lm, "z", 0.0))
 
+    def _framing_proxy(self, results):
+        sh = self._shoulders(results)
+        hp = self._hips(results)
+        if not sh or not hp:
+            return None
+
+        sl, sr = sh
+        hl, hr = hp
+
+        sy = (sl[1] + sr[1]) / 2.0
+        hy = (hl[1] + hr[1]) / 2.0
+
+        # bigger torso height on screen = closer
+        torso_h = abs(hy - sy)
+        return torso_h
 
 # SEGMENT 4: core feature extractors
 
@@ -140,6 +158,39 @@ class MovementAnalyzer:
         if not l or not r:
             return None
         return l, r
+    
+
+    def _hips(self, results):
+        l = self._pose_xy(results, 23)
+        r = self._pose_xy(results, 24)
+        if not l or not r:
+            return None
+        return l, r
+
+    def _torso_posture(self, results):
+        sh = self._shoulders(results)
+        hp = self._hips(results)
+        if not sh or not hp:
+            return None
+
+        sl, sr = sh
+        hl, hr = hp
+
+        sx = (sl[0] + sr[0]) / 2.0
+        sy = (sl[1] + sr[1]) / 2.0
+        hx = (hl[0] + hr[0]) / 2.0
+        hy = (hl[1] + hr[1]) / 2.0
+
+        vx = sx - hx
+        vy = sy - hy
+
+        # angle from vertical (0 = upright). bigger = more leaning/slouching
+        ang = abs(math.atan2(vx, -vy))  # radians
+        # separation (bigger = upright/open, smaller = collapsed)
+        sep = abs(hy - sy)
+
+        return ang, sep
+
 
     def _distance_proxy(self, results):
         sh = self._shoulders(results)
@@ -159,6 +210,19 @@ class MovementAnalyzer:
         if not top or not bot:
             return None
         return dist(top, bot)
+    
+    def _center_offset(self, results):
+        nose = self._nose(results)
+        sh = self._shoulders(results)
+        if not nose or not sh:
+            return None
+        l, r = sh
+        mid_x = (l[0] + r[0]) / 2.0
+        span = abs(l[0] - r[0])
+        if span < 1e-6:
+            return None
+        return abs(nose[0] - mid_x) / span  # 0 = perfectly centered
+
 
     def _eye_contact_proxy(self, results):
         # nose centered between shoulders
@@ -243,18 +307,14 @@ class MovementAnalyzer:
         slope = self._shoulder_slope(results)
         slope = self.ema["shoulder_slope"].update(slope)
 
-        slouch = self._slouch_proxy(results)
-        slouch = self.ema["lean"].update(slouch)
+        framing = self._framing_proxy(results)
+        framing = self.ema["framing"].update(framing)
 
-        dist_proxy = self._distance_proxy(results)
-        dist_proxy = self.ema["distance"].update(dist_proxy)
-
-        slope = self._shoulder_slope(results)
-        slope = self.ema["shoulder_slope"].update(slope)
+        center_off = self._center_offset(results)
+        center_off = self.ema["center"].update(center_off)
 
         slouch = self._slouch_proxy(results)
         slouch = self.ema["slouch"].update(slouch)
-
 
         mouth_open = self.ema["mouth_open"].update(mouth_open)
 
@@ -292,9 +352,6 @@ class MovementAnalyzer:
             else:
                 self.stare_streak_sec = 0.0
 
-        dist_proxy = self._distance_proxy(results)
-        dist_proxy = self.ema["lean"].update(dist_proxy)  # reuse an EMA or add a new one
-
         sh = self._shoulders(results)
         span = abs(sh[0][0] - sh[1][0]) if sh else None
 
@@ -311,6 +368,15 @@ class MovementAnalyzer:
             energy = 0.0
         if fidget is not None and fidget < 0.08:
             fidget = 0.0
+
+        torso = self._torso_posture(results)
+        if torso:
+            torso_ang, torso_sep = torso
+        else:
+            torso_ang, torso_sep = None, None
+
+        torso_ang = self.ema["torso_ang"].update(torso_ang)
+        torso_sep = self.ema["torso_sep"].update(torso_sep)
 
         # normalize 
         e = clamp(energy or 0.0, 0.0, 1.5) / 1.5
@@ -332,6 +398,8 @@ class MovementAnalyzer:
                 "stare_sec": self.stare_streak_sec,
             })
 
+        if self.frames % 30 == 0:
+            print("torso_angle", torso_ang, "torso_sep", torso_sep)
 
         return {
             "has_pose": bool(results and results.pose_landmarks),
@@ -344,13 +412,14 @@ class MovementAnalyzer:
             "gesture_energy": energy,
             "fidget": fidget,
             "movement_score": movement_score,
-            "distance_proxy": dist_proxy,
             "shoulder_span": span,
             "pupil_l": pupil_l,
             "pupil_r": pupil_r,
-            "distance_proxy": dist_proxy,
             "shoulder_slope": slope,
             "slouch_proxy": slouch,
-
+            "center_offset": center_off,
+            "torso_angle": torso_ang,
+            "torso_sep": torso_sep,
+            "framing_proxy": framing,
         }
     

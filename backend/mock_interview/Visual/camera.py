@@ -22,6 +22,7 @@ holistic = mp_holistic.Holistic(
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
+
 # Webcam 
 cap = cv2.VideoCapture(0)
 cap.set(3, 1280)
@@ -41,6 +42,13 @@ MOUTH_IDXS = [
     78, 95, 88, 178, 87, 14, 13, 312, 317, 402
 ]
 
+
+def draw_hud(img, lines, x=30, y=40, dy=38):
+    for i, s in enumerate(lines):
+        cv2.putText(img, s, (x, y + i*dy),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,255,255), 2)
+
+
 while True:
     ok, frame = cap.read()
     if not ok:
@@ -55,23 +63,15 @@ while True:
     h, w = frame.shape[:2]
     is_speaking = None  
     metrics = analyzer.update(results, frame, w, h, is_speaking=is_speaking)
+   
+
+#MIRROR FOR DISPLAY
+    disp = cv2.flip(frame, 1)
     fb = feedback_from_metrics(metrics)
-    metrics_log.append(metrics)     
-    ms = metrics.get("movement_score")
-    fz = metrics.get("fidget")
-    ec = metrics.get("eye_contact")
-
-    if ms is not None:
-        cv2.putText(frame, f"move: {ms:.2f}", (30, 40),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,255,255), 2)
-    if fz is not None:
-        cv2.putText(frame, f"fidget: {fz:.2f}", (30, 80),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,255,255), 2)
-    if ec is not None:
-        cv2.putText(frame, f"eye: {str(ec)}", (30, 120),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,255,255), 2)
-
-
+    ind = fb.get("indicators", {})
+    metrics_log.append(metrics)
+   
+        
     # -------------------- POSE --------------------
     if results.pose_landmarks:
         mp_drawing.draw_landmarks(
@@ -137,17 +137,25 @@ while True:
             x2, y2 = int(end.x*w), int(end.y*h)
             cv2.line(frame, (x1,y1), (x2,y2), (0,255,0), 2)
 
-    #MIRROR FOR DISPLAY
-    disp = cv2.flip(frame, 1)
+    lines = [
+        f"Movement: {ind.get('movement', {}).get('state', 'unknown')}",
+        f"Posture:  {ind.get('posture', {}).get('state', 'unknown')}",
+        f"Center:   {ind.get('centered', {}).get('state', 'unknown')}",
+        f"Distance: {ind.get('distance', {}).get('state', 'unknown')}",
+        f"Eye:      {ind.get('eye_contact', {}).get('state', 'unknown')}",
+    ]
 
-    # DEV ONLY FEEDBACK OVERLAY (live)
-    m_state = fb["indicators"]["movement"]["state"]
-    cv2.putText(disp, f"Movement: {m_state}", (30, 40),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+    draw_hud(disp, lines, x=30, y=40, dy=34)
 
-    if fb["tips"]:
-        cv2.putText(disp, fb["tips"][0], (30, 90),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
+    tips = fb.get("tips") or []
+    # de-duplicate while preserving order
+    seen = set()
+    tips = [t for t in tips if not (t in seen or seen.add(t))]
+
+    y0 = disp.shape[0] - 120
+    for i, t in enumerate(tips[:4]):
+        cv2.putText(disp, t, (30, y0 + i*30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
 
 
     #LABEL HANDS AFTER FLIP
@@ -163,6 +171,8 @@ while True:
                     cv2.FONT_HERSHEY_SIMPLEX,
                     1.2, (255,0,255), 3)
 
+    
+    
     cv2.imshow("Holistic Tracking", disp)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
