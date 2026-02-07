@@ -15,17 +15,21 @@ from .models import ResumeData, CoverLetter, Header
 from .config import MIN_GPA_DISPLAY
 
 
+# Pre-compile regex patterns for better performance
+_BOLD_PATTERN = re.compile(r'\*\*(.+?)\*\*')
+_BOLD_UNDERSCORE_PATTERN = re.compile(r'__(.+?)__')
+_ITALIC_PATTERN = re.compile(r'\*(.+?)\*')
+_ITALIC_UNDERSCORE_PATTERN = re.compile(r'_(.+?)_')
+
 def clean_markdown_text(text: str) -> str:
-    """Remove markdown formatting characters from text"""
+    """Remove markdown formatting characters from text (optimized)"""
     if not text:
         return text
-    # Remove bold markdown (**text** or __text__)
-    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
-    text = re.sub(r'__(.+?)__', r'\1', text)
-    # Remove italic markdown (*text* or _text_)
-    text = re.sub(r'\*(.+?)\*', r'\1', text)
-    text = re.sub(r'_(.+?)_', r'\1', text)
-    # Remove any remaining asterisks
+    # Use pre-compiled patterns for faster processing
+    text = _BOLD_PATTERN.sub(r'\1', text)
+    text = _BOLD_UNDERSCORE_PATTERN.sub(r'\1', text)
+    text = _ITALIC_PATTERN.sub(r'\1', text)
+    text = _ITALIC_UNDERSCORE_PATTERN.sub(r'\1', text)
     text = text.replace('*', '')
     return text.strip()
 
@@ -40,6 +44,11 @@ class PDFGenerator:
     - Future: Multiple template styles
     """
 
+    # Cache styles as class variables (created once, reused forever)
+    _resume_styles = None
+    _cover_letter_styles = None
+    _table_style_cached = None
+
     @staticmethod
     def generate_resume_pdf(resume: ResumeData, output_path: str) -> bool:
         """
@@ -53,6 +62,9 @@ class PDFGenerator:
             True if successful, False otherwise
         """
         try:
+            import time
+            start_time = time.time()
+
             doc = SimpleDocTemplate(
                 output_path,
                 pagesize=letter,
@@ -63,7 +75,10 @@ class PDFGenerator:
             )
 
             story = []
-            styles = PDFGenerator._create_resume_styles()
+            # Use cached styles (huge performance boost)
+            if PDFGenerator._resume_styles is None:
+                PDFGenerator._resume_styles = PDFGenerator._create_resume_styles()
+            styles = PDFGenerator._resume_styles
 
             # Header
             PDFGenerator._add_header(story, resume.header, styles)
@@ -85,7 +100,8 @@ class PDFGenerator:
                 PDFGenerator._add_skills(story, resume.skills, styles)
 
             doc.build(story)
-            print(f"  ✓ Resume PDF generated: {output_path}")
+            pdf_time = time.time() - start_time
+            print(f"  ✓ Resume PDF generated in {pdf_time:.1f}s: {output_path}")
             return True
 
         except Exception as e:
@@ -120,7 +136,10 @@ class PDFGenerator:
             )
 
             story = []
-            styles = PDFGenerator._create_cover_letter_styles()
+            # Use cached styles (huge performance boost)
+            if PDFGenerator._cover_letter_styles is None:
+                PDFGenerator._cover_letter_styles = PDFGenerator._create_cover_letter_styles()
+            styles = PDFGenerator._cover_letter_styles
 
             # Contact info
             story.append(Paragraph(header.name, styles['contact']))
@@ -423,11 +442,13 @@ class PDFGenerator:
 
     @staticmethod
     def _table_style():
-        """Standard table style for two-column layouts"""
-        return TableStyle([
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 0),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-            ('TOPPADDING', (0, 0), (-1, -1), 0),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-        ])
+        """Standard table style for two-column layouts (cached)"""
+        if PDFGenerator._table_style_cached is None:
+            PDFGenerator._table_style_cached = TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                ('TOPPADDING', (0, 0), (-1, -1), 0),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+            ])
+        return PDFGenerator._table_style_cached

@@ -8,12 +8,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# API Configuration
+# LLM Provider Configuration (Modular)
+# Options: "gemini" (cloud) or "ollama" (local)
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
+
+# Gemini Configuration (when LLM_PROVIDER=gemini)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_MODEL = "gemini-2.5-flash"
-GEMINI_TEMPERATURE = 0.3
-GEMINI_TIMEOUT = 120
-GEMINI_MAX_RETRIES = 3
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_TEMPERATURE = float(os.getenv("GEMINI_TEMPERATURE", "0.3"))
+GEMINI_TIMEOUT = int(os.getenv("GEMINI_TIMEOUT", "120"))
+GEMINI_MAX_RETRIES = int(os.getenv("GEMINI_MAX_RETRIES", "3"))
+
+# Ollama Configuration (when LLM_PROVIDER=ollama)
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "phi3.5")  # Options: phi3.5, qwen2.5:7b, llama3.3:8b
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.3"))
 
 # Semantic Matching Configuration
 SEMANTIC_MODEL = "all-MiniLM-L6-v2"

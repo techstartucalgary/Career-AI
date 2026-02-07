@@ -8,6 +8,7 @@ pydantic[email]
 python-jose[cryptography]
 passlib[bcrypt]
 langchain-google-genai
+langchain-ollama
 langchain-core
 langchain-community
 sentence-transformers

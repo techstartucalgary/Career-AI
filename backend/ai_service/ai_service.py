@@ -6,11 +6,12 @@ Centralizes all LLM interactions.
 import json
 import re
 from typing import List, Dict, Tuple, Optional
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 from .models import ResumeData, CoverLetter, CoverLetterTone, CompanyResearch, SemanticAnalysisResult
+from .llm import get_llm_provider
 from .config import (
-    GEMINI_API_KEY, GEMINI_MODEL, GEMINI_TEMPERATURE, GEMINI_TIMEOUT, GEMINI_MAX_RETRIES,
+    LLM_PROVIDER, GEMINI_API_KEY, GEMINI_MODEL, GEMINI_TEMPERATURE, GEMINI_TIMEOUT, GEMINI_MAX_RETRIES,
+    OLLAMA_MODEL, OLLAMA_BASE_URL, OLLAMA_TEMPERATURE,
     CONTEXT_JOB_DESCRIPTION, CONTEXT_RESUME_TEXT, CONTEXT_RESUME_JSON,
     CONTEXT_COVER_LETTER_JD, CONTEXT_COVER_LETTER_RESUME,
     MAX_REFINEMENT_ITERATIONS, REFINEMENT_TEMPERATURE
@@ -74,15 +75,43 @@ class AIService:
     - Question generation for user clarification
     """
 
-    def __init__(self):
-        """Initialize LLM client"""
-        self.llm = ChatGoogleGenerativeAI(
-            model=GEMINI_MODEL,
-            temperature=GEMINI_TEMPERATURE,
-            google_api_key=GEMINI_API_KEY,
-            request_timeout=GEMINI_TIMEOUT,
-            max_retries=GEMINI_MAX_RETRIES
-        )
+    def __init__(self, provider: Optional[str] = None, model_name: Optional[str] = None):
+        """
+        Initialize LLM client with modular provider support
+
+        Args:
+            provider: LLM provider ("gemini" or "ollama"). If None, uses LLM_PROVIDER from config
+            model_name: Model name. If None, uses default for the provider
+        """
+        provider = provider or LLM_PROVIDER
+
+        if provider == "gemini":
+            model_name = model_name or GEMINI_MODEL
+            self.llm = get_llm_provider(
+                provider="gemini",
+                model_name=model_name,
+                temperature=GEMINI_TEMPERATURE,
+                api_key=GEMINI_API_KEY,
+                request_timeout=GEMINI_TIMEOUT,
+                max_retries=GEMINI_MAX_RETRIES
+            )
+            print(f"✓ AIService initialized with Gemini ({model_name})")
+
+        elif provider == "ollama":
+            model_name = model_name or OLLAMA_MODEL
+            self.llm = get_llm_provider(
+                provider="ollama",
+                model_name=model_name,
+                temperature=OLLAMA_TEMPERATURE,
+                base_url=OLLAMA_BASE_URL
+            )
+            print(f"✓ AIService initialized with Ollama ({model_name} at {OLLAMA_BASE_URL})")
+
+        else:
+            raise ValueError(f"Unsupported LLM provider: {provider}. Use 'gemini' or 'ollama'")
+
+        self.provider = provider
+        self.model_name = model_name
 
     # ============================================================
     # COMPANY RESEARCH & PERSONALIZATION
