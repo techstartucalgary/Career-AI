@@ -7,6 +7,7 @@ import OnboardingStep1 from '../src/pages/onboarding/OnboardingStep1';
 import OnboardingStep2 from '../src/pages/onboarding/OnboardingStep2';
 import OnboardingStep3 from '../src/pages/onboarding/OnboardingStep3';
 import styles from './OnboardingPage.styles';
+import { apiFetch } from '../src/services/api';
 
 const OnboardingPage = () => {
   const router = useRouter();
@@ -25,6 +26,7 @@ const OnboardingPage = () => {
     cellPhone: '',
     linkedinUrl: '',
     githubUrl: '',
+    website: '',
     location: '',
     // Step 3 (Preferences) data
     positions: [],
@@ -32,13 +34,34 @@ const OnboardingPage = () => {
     workArrangement: 'any',
   });
 
-  const handleNext = (stepData) => {
-    setFormData(prev => ({ ...prev, ...stepData }));
+  const handleNext = async (stepData) => {
+    const nextData = { ...formData, ...stepData };
+    setFormData(nextData);
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
-    } else {
-      // Onboarding complete, navigate to home
+      return;
+    }
+
+    try {
+      await apiFetch('/onboarding/complete', {
+        method: 'POST',
+        body: JSON.stringify({
+          first_name: nextData.firstName,
+          last_name: nextData.lastName,
+          phone: nextData.cellPhone,
+          linkedin: nextData.linkedinUrl,
+          github: nextData.githubUrl,
+          website: nextData.website,
+          location: nextData.location,
+          positions: nextData.positions,
+          locations: nextData.locations,
+          work_arrangement: nextData.workArrangement,
+        }),
+      });
+
       router.push('/home');
+    } catch (error) {
+      alert(error.message || 'Unable to complete onboarding.');
     }
   };
 

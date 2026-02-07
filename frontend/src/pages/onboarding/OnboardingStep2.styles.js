@@ -48,6 +48,13 @@ const styles = StyleSheet.create({
     flex: isDesktop ? 1 : undefined,
     width: isDesktop ? undefined : '100%',
   },
+  requiredLabel: {
+    fontSize: 14,
+    color: WHITE,
+    marginBottom: 12,
+    fontWeight: '600',
+    textAlign: isDesktop ? 'left' : 'center',
+  },
   uploadCard: {
     backgroundColor: UPLOAD_GRAY,
     borderRadius: 20,
@@ -322,6 +329,22 @@ const styles = StyleSheet.create({
     color: WHITE,
     fontSize: 16,
     fontWeight: '600',
+  },
+  errorContainer: {
+    width: '100%',
+    paddingHorizontal: 16,
+    marginVertical: 12,
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 14,
+    marginTop: 12,
+    marginBottom: 12,
+    textAlign: 'center',
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
   },
 });
 

@@ -51,6 +51,24 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
     textAlign: 'center',
   },
+  statusText: {
+    fontSize: 14,
+    color: TEXT_LIGHT,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#F87171',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  successText: {
+    fontSize: 14,
+    color: '#34D399',
+    textAlign: 'center',
+    marginTop: 12,
+  },
 
   // Avatar Section
   avatarSection: {
@@ -121,6 +139,175 @@ const styles = StyleSheet.create({
     color: BRIGHT_PURPLE,
     marginBottom: 24,
   },
+  infoGroup: {
+    marginBottom: 16,
+  },
+  infoLabel: {
+    fontSize: 12,
+    color: TEXT_MUTED,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  infoValue: {
+    fontSize: 15,
+    color: WHITE,
+    fontWeight: '600',
+  },
+  preferenceSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: WHITE,
+    marginBottom: 12,
+  },
+  inputWithButton: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: BRIGHT_PURPLE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        boxShadow: '0 2px 8px rgba(167, 139, 250, 0.4)',
+      },
+      default: {
+        shadowColor: BRIGHT_PURPLE,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 4,
+      },
+    }),
+  },
+  addButtonText: {
+    color: WHITE,
+    fontSize: 24,
+    fontWeight: 'bold',
+    lineHeight: 24,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: LIGHT_PURPLE,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingLeft: 16,
+    paddingRight: 8,
+    gap: 8,
+  },
+  tagText: {
+    color: WHITE,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  tagRemove: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      },
+    }),
+  },
+  tagRemoveText: {
+    color: WHITE,
+    fontSize: 16,
+    fontWeight: 'bold',
+    lineHeight: 16,
+  },
+  checkboxContainer: {
+    gap: 12,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: LIGHT_PURPLE,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      web: {
+        transition: 'all 0.3s ease',
+      },
+    }),
+  },
+  checkboxChecked: {
+    backgroundColor: BRIGHT_PURPLE,
+    borderColor: BRIGHT_PURPLE,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 8px rgba(167, 139, 250, 0.4)',
+      },
+      default: {
+        shadowColor: BRIGHT_PURPLE,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 4,
+      },
+    }),
+  },
+  checkmark: {
+    width: 12,
+    height: 12,
+    position: 'relative',
+  },
+  checkmarkLine1: {
+    position: 'absolute',
+    width: 4,
+    height: 2,
+    backgroundColor: WHITE,
+    top: 6,
+    left: 2,
+    transform: [{ rotate: '45deg' }],
+  },
+  checkmarkLine2: {
+    position: 'absolute',
+    width: 8,
+    height: 2,
+    backgroundColor: WHITE,
+    top: 4,
+    left: 4,
+    transform: [{ rotate: '-45deg' }],
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: TEXT_LIGHT,
+    flex: 1,
+  },
 
   // Input Group
   inputGroup: {
@@ -147,6 +334,9 @@ const styles = StyleSheet.create({
         transition: 'all 0.2s ease',
       },
     }),
+  },
+  readOnlyInput: {
+    opacity: 0.7,
   },
   textArea: {
     minHeight: 120,
@@ -202,6 +392,64 @@ const styles = StyleSheet.create({
   saveButtonPressed: {
     opacity: 0.8,
     transform: [{ scale: 0.98 }],
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  
+  // Resume Section
+  resumeContainer: {
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#1F1C2F',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#4B5563',
+  },
+  resumeLabel: {
+    fontSize: 12,
+    color: TEXT_MUTED,
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  resumeFileName: {
+    fontSize: 14,
+    color: BRIGHT_PURPLE,
+    fontWeight: '600',
+  },
+  noResumeText: {
+    fontSize: 14,
+    color: TEXT_MUTED,
+    marginBottom: 16,
+    fontStyle: 'italic',
+  },
+  uploadButton: {
+    backgroundColor: '#1F1C2F',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 2,
+    borderColor: BRIGHT_PURPLE,
+    alignItems: 'center',
+    marginBottom: 8,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      },
+    }),
+  },
+  uploadButtonDisabled: {
+    opacity: 0.6,
+    ...Platform.select({
+      web: {
+        cursor: 'not-allowed',
+      },
+    }),
+  },
+  uploadButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: BRIGHT_PURPLE,
   },
   saveButtonGradient: {
     paddingVertical: 18,

@@ -139,9 +139,11 @@ class LoginRequest(BaseModel):
 class ProfileUpdateRequest(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    display_name: Optional[str] = None
     phone: Optional[str] = None
     linkedin: Optional[str] = None
     github: Optional[str] = None
+    website: Optional[str] = None
     location: Optional[str] = None
 
 
@@ -154,6 +156,26 @@ class PreferencesUpdateRequest(BaseModel):
 class ResumeUpdateRequest(BaseModel):
     resume_file_name: Optional[str] = None
     extracted_data: Optional[Dict[str, Any]] = None
+
+
+class OnboardingCompleteRequest(BaseModel):
+    first_name: str
+    last_name: str
+    phone: str
+    linkedin: str
+    github: Optional[str] = None
+    website: Optional[str] = None
+    location: str
+    positions: List[str]
+    locations: List[str]
+    work_arrangement: str
+
+
+class DemographicsUpdateRequest(BaseModel):
+    sex: Optional[str] = None
+    gender: Optional[str] = None
+    disability: Optional[str] = None
+    race: Optional[str] = None
 
 
 """
@@ -220,8 +242,10 @@ async def login(payload: LoginRequest):
             }
         )
     #unexpected error
-    except:
-        print("error")
+    except Exception as e:
+        print(f"Login error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse(
             status_code=500,
             content={
@@ -352,7 +376,10 @@ async def signup(data: SignupRequest):
                     "message": "Email already in use!"
                 }
             )
-    except:
+    except Exception as e:
+        print(f"Signup error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         pass
 
     """Insert information into database"""
@@ -365,6 +392,14 @@ async def signup(data: SignupRequest):
             "registration_date": reg_date,
             "role": role
         }
+
+        display_name = f"{first_name} {last_name}".strip()
+        if display_name:
+            user_data["profile"] = {
+                "display_name": display_name,
+                "first_name": first_name,
+                "last_name": last_name,
+            }
         
         # TODO: Re-enable when frontend collects these fields
         # user_data["phone"] = hashed_phone
@@ -375,15 +410,11 @@ async def signup(data: SignupRequest):
         # user_data["lgbtq"] = hashed_lgbtq
         # user_data["minority"] = hashed_minority
         
-        # Add demographics if provided
-        if hashed_sex:
-            user_data["sex"] = hashed_sex
-        if hashed_gender:
-            user_data["gender"] = hashed_gender
-        if hashed_disability:
-            user_data["disability"] = hashed_disability
-        if hashed_race:
-            user_data["race"] = hashed_race
+        # Add demographics (always initialize, even if empty)
+        user_data["sex"] = hashed_sex or ""
+        user_data["gender"] = hashed_gender or ""
+        user_data["disability"] = hashed_disability or ""
+        user_data["race"] = hashed_race or ""
         
         user = col.insert_one(user_data)
         user_id = user.inserted_id  # database generated object ID
@@ -445,6 +476,19 @@ def serialize_user(user: dict) -> dict:
     user = dict(user)
     user["user_id"] = str(user.pop("_id"))
     user.pop("password", None)
+    profile = user.get("profile") or {}
+
+    def is_bcrypt(value: object) -> bool:
+        return isinstance(value, str) and value.startswith("$2")
+
+    if profile.get("display_name"):
+        user["name"] = profile.get("display_name")
+    else:
+        first_name = profile.get("first_name") or ("" if is_bcrypt(user.get("first_name")) else user.get("first_name")) or ""
+        last_name = profile.get("last_name") or ("" if is_bcrypt(user.get("last_name")) else user.get("last_name")) or ""
+        combined_name = f"{first_name} {last_name}".strip()
+        if combined_name:
+            user["name"] = combined_name
     return user
 
 
@@ -469,14 +513,30 @@ def read_user(authorization: str = Header(None)):
                     "message": "User not found."
                 }
             )
+        
+        serialized = serialize_user(user)
+        
+        # Ensure identification fields always exist
+        if "sex" not in serialized:
+            serialized["sex"] = ""
+        if "gender" not in serialized:
+            serialized["gender"] = ""
+        if "disability" not in serialized:
+            serialized["disability"] = ""
+        if "race" not in serialized:
+            serialized["race"] = ""
+        
         return JSONResponse(
             status_code=200,
             content={
                 "success": True,
-                "data": serialize_user(user)
+                "data": serialized
             }
         )
-    except:
+    except Exception as e:
+        print(f"Profile GET error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse(
             status_code=400,
             content={
@@ -507,6 +567,13 @@ def update_profile(payload: ProfileUpdateRequest, authorization: str = Header(No
             }
         )
 
+    if "display_name" not in updates and ("first_name" in updates or "last_name" in updates):
+        first_name = updates.get("first_name", "")
+        last_name = updates.get("last_name", "")
+        combined = f"{first_name} {last_name}".strip()
+        if combined:
+            updates["display_name"] = combined
+
     try:
         col.update_one({"_id": user_id}, {"$set": {f"profile.{k}": v for k, v in updates.items()}})
         return JSONResponse(
@@ -516,7 +583,10 @@ def update_profile(payload: ProfileUpdateRequest, authorization: str = Header(No
                 "message": "Profile updated."
             }
         )
-    except:
+    except Exception as e:
+        print(f"Profile PUT error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse(
             status_code=400,
             content={
@@ -556,7 +626,100 @@ def update_preferences(payload: PreferencesUpdateRequest, authorization: str = H
                 "message": "Preferences updated."
             }
         )
-    except:
+    except Exception as e:
+        print(f"Preferences error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Server side error!"
+            }
+        )
+
+
+@app.post("/onboarding/complete")
+def complete_onboarding(payload: OnboardingCompleteRequest, authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    required_fields = [
+        payload.first_name,
+        payload.last_name,
+        payload.phone,
+        payload.linkedin,
+        payload.location,
+        payload.positions,
+        payload.locations,
+        payload.work_arrangement,
+    ]
+    if (
+        not all(required_fields)
+        or not str(payload.first_name).strip()
+        or not str(payload.last_name).strip()
+        or not str(payload.phone).strip()
+        or not str(payload.linkedin).strip()
+        or not str(payload.location).strip()
+        or not payload.positions
+        or not payload.locations
+    ):
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Missing required onboarding fields."
+            }
+        )
+
+    display_name = f"{payload.first_name} {payload.last_name}".strip()
+    profile_update = {
+        "profile.display_name": display_name,
+        "profile.first_name": payload.first_name,
+        "profile.last_name": payload.last_name,
+        "profile.phone": payload.phone,
+        "profile.location": payload.location,
+        "profile.linkedin": payload.linkedin,
+        "profile.github": payload.github or "",
+        "profile.website": payload.website or "",
+    }
+
+    preferences_update = {
+        "job_preferences.positions": payload.positions,
+        "job_preferences.locations": payload.locations,
+        "job_preferences.work_arrangement": payload.work_arrangement,
+    }
+    
+    # Initialize identification fields if they don't exist
+    identification_update = {
+        "sex": "",
+        "gender": "",
+        "disability": "",
+        "race": "",
+    }
+
+    try:
+        col.update_one(
+            {"_id": user_id},
+            {"$set": {**profile_update, **preferences_update, **identification_update, "onboarding_complete": True}}
+        )
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "Onboarding completed."
+            }
+        )
+    except Exception as e:
+        print(f"Onboarding complete error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse(
             status_code=400,
             content={
@@ -596,7 +759,10 @@ def update_resume(payload: ResumeUpdateRequest, authorization: str = Header(None
                 "message": "Resume saved."
             }
         )
-    except:
+    except Exception as e:
+        print(f"Resume save error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JSONResponse(
             status_code=400,
             content={
@@ -604,6 +770,220 @@ def update_resume(payload: ResumeUpdateRequest, authorization: str = Header(None
                 "message": "Server side error!"
             }
         )
+
+
+@app.put("/demographics")
+def update_demographics(payload: DemographicsUpdateRequest, authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    updates = {k: v for k, v in payload.dict().items() if v is not None}
+    if not updates:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "No demographics provided."
+            }
+        )
+
+    try:
+        col.update_one({"_id": user_id}, {"$set": updates})
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "Demographics updated."
+            }
+        )
+    except Exception as e:
+        print(f"Demographics error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Server side error!"
+            }
+        )
+
+@app.post("/resume/parse")
+async def parse_resume_file(
+    resume_file: UploadFile = File(...),
+    authorization: str = Header(None)
+):
+    """Parse resume file and extract structured data"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        # Import here to avoid circular imports
+        from ai_service.service import ResumeTailoringService
+        from ai_service.parser import ResumeParser
+        import base64
+        
+        # Create temp file
+        temp_dir = tempfile.gettempdir()
+        temp_file_path = Path(temp_dir) / f"resume_{datetime.now().timestamp()}.pdf"
+        
+        # Write uploaded file to temp location
+        with open(temp_file_path, "wb") as buffer:
+            buffer.write(await resume_file.read())
+        
+        # Parse resume
+        parser = ResumeParser()
+        resume_text = parser.extract_text_from_pdf(str(temp_file_path))
+        parsed_resume = parser.parse_resume_text(resume_text)
+        
+        # Extract header info
+        header = parsed_resume.header
+        
+        # Prepare extracted data for response
+        extracted_data = {
+            "name": header.name or "",
+            "email": header.email or "",
+            "phone": header.phone or "",
+            "linkedin": header.linkedin or "",
+            "github": header.github or "",
+            "location": header.location or "",
+        }
+        
+        # Parse first/last name from full name
+        name_parts = (header.name or "").strip().split(maxsplit=1)
+        first_name = name_parts[0] if name_parts else ""
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
+        
+        # Auto-save to user profile
+        if first_name or last_name:
+            display_name = f"{first_name} {last_name}".strip()
+            update_data = {
+                "profile.display_name": display_name,
+                "profile.first_name": first_name,
+                "profile.last_name": last_name,
+            }
+            
+            if header.phone:
+                update_data["profile.phone"] = header.phone
+            if header.linkedin:
+                update_data["profile.linkedin"] = header.linkedin
+            if header.github:
+                update_data["profile.github"] = header.github
+            if header.location:
+                update_data["profile.location"] = header.location
+            
+            # Save resume file as base64
+            with open(temp_file_path, "rb") as f:
+                resume_bytes = f.read()
+                resume_base64 = base64.b64encode(resume_bytes).decode("utf-8")
+            
+            update_data["resume.file_name"] = resume_file.filename
+            update_data["resume.file_data"] = resume_base64
+            update_data["resume.uploaded_at"] = datetime.utcnow().isoformat()
+            
+            col.update_one({"_id": user_id}, {"$set": update_data})
+        
+        # Clean up temp file
+        try:
+            Path(temp_file_path).unlink()
+        except:
+            pass
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "data": extracted_data
+            }
+        )
+    
+    except Exception as e:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": f"Resume parsing failed: {str(e)}"
+            }
+        )
+
+@app.post("/resume/upload")
+async def upload_resume_file(
+    resume_file: UploadFile = File(...),
+    authorization: str = Header(None)
+):
+    """Upload resume file without parsing or auto-filling profile"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        import base64
+        
+        # Create temp file
+        temp_dir = tempfile.gettempdir()
+        temp_file_path = Path(temp_dir) / f"resume_{datetime.now().timestamp()}.pdf"
+        
+        # Write uploaded file to temp location
+        with open(temp_file_path, "wb") as buffer:
+            buffer.write(await resume_file.read())
+        
+        # Save resume file as base64
+        with open(temp_file_path, "rb") as f:
+            resume_bytes = f.read()
+            resume_base64 = base64.b64encode(resume_bytes).decode("utf-8")
+        
+        # Store without parsing or auto-fill
+        update_data = {
+            "resume.file_name": resume_file.filename,
+            "resume.file_data": resume_base64,
+            "resume.uploaded_at": datetime.utcnow().isoformat()
+        }
+        
+        col.update_one({"_id": user_id}, {"$set": update_data})
+        
+        # Clean up temp file
+        try:
+            Path(temp_file_path).unlink()
+        except:
+            pass
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "Resume uploaded successfully",
+                "data": {
+                    "file_name": resume_file.filename
+                }
+            }
+        )
+    
+    except Exception as e:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": f"Resume upload failed: {str(e)}"
+            }
+        )
+
 
 @app.get("/jobs")
 def read_jobs():

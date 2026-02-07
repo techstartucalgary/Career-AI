@@ -9,6 +9,7 @@ const LIGHT_PURPLE = '#8B7AB8';
 const BRIGHT_PURPLE = '#A78BFA';
 const WHITE = '#ffffff';
 const TEXT_LIGHT = '#D1D5DB';
+const ERROR_RED = '#EF4444';
 const GRAY_BACKGROUND = '#2D1B3D';
 
 const styles = StyleSheet.create({
@@ -128,6 +129,18 @@ const styles = StyleSheet.create({
       web: {
         boxShadow: '0 0 0 3px rgba(167, 139, 250, 0.2)',
       },
+    }),
+  },
+  inputError: {
+    borderColor: ERROR_RED,
+  },
+  errorText: {
+    color: ERROR_RED,
+    fontSize: 12,
+    marginTop: 6,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
     }),
   },
   navigation: {
