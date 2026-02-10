@@ -23,15 +23,18 @@ def feedback_from_metrics(m):
     ms = m.get("movement_score")
     eye = m.get("eye_contact")
     stare = m.get("stare_streak_sec")
-    d = m.get("framing_proxy")
+    d = m.get("upper_body_proxy")   
+    sp = m.get("slouch_proxy")  
+    bs = m.get("base_shoulder_span")   
     c = m.get("center_offset")
     ta = m.get("torso_angle")
     ts = m.get("torso_sep")
-    out = {"indicators": {}, "tips": []}
+    ss = m.get("shoulder_span")
+    out = {"indicators": {}, "tips": [], "messages": []}
 
     move_state = _state(ms, 0.10, 0.35)
     if move_state == "high":
-        out["tips"].append("Calm your hands/upper-body movement a bit.")
+        out["tips"].append("Calm your hands and upper body movement a bit.")
     elif move_state == "low":
         out["tips"].append("Add a bit more natural hand movement.")
 
@@ -44,15 +47,20 @@ def feedback_from_metrics(m):
         out["tips"].append("Break eye contact occasionally so it feels natural.")
     
     
-    # distance proxy (shoulder span): bigger = closer
+    # Distance (upper-body framing): bigger = closer
     if d is None:
-            dist_state = "unknown"
-    elif d > 0.45:
-        dist_state = "too_close"
-    elif d < 0.22:
-        dist_state = "low"
+        dist_state = "unknown"
+    elif d > 0.58:
+        dist_state = "too_close"   # face/torso too big
+    elif d < 0.21:
+        dist_state = "low"         # too far (elbows/chest not filling enough)
     else:
         dist_state = "ok"
+
+    if dist_state == "too_close":
+            out["tips"].append("Back up slightly, keep shoulders + chest visible.")
+    elif dist_state == "low":
+            out["tips"].append("Move closer, include shoulders, chest, and face.")
 
     #Camera centering
     if c is None:
@@ -66,20 +74,50 @@ def feedback_from_metrics(m):
     else:
         center_state = "ok"
 
-    # upper-body posture (torso angle + collapse)
-    if ta is None or ts is None:
+    # Posture: front-facing strict (detect slouch-back using shoulder span drop)
+    if sp is None and (ta is None or ts is None) and ss is None:
         posture_state = "unknown"
     else:
-        # tune these after watching a few values:
-        # ta ~ 0.00–0.15 upright, >0.25 usually leaning/slouching
-        if ta > 0.30 or ts < 0.12:
+        bad = False
+        warn = False
+
+        # slouch-down cue (head drops toward shoulders)
+        if sp is not None:
+            if sp > -0.10:
+                bad = True
+            elif sp > -0.14:
+                warn = True
+        
+        if ss is not None and bs is not None:
+            ratio = ss / max(1e-6, bs)
+            if ratio < 0.82:
+                bad = True
+            elif ratio < 0.90:
+                warn = True
+
+        # slouch-back cue (you sink away -> shoulder span shrinks)
+        if ss is not None:
+            if ss < 0.17:
+                bad = True
+            elif ss < 0.20:
+                warn = True
+
+        # hips-based cues if available (optional)
+        if ta is not None and ts is not None:
+            if ta > 0.28 or ts < 0.14:
+                bad = True
+            elif ta > 0.20 or ts < 0.17:
+                warn = True
+
+        if bad:
             posture_state = "high"
-            out["tips"].append("Posture: sit taller and keep your upper body upright.")
-        elif ta > 0.22 or ts < 0.16:
+            out["tips"].append("Posture: sit tall - don't sink back in the chair.")
+        elif warn:
             posture_state = "low"
-            out["tips"].append("Posture: straighten up a bit.")
+            out["tips"].append("Posture: straighten up - move slightly forward.")
         else:
             posture_state = "ok"
+
 
     out["indicators"]["posture"] = {"value": ta, "state": posture_state}
     out["indicators"]["centered"] = {"value": c, "state": center_state}
@@ -87,8 +125,7 @@ def feedback_from_metrics(m):
     out["indicators"]["movement"] = {"value": ms, "state": move_state}
     out["indicators"]["eye_contact"] = {"value": eye, "state": eye_state}
     out["indicators"]["stare"] = {"value": stare, "state": stare_state}
-    out["indicators"]["distance"] = {"value": d, "state": dist_state}
-    
+
     msgs = []
 
     msgs.append(_msg(
@@ -96,14 +133,14 @@ def feedback_from_metrics(m):
         move_state,
         ok="Looks calm and steady.",
         low="Add a bit more natural hand movement.",
-        high="Calm your hands/upper-body movement a bit.",
+        high="Calm your hands and upper body movement a bit.",
         unknown="Movement not detected."
     ))
 
     msgs.append(_msg(
         "Posture",
         posture_state,
-        ok="Sitting upright — good posture.",
+        ok="Sitting upright, good posture.",
         low="Straighten up a bit.",
         high="Sit taller and keep your upper body upright.",
         unknown="Posture not detected."
@@ -112,9 +149,9 @@ def feedback_from_metrics(m):
     msgs.append(_msg(
         "Centering",
         center_state,
-        ok="You’re centered in frame.",
+        ok="You are centered in frame.",
         low="Shift slightly toward the center.",
-        high="Re-center yourself in the frame.",
+        high="Center yourself in the frame.",
         unknown="Centering not detected."
     ))
 
@@ -124,7 +161,7 @@ def feedback_from_metrics(m):
         ok="Distance from camera looks good.",
         low="Move a bit closer to the camera.",
         high="Move a bit farther from the camera.",
-        too_close="Back up — you're too close to the camera.",
+        too_close="Back up — you are too close to the camera.",
         unknown="Distance not detected."
     ))
 
@@ -137,7 +174,7 @@ def feedback_from_metrics(m):
         unknown="Eyes not detected."
     ))
 
-    out["tips"] = msgs
+    out["messages"] = msgs
     return out
 
 

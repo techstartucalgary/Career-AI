@@ -83,6 +83,7 @@ class MovementAnalyzer:
         }
 
         self.frames = 0
+        self.base_span = None
         self.eye_contact_frames = 0
         self.eye_ok_run = 0
 
@@ -290,6 +291,23 @@ class MovementAnalyzer:
         l, r = sh
         mid_y = (l[1] + r[1]) / 2.0
         return nose[1] - mid_y  # bigger = nose lower relative to shoulders (slouch/lean down)
+    
+    def _upper_body_proxy(self, results):
+        sh = self._shoulders(results)
+        if not sh or not results or not results.pose_landmarks:
+            return None
+
+        sl, sr = sh
+        sy = (sl[1] + sr[1]) / 2.0
+
+        el_l = self._pose_xy(results, 13)  # left elbow
+        el_r = self._pose_xy(results, 14)  # right elbow
+        if not el_l or not el_r:
+            return None
+
+        ey = (el_l[1] + el_r[1]) / 2.0
+        return abs(ey - sy)  # bigger = closer (more of upper body fills frame)
+
 
 
     def update(self, results, frame_bgr, frame_w, frame_h, is_speaking=None, now=None):
@@ -297,6 +315,9 @@ class MovementAnalyzer:
         self.frames += 1
 
         nose = self._nose(results)
+
+        upper_body = self._upper_body_proxy(results)
+        upper_body = self.ema["distance"].update(upper_body)
 
         left_wrist = self._pose_xy(results, 15)
         right_wrist = self._pose_xy(results, 16)
@@ -354,6 +375,13 @@ class MovementAnalyzer:
 
         sh = self._shoulders(results)
         span = abs(sh[0][0] - sh[1][0]) if sh else None
+
+        if span is not None:
+            if self.base_span is None:
+                self.base_span = span
+            else:
+                if span > self.base_span:
+                    self.base_span = 0.98*self.base_span + 0.02*span
 
         energy = self._gesture_energy(t, left_wrist, right_wrist)
         energy = self.ema["gesture_energy"].update(energy)
@@ -413,6 +441,7 @@ class MovementAnalyzer:
             "fidget": fidget,
             "movement_score": movement_score,
             "shoulder_span": span,
+            "base_shoulder_span": self.base_span,
             "pupil_l": pupil_l,
             "pupil_r": pupil_r,
             "shoulder_slope": slope,
@@ -421,5 +450,7 @@ class MovementAnalyzer:
             "torso_angle": torso_ang,
             "torso_sep": torso_sep,
             "framing_proxy": framing,
+            "upper_body_proxy": upper_body,
+            "slouch": slouch,
         }
     

@@ -145,9 +145,10 @@ while True:
         f"Eye:      {ind.get('eye_contact', {}).get('state', 'unknown')}",
     ]
 
+
     draw_hud(disp, lines, x=30, y=40, dy=34)
 
-    tips = fb.get("tips") or []
+    tips = (fb.get("messages") or []) + (fb.get("tips") or [])
     # de-duplicate while preserving order
     seen = set()
     tips = [t for t in tips if not (t in seen or seen.add(t))]
