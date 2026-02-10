@@ -20,6 +20,7 @@ def _msg(label, state, ok, low, high, unknown, too_close=None):
     return f"{label}: {unknown}"
 
 def feedback_from_metrics(m):
+    mbs = m.get("movement_bad_sec")
     ms = m.get("movement_score")
     eye = m.get("eye_contact")
     stare = m.get("stare_streak_sec")
@@ -33,11 +34,11 @@ def feedback_from_metrics(m):
     pbs = m.get("posture_bad_sec")
     out = {"indicators": {}, "tips": [], "messages": []}
 
-    move_state = _state(ms, 0.10, 0.35)
-    if move_state == "high":
+    move_state = _state(ms, 0.15, 0.55)
+    if move_state == "high" and mbs is not None and mbs > 2.0:
         out["tips"].append("Calm your hands and upper body movement a bit.")
     elif move_state == "low":
-        out["tips"].append("Add a bit more natural hand movement.")
+        pass  # don't push "move more" until you add speaking mode
 
     eye_state = "ok" if eye is True else "low" if eye is False else "unknown"
     stare_state = _state(stare, 0.0, 6.0)

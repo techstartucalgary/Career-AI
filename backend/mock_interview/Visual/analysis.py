@@ -82,6 +82,8 @@ class MovementAnalyzer:
             "framing": EMA(0.25),
         }
 
+        self.movement_bad_sec = 0.0
+
         self.frames = 0
         self.base_span = None
         self.posture_bad_sec = 0.0
@@ -433,6 +435,14 @@ class MovementAnalyzer:
         f = clamp(fidget or 0.0, 0.0, 1.5) / 1.5
 
         movement_score = 0.75 * e + 0.25 * f
+        dt = 0.0 if self.t_prev is None else max(1e-3, t - self.t_prev)
+
+        if movement_score > 0.60:
+            self.movement_bad_sec += dt
+        elif movement_score < 0.45:
+            self.movement_bad_sec = max(0.0, self.movement_bad_sec - 2.0*dt)
+        else:
+            self.movement_bad_sec = max(0.0, self.movement_bad_sec - 0.7*dt)
 
         self.prev["nose"] = nose
         self.prev["left_wrist"] = left_wrist
@@ -475,5 +485,6 @@ class MovementAnalyzer:
             "upper_body_proxy": upper_body,
             "slouch": slouch,
             "posture_bad_sec": self.posture_bad_sec,
+            "movement_bad_sec": self.movement_bad_sec,
         }
     
