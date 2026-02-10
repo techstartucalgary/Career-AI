@@ -1,7 +1,7 @@
 """
 Gemini LLM provider implementation
 """
-from typing import List, Any
+from typing import List, Any, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import BaseMessage, HumanMessage
 from .base import BaseLLMProvider
