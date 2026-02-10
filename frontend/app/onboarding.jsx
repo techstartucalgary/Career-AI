@@ -38,14 +38,13 @@ const OnboardingPage = () => {
   const handleNext = async (stepData) => {
     const nextData = { ...formData, ...stepData };
     setFormData(nextData);
+    
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
-    } else {
-      // Onboarding complete, navigate to Job Board
-      router.push('/jobs');
       return;
     }
-
+    
+    // Only call API when completing final step (step 3)
     try {
       await apiFetch('/onboarding/complete', {
         method: 'POST',

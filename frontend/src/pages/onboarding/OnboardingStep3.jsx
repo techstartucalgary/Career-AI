@@ -77,6 +77,12 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
 
   return (
     <View style={styles.container}>
+      {formData.email && (
+        <View style={styles.emailBadge}>
+          <View style={styles.badgeDot} />
+          <Text style={styles.badgeText}>{formData.email}</Text>
+        </View>
+      )}
       <View style={styles.header}>
         <Text style={styles.title}>Finally, Tell Us What You're Looking For</Text>
         <Text style={styles.subtitle}>
@@ -103,6 +109,9 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
                   onSubmitEditing={handleAddPosition}
                   onFocus={() => setFocusedInput('position')}
                   onBlur={() => setFocusedInput(null)}
+                  autoComplete="off"
+                  name="position"
+                  id="position"
                 />
                 <Pressable
                   style={styles.addButton}
@@ -146,6 +155,9 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
                   onSubmitEditing={handleAddLocation}
                   onFocus={() => setFocusedInput('location')}
                   onBlur={() => setFocusedInput(null)}
+                  autoComplete="off"
+                  name="locationInput"
+                  id="locationInput"
                 />
                 <Pressable
                   style={styles.addButton}

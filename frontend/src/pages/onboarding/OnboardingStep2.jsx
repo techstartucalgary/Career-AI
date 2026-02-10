@@ -98,6 +98,12 @@ const OnboardingStep2 = ({ formData, onNext, onBack }) => {
 
   return (
     <View style={styles.container}>
+      {formData.email && (
+        <View style={styles.emailBadge}>
+          <View style={styles.badgeDot} />
+          <Text style={styles.badgeText}>{formData.email}</Text>
+        </View>
+      )}
       <View style={styles.contentRow}>
         <View style={styles.textSection}>
           <Text style={styles.title}>
@@ -106,7 +112,6 @@ const OnboardingStep2 = ({ formData, onNext, onBack }) => {
           </Text>
         </View>
         <View style={styles.uploadSection}>
-          <Text style={styles.requiredLabel}>Resume*</Text>
           <View style={styles.uploadCard}>
             {isExtracting ? (
               <View style={styles.extractingContainer}>

@@ -66,17 +66,17 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
 
   return (
     <View style={styles.container}>
+      {formData.email && (
+        <View style={styles.emailBadge}>
+          <View style={styles.badgeDot} />
+          <Text style={styles.badgeText}>{formData.email}</Text>
+        </View>
+      )}
       <View style={styles.header}>
         <Text style={styles.title}>Complete Your Profile</Text>
         <Text style={styles.subtitle}>
           Fill out your information once, and we'll use it for every job application
         </Text>
-        {formData.email && (
-          <View style={styles.emailDisplay}>
-            <Text style={styles.emailLabel}>Email:</Text>
-            <Text style={styles.emailValue}>{formData.email}</Text>
-          </View>
-        )}
       </View>
 
       <View style={styles.formCard}>
@@ -97,6 +97,9 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 onChangeText={(value) => handleChange('firstName', value)}
                 onFocus={() => setFocusedInput('firstName')}
                 onBlur={() => setFocusedInput(null)}
+                autoComplete="given-name"
+                name="firstName"
+                id="firstName"
               />
               {!!errors.firstName && (
                 <Text style={styles.errorText}>{errors.firstName}</Text>
@@ -118,6 +121,9 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 autoCapitalize="none"
                 onFocus={() => setFocusedInput('linkedinUrl')}
                 onBlur={() => setFocusedInput(null)}
+                autoComplete="url"
+                name="linkedinUrl"
+                id="linkedinUrl"
               />
               {!!errors.linkedinUrl && (
                 <Text style={styles.errorText}>{errors.linkedinUrl}</Text>
@@ -138,6 +144,9 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 autoCapitalize="none"
                 onFocus={() => setFocusedInput('website')}
                 onBlur={() => setFocusedInput(null)}
+                autoComplete="url"
+                name="website"
+                id="website"
               />
             </View>
 
@@ -155,6 +164,9 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 onChangeText={(value) => handleChange('location', value)}
                 onFocus={() => setFocusedInput('location')}
                 onBlur={() => setFocusedInput(null)}
+                autoComplete="off"
+                name="location"
+                id="location"
               />
               {!!errors.location && (
                 <Text style={styles.errorText}>{errors.location}</Text>
@@ -178,6 +190,9 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 onChangeText={(value) => handleChange('lastName', value)}
                 onFocus={() => setFocusedInput('lastName')}
                 onBlur={() => setFocusedInput(null)}
+                autoComplete="family-name"
+                name="lastName"
+                id="lastName"
               />
               {!!errors.lastName && (
                 <Text style={styles.errorText}>{errors.lastName}</Text>
@@ -199,6 +214,9 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 keyboardType="phone-pad"
                 onFocus={() => setFocusedInput('cellPhone')}
                 onBlur={() => setFocusedInput(null)}
+                autoComplete="tel"
+                name="cellPhone"
+                id="cellPhone"
               />
               {!!errors.cellPhone && (
                 <Text style={styles.errorText}>{errors.cellPhone}</Text>
@@ -219,6 +237,9 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 autoCapitalize="none"
                 onFocus={() => setFocusedInput('githubUrl')}
                 onBlur={() => setFocusedInput(null)}
+                autoComplete="url"
+                name="githubUrl"
+                id="githubUrl"
               />
             </View>
           </View>

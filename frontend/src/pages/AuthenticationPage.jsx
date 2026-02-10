@@ -232,6 +232,9 @@ export default function AuthenticationPage() {
                       onChangeText={setName}
                       onFocus={() => setFocusedInput('name')}
                       onBlur={() => setFocusedInput(null)}
+                      autoComplete="name"
+                      name="name"
+                      id="name"
                     />
                     {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
                   </View>
@@ -253,6 +256,9 @@ export default function AuthenticationPage() {
                     autoCapitalize="none"
                     onFocus={() => setFocusedInput('email')}
                     onBlur={() => setFocusedInput(null)}
+                    autoComplete="email"
+                    name="email"
+                    id="email"
                   />
                   {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
                 </View>
@@ -272,6 +278,9 @@ export default function AuthenticationPage() {
                     secureTextEntry
                     onFocus={() => setFocusedInput('password')}
                     onBlur={() => setFocusedInput(null)}
+                    autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                    name="password"
+                    id="password"
                   />
                   {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
                 </View>
@@ -292,6 +301,9 @@ export default function AuthenticationPage() {
                       secureTextEntry
                       onFocus={() => setFocusedInput('confirmPassword')}
                       onBlur={() => setFocusedInput(null)}
+                      autoComplete="new-password"
+                      name="confirmPassword"
+                      id="confirmPassword"
                     />
                     {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
                   </View>
