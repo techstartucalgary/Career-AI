@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Header from '../components/Header';
 import styles from './JobPostingPage.styles';
+import './JobPages.css';
 
 const JobPostingPage = () => {
   const router = useRouter();
@@ -39,15 +40,17 @@ const JobPostingPage = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <LinearGradient 
-        colors={['#1F1C2F', '#2D1B3D']} 
+      <LinearGradient
+        colors={['#0A0A0F', '#12101A', '#0A0A0F']}
         style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <View style={styles.contentContainer}>
           {/* Left Sidebar */}
           <View style={styles.sidebar}>
-            <Pressable 
-              onPress={() => router.back()} 
+            <Pressable
+              onPress={() => router.back()}
               style={[
                 styles.backButton,
                 hoveredButton === 'back' && styles.backButtonHover
@@ -61,9 +64,9 @@ const JobPostingPage = () => {
               </View>
               <Text style={styles.backButtonText}>Back</Text>
             </Pressable>
-            
+
             <View style={styles.actionButtons}>
-              <Pressable 
+              <Pressable
                 style={[
                   styles.actionButton,
                   styles.primaryActionButton,
@@ -77,7 +80,7 @@ const JobPostingPage = () => {
                 </View>
                 <Text style={styles.actionButtonText}>Apply Now</Text>
               </Pressable>
-              <Pressable 
+              <Pressable
                 style={[
                   styles.actionButton,
                   hoveredButton === 'interview' && styles.actionButtonHover
@@ -91,7 +94,7 @@ const JobPostingPage = () => {
                 </View>
                 <Text style={styles.actionButtonText}>Interview Prep</Text>
               </Pressable>
-              <Pressable 
+              <Pressable
                 style={[
                   styles.actionButton,
                   hoveredButton === 'cover-letter' && styles.actionButtonHover
@@ -105,7 +108,7 @@ const JobPostingPage = () => {
                 </View>
                 <Text style={styles.actionButtonText}>Generate Cover Letter</Text>
               </Pressable>
-              <Pressable 
+              <Pressable
                 style={[
                   styles.actionButton,
                   hoveredButton === 'resume' && styles.actionButtonHover
@@ -123,7 +126,7 @@ const JobPostingPage = () => {
           </View>
 
           {/* Right Content */}
-          <ScrollView 
+          <ScrollView
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -168,7 +171,7 @@ const JobPostingPage = () => {
                     </View>
                   </View>
                 </View>
-                <Pressable 
+                <Pressable
                   style={styles.bookmarkButton}
                   onPress={() => setIsBookmarked(!isBookmarked)}
                 >

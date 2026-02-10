@@ -1,20 +1,16 @@
 import { StyleSheet, Platform, Dimensions } from 'react-native';
+import { THEME } from '../../src/styles/theme';
 
 const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
-const GRAY_BACKGROUND = '#2D1B3D';
+const { colors: COLORS } = THEME;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
   },
   gradient: {
     flex: 1,
@@ -38,9 +34,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: 24,
     paddingVertical: 50,
-    backgroundColor: 'rgba(45, 27, 61, 0.6)',
+    backgroundColor: 'rgba(18, 18, 26, 0.7)',
     borderWidth: 1,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
+    borderColor: COLORS.border,
     width: '100%',
     ...Platform.select({
       web: {
@@ -94,12 +90,12 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
   },
   badgeText: {
     fontSize: 13,
     fontWeight: '600',
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     letterSpacing: 0.5,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
@@ -109,7 +105,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: isDesktop ? 56 : isTablet ? 48 : 36,
     fontWeight: 'bold',
-    color: WHITE,
+    color: COLORS.white,
     textAlign: 'center',
     marginBottom: 16,
     fontFamily: Platform.select({
@@ -122,7 +118,7 @@ const styles = StyleSheet.create({
   },
   heroSubtitle: {
     fontSize: isDesktop ? 20 : 18,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: isDesktop ? 30 : 26,
     maxWidth: 700,
@@ -132,11 +128,11 @@ const styles = StyleSheet.create({
   instructionsCard: {
     width: '100%',
     maxWidth: 800,
-    backgroundColor: 'rgba(45, 27, 61, 0.8)',
+    backgroundColor: COLORS.surface,
     borderRadius: 24,
     padding: isDesktop ? 48 : isTablet ? 40 : 32,
     borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.4)',
+    borderColor: COLORS.border,
     alignItems: 'center',
     ...Platform.select({
       web: {
@@ -159,11 +155,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
-    backgroundColor: 'rgba(139, 122, 184, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
+    borderColor: COLORS.border,
     ...Platform.select({
       web: {
         transition: 'all 0.2s ease',
@@ -174,7 +170,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -183,7 +179,7 @@ const styles = StyleSheet.create({
         boxShadow: '0 2px 8px rgba(167, 139, 250, 0.4)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.4,
         shadowRadius: 8,
@@ -192,20 +188,20 @@ const styles = StyleSheet.create({
     }),
   },
   instructionNumberText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 18,
     fontWeight: 'bold',
   },
   instructionText: {
     flex: 1,
     fontSize: isDesktop ? 18 : 16,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     lineHeight: 24,
   },
   continueButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 40,
@@ -214,10 +210,10 @@ const styles = StyleSheet.create({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
+        boxShadow: '0 4px 15px rgba(167, 139, 250, 0.25)',
       },
       default: {
-        shadowColor: LIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -226,14 +222,14 @@ const styles = StyleSheet.create({
     }),
   },
   continueButtonHover: {
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primaryDark,
     transform: [{ translateY: -2 }],
     ...Platform.select({
       web: {
         boxShadow: '0 6px 20px rgba(167, 139, 250, 0.6)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOpacity: 0.5,
         shadowRadius: 10,
         elevation: 8,
@@ -241,7 +237,7 @@ const styles = StyleSheet.create({
     }),
   },
   continueButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 18,
     fontWeight: '600',
   },
@@ -256,7 +252,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: 12,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
   },
   arrowHead: {
     position: 'absolute',
@@ -267,7 +263,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 7,
     borderTopWidth: 5,
     borderBottomWidth: 5,
-    borderLeftColor: WHITE,
+    borderLeftColor: COLORS.white,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
     borderRightWidth: 0,

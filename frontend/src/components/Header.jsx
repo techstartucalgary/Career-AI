@@ -32,7 +32,7 @@ const Header = () => {
     <View style={styles.header}>
       <View style={styles.container}>
         <View style={styles.nav}>
-          <Pressable onPress={() => router.push('/home')} style={styles.logoContainer}>
+          <Pressable onPress={() => router.push('/jobs')} style={styles.logoContainer}>
             <View style={styles.logoCircle}>
               <View style={styles.logoStar} />
             </View>

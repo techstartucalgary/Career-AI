@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './AuthenticationPage.styles';
+import { THEME } from '../styles/theme';
 import { apiFetch, setAuthToken } from '../services/api';
 
 export default function AuthenticationPage() {
@@ -93,18 +94,13 @@ export default function AuthenticationPage() {
   const SelectField = ({ value, onValueChange, options, placeholder, focused, onFocus, onBlur }) => {
     const [isOpen, setIsOpen] = useState(false);
 
-    const handleToggle = (e) => {
-      // Prevent event propagation to avoid double-click issues
-      if (e && e.stopPropagation) {
-        e.stopPropagation();
-      }
-      if (!isOpen) {
-        setIsOpen(true);
-        onFocus();
-      } else {
-        setIsOpen(false);
-        onBlur();
-      }
+    const handleToggle = () => {
+      setIsOpen((prev) => {
+        const next = !prev;
+        if (next) onFocus();
+        else onBlur();
+        return next;
+      });
     };
 
     const handleSelect = (option) => {
@@ -126,7 +122,8 @@ export default function AuthenticationPage() {
             focused && styles.inputFocused,
             isOpen && styles.selectInputOpen
           ]}
-          onPress={handleToggle}
+          // RN-web sometimes requires 2 clicks with onPress due to focus/press ordering.
+          onPressIn={handleToggle}
           hitSlop={0}
           accessibilityRole="button"
           accessibilityLabel={`Toggle ${placeholder}`}
@@ -179,7 +176,7 @@ export default function AuthenticationPage() {
     <View style={styles.container}>
       <Header />
       <LinearGradient
-        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']}
+        colors={THEME.gradients.page}
         style={styles.gradient}
       >
         <KeyboardAvoidingView
@@ -371,7 +368,7 @@ export default function AuthenticationPage() {
                     styles.submitButton,
                     hoveredButton === 'submit' && styles.submitButtonHover
                   ]}
-                  onPress={handleSubmit} 
+                  onPress={handleSubmit}
                   disabled={loading}
                   onHoverIn={() => Platform.OS === 'web' && setHoveredButton('submit')}
                   onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
@@ -393,7 +390,7 @@ export default function AuthenticationPage() {
                 </View>
 
                 {/* Switch Mode Button */}
-                <Pressable 
+                <Pressable
                   style={[
                     styles.switchButton,
                     hoveredSwitch && styles.switchButtonHover

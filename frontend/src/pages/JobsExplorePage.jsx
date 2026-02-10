@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './JobsExplorePage.styles';
+import './JobPages.css';
 
 const JobsExplorePage = () => {
   const router = useRouter();
@@ -57,9 +58,11 @@ const JobsExplorePage = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <LinearGradient 
-        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']} 
+      <LinearGradient
+        colors={['#0A0A0F', '#12101A', '#0A0A0F']}
         style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
@@ -232,7 +235,7 @@ const JobsExplorePage = () => {
                       </Pressable>
                     </View>
                   </View>
-                  
+
                   <View style={styles.jobCardDetails}>
                     <View style={styles.jobDetailItem}>
                       <View style={styles.detailIcon}>
@@ -253,7 +256,7 @@ const JobsExplorePage = () => {
                       <Text style={styles.jobCardPosted}>Posted {job.posted}</Text>
                     </View>
                   </View>
-                  
+
                   <View style={styles.jobTypes}>
                     {job.types.map((type, index) => (
                       <View key={index} style={styles.jobTypeTag}>
@@ -261,11 +264,11 @@ const JobsExplorePage = () => {
                       </View>
                     ))}
                   </View>
-                  
+
                   <Text style={styles.jobCardDescription} numberOfLines={2}>
                     {job.description}
                   </Text>
-                  
+
                   <View style={styles.jobCardFooter}>
                     <Pressable style={styles.viewDetailsButton}>
                       <Text style={styles.viewDetailsText}>View Details</Text>

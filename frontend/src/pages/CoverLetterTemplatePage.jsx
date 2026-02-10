@@ -5,6 +5,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import Header from '../components/Header';
 import styles from './CoverLetterTemplatePage.styles';
+import './JobPages.css';
 
 const CoverLetterTemplatePage = () => {
   const router = useRouter();
@@ -20,7 +21,7 @@ const CoverLetterTemplatePage = () => {
         type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
         copyToCacheDirectory: true
       });
-      
+
       if (result.type === 'success' || !result.canceled) {
         const uri = result.uri ?? result.assets?.[0]?.uri ?? result.assets?.[0]?.fileCopyUri;
         const name = result.name ?? result.assets?.[0]?.name;
@@ -45,9 +46,11 @@ const CoverLetterTemplatePage = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <LinearGradient 
-        colors={['#1F1C2F', '#2D1B3D']} 
+      <LinearGradient
+        colors={['#0A0A0F', '#12101A', '#0A0A0F']}
         style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
@@ -59,12 +62,12 @@ const CoverLetterTemplatePage = () => {
                 </Text>
               </View>
               <Text style={styles.headerTitle}>
-                {templateMode === 'template' 
+                {templateMode === 'template'
                   ? 'Choose a Professional Template'
                   : 'Optimize Your Current Cover Letter'}
               </Text>
               <Text style={styles.headerText}>
-                {templateMode === 'template' 
+                {templateMode === 'template'
                   ? 'Select from our collection of professional templates and customize to your needs'
                   : 'Upload your cover letter and let AI enhance it for better impact and personalization'}
               </Text>

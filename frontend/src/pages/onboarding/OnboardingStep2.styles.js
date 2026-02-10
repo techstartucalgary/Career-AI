@@ -1,16 +1,11 @@
 import { StyleSheet, Platform, Dimensions } from 'react-native';
+import { THEME } from '../../styles/theme';
 
 const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
-const GRAY_BACKGROUND = '#2D1B3D';
-const UPLOAD_GRAY = '#E5E7EB';
+const { colors: COLORS } = THEME;
 
 const styles = StyleSheet.create({
   container: {
@@ -34,7 +29,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: isDesktop ? 56 : isTablet ? 48 : 36,
     fontWeight: 'bold',
-    color: WHITE,
+    color: COLORS.white,
     lineHeight: isDesktop ? 68 : isTablet ? 58 : 44,
     fontFamily: Platform.select({
       web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -56,23 +51,24 @@ const styles = StyleSheet.create({
     textAlign: isDesktop ? 'left' : 'center',
   },
   uploadCard: {
-    backgroundColor: UPLOAD_GRAY,
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: isDesktop ? 48 : isTablet ? 40 : 32,
     minHeight: 300,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
+    borderColor: COLORS.border,
     borderStyle: 'dashed',
     ...Platform.select({
       web: {
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
+        backdropFilter: 'blur(28px)',
       },
       default: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.25,
         shadowRadius: 20,
         elevation: 8,
       },
@@ -110,7 +106,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: '#4A5568',
+    backgroundColor: COLORS.textMuted,
     top: 0,
     left: 0,
   },
@@ -119,7 +115,7 @@ const styles = StyleSheet.create({
     width: 35,
     height: 35,
     borderRadius: 17.5,
-    backgroundColor: '#4A5568',
+    backgroundColor: COLORS.textMuted,
     top: -5,
     right: 0,
   },
@@ -128,7 +124,7 @@ const styles = StyleSheet.create({
     width: 25,
     height: 25,
     borderRadius: 12.5,
-    backgroundColor: '#4A5568',
+    backgroundColor: COLORS.textMuted,
     bottom: 0,
     left: 15,
   },
@@ -145,7 +141,7 @@ const styles = StyleSheet.create({
     left: 4,
     width: 12,
     height: 2,
-    backgroundColor: '#4A5568',
+    backgroundColor: COLORS.textMuted,
     transform: [{ rotate: '45deg' }],
   },
   arrowHead: {
@@ -157,14 +153,14 @@ const styles = StyleSheet.create({
     borderLeftWidth: 6,
     borderTopWidth: 4,
     borderBottomWidth: 4,
-    borderLeftColor: '#4A5568',
+    borderLeftColor: COLORS.textMuted,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
     borderRightWidth: 0,
   },
   uploadText: {
     fontSize: 16,
-    color: '#4A5568',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -173,11 +169,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.bgAlt,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: COLORS.border,
   },
   fileInfo: {
     flexDirection: 'row',
@@ -201,7 +197,7 @@ const styles = StyleSheet.create({
   fileName: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
+    color: COLORS.textPrimary,
     fontWeight: '500',
   },
   removeButton: {
@@ -219,7 +215,7 @@ const styles = StyleSheet.create({
     }),
   },
   removeButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 20,
     fontWeight: 'bold',
     lineHeight: 20,
@@ -231,7 +227,7 @@ const styles = StyleSheet.create({
   },
   extractingText: {
     fontSize: 16,
-    color: '#4A5568',
+    color: COLORS.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -242,47 +238,46 @@ const styles = StyleSheet.create({
     maxWidth: 1200,
   },
   backButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 32,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
     ...Platform.select({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
+        backdropFilter: 'blur(10px)',
       },
       default: {
-        shadowColor: LIGHT_PURPLE,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.25,
         shadowRadius: 8,
         elevation: 6,
       },
     }),
   },
   backButtonHover: {
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: 'rgba(167, 139, 250, 0.10)',
     transform: [{ translateY: -2 }],
     ...Platform.select({
       web: {
-        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.6)',
+        borderColor: COLORS.primary,
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
-        elevation: 8,
+        shadowOpacity: 0.3,
       },
     }),
   },
   backButtonText: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '600',
   },
   continueButton: {
-    backgroundColor: LIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 32,
@@ -291,10 +286,10 @@ const styles = StyleSheet.create({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
-        boxShadow: '0 4px 15px rgba(139, 122, 184, 0.4)',
+        boxShadow: '0 4px 15px rgba(167, 139, 250, 0.25)',
       },
       default: {
-        shadowColor: LIGHT_PURPLE,
+        shadowColor: COLORS.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -311,22 +306,22 @@ const styles = StyleSheet.create({
     }),
   },
   continueButtonHover: {
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primaryDark,
     transform: [{ translateY: -2 }],
     ...Platform.select({
       web: {
-        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.6)',
+        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.35)',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
-        shadowOpacity: 0.5,
+        shadowColor: COLORS.primary,
+        shadowOpacity: 0.4,
         shadowRadius: 10,
-        elevation: 8,
+        elevation: 7,
       },
     }),
   },
   continueButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
   },

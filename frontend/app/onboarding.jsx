@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Header from '../src/components/Header';
+import { THEME } from '../src/styles/theme';
 import OnboardingStep1 from '../src/pages/onboarding/OnboardingStep1';
 import OnboardingStep2 from '../src/pages/onboarding/OnboardingStep2';
 import OnboardingStep3 from '../src/pages/onboarding/OnboardingStep3';
@@ -39,6 +40,9 @@ const OnboardingPage = () => {
     setFormData(nextData);
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
+    } else {
+      // Onboarding complete, navigate to Job Board
+      router.push('/jobs');
       return;
     }
 
@@ -93,7 +97,7 @@ const OnboardingPage = () => {
     <View style={styles.container}>
       <Header />
       <LinearGradient
-        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']}
+        colors={THEME.gradients.page}
         style={styles.gradient}
       >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>

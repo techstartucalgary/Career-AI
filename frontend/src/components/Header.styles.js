@@ -1,14 +1,13 @@
 import { StyleSheet, Platform } from 'react-native';
+import { THEME } from '../styles/theme';
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const WHITE = '#ffffff';
+const { colors: COLORS } = THEME;
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
     borderBottomWidth: 1,
-    borderBottomColor: LIGHT_PURPLE,
+    borderBottomColor: COLORS.borderLight,
     ...Platform.select({
       web: {
         position: 'sticky',
@@ -45,9 +44,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
     borderWidth: 2,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -55,13 +54,13 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderWidth: 2,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
     transform: [{ rotate: '45deg' }],
   },
   logoText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: WHITE,
+    color: COLORS.white,
   },
   navLinks: {
     flexDirection: 'row',
@@ -74,7 +73,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   navLink: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '500',
   },
@@ -93,11 +92,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: LIGHT_PURPLE,
+    borderColor: COLORS.borderLight,
     backgroundColor: 'transparent',
   },
   messagesButtonText: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '500',
   },
@@ -109,11 +108,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: LIGHT_PURPLE,
+    borderColor: COLORS.borderLight,
     backgroundColor: 'transparent',
   },
   logoutButtonText: {
-    color: WHITE,
+    color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '500',
   },
@@ -128,7 +127,7 @@ const styles = StyleSheet.create({
     top: 7,
     width: 12,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.textPrimary,
   },
   arrowHead: {
     position: 'absolute',
@@ -141,7 +140,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 6,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
-    borderLeftColor: WHITE,
+    borderLeftColor: COLORS.textPrimary,
   },
 });
 

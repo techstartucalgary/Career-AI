@@ -4,16 +4,28 @@ const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
+// Landing Page Color System
+const COLORS = {
+  bg: '#08080C',
+  bgAlt: '#0C0C12',
+  surface: '#12121A',
+  surfaceLight: '#1A1A24',
+  border: 'rgba(255,255,255,0.06)',
+  borderLight: 'rgba(255,255,255,0.1)',
+  primary: '#A78BFA',
+  primaryDark: '#8B5CF6',
+  primaryLight: '#C4B5FD',
+  accent: '#6366F1',
+  white: '#FFFFFF',
+  textPrimary: 'rgba(255,255,255,0.95)',
+  textSecondary: 'rgba(255,255,255,0.6)',
+  textMuted: 'rgba(255,255,255,0.4)',
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.bg,
   },
   gradient: {
     flex: 1,
@@ -25,11 +37,16 @@ const styles = StyleSheet.create({
   sidebar: {
     width: isDesktop ? 320 : '100%',
     padding: isDesktop ? 32 : 24,
-    backgroundColor: '#2D1B3D',
-    borderRightWidth: isDesktop ? 1.5 : 0,
-    borderRightColor: 'rgba(139, 122, 184, 0.2)',
-    borderBottomWidth: isDesktop ? 0 : 1.5,
-    borderBottomColor: 'rgba(139, 122, 184, 0.2)',
+    backgroundColor: COLORS.surface,
+    borderRightWidth: isDesktop ? 1 : 0,
+    borderRightColor: COLORS.border,
+    borderBottomWidth: isDesktop ? 0 : 1,
+    borderBottomColor: COLORS.border,
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(20px)',
+      },
+    }),
   },
   backButton: {
     flexDirection: 'row',
@@ -39,9 +56,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: 'rgba(139, 122, 184, 0.1)',
+    backgroundColor: COLORS.surfaceLight,
     borderWidth: 1,
-    borderColor: 'rgba(139, 122, 184, 0.2)',
+    borderColor: COLORS.border,
     alignSelf: 'flex-start',
     ...Platform.select({
       web: {
@@ -51,8 +68,12 @@ const styles = StyleSheet.create({
     }),
   },
   backButtonHover: {
-    backgroundColor: 'rgba(139, 122, 184, 0.2)',
-    borderColor: LIGHT_PURPLE,
+    borderColor: COLORS.primary,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 12px rgba(167, 139, 250, 0.2)',
+      },
+    }),
   },
   backArrow: {
     width: 20,
@@ -65,7 +86,7 @@ const styles = StyleSheet.create({
     top: 9,
     width: 12,
     height: 2,
-    backgroundColor: WHITE,
+    backgroundColor: COLORS.white,
   },
   backArrowHead: {
     position: 'absolute',
@@ -78,16 +99,12 @@ const styles = StyleSheet.create({
     borderLeftWidth: 8,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
-    borderLeftColor: WHITE,
+    borderLeftColor: COLORS.white,
   },
   backButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 15,
     fontWeight: '500',
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   actionButtons: {
     gap: 16,
@@ -97,16 +114,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
-    backgroundColor: 'rgba(139, 122, 184, 0.1)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surfaceLight,
     gap: 12,
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
     ...Platform.select({
       web: {
         transition: 'all 0.3s ease',
@@ -115,18 +127,22 @@ const styles = StyleSheet.create({
     }),
   },
   primaryActionButton: {
-    backgroundColor: LIGHT_PURPLE,
-    borderColor: LIGHT_PURPLE,
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
+      },
+    }),
   },
   actionButtonHover: {
     transform: [{ translateY: -2 }],
-    borderColor: BRIGHT_PURPLE,
-    backgroundColor: isDesktop ? BRIGHT_PURPLE : LIGHT_PURPLE,
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
+    borderColor: COLORS.primary,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 30px rgba(167, 139, 250, 0.4)',
+      },
+    }),
   },
   actionButtonIcon: {
     width: 24,
@@ -140,38 +156,34 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 2.5,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
   },
   interviewIcon: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2.5,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
   },
   letterIcon: {
     width: 20,
     height: 16,
     borderRadius: 2,
     borderWidth: 2.5,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
   },
   resumeIcon: {
     width: 16,
     height: 20,
     borderRadius: 2,
     borderWidth: 2.5,
-    borderColor: WHITE,
+    borderColor: COLORS.white,
   },
   actionButtonText: {
-    color: WHITE,
+    color: COLORS.white,
     fontSize: 15,
     fontWeight: '600',
     flex: 1,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   scrollView: {
     flex: 1,
@@ -189,8 +201,8 @@ const styles = StyleSheet.create({
   jobHeader: {
     marginBottom: 48,
     paddingBottom: 32,
-    borderBottomWidth: 1.5,
-    borderBottomColor: 'rgba(139, 122, 184, 0.2)',
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
   jobHeaderLeft: {
     flexDirection: 'row',
@@ -201,20 +213,16 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   companyLogoText: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: TEXT_LIGHT,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   jobHeaderContent: {
     flex: 1,
@@ -229,11 +237,7 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 18,
     fontWeight: '600',
-    color: TEXT_LIGHT,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    color: COLORS.textSecondary,
   },
   matchBadge: {
     backgroundColor: 'rgba(167, 139, 250, 0.15)',
@@ -248,35 +252,20 @@ const styles = StyleSheet.create({
   },
   matchScore: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: TEXT_LIGHT,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   matchLabel: {
     fontSize: 12,
-    color: TEXT_LIGHT,
-    opacity: 0.7,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    color: COLORS.textSecondary,
   },
   jobTitle: {
     fontSize: isDesktop ? 36 : isTablet ? 32 : 28,
-    fontWeight: 'bold',
-    color: WHITE,
+    fontWeight: '700',
+    color: COLORS.white,
     marginBottom: 20,
     lineHeight: isDesktop ? 44 : isTablet ? 40 : 36,
-    fontFamily: Platform.select({
-      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      default: 'sans-serif',
-    }),
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 12,
+    letterSpacing: -0.5,
   },
   jobMeta: {
     flexDirection: 'row',
@@ -300,14 +289,14 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: TEXT_LIGHT,
+    borderColor: COLORS.textSecondary,
     opacity: 0.7,
   },
   typeIcon: {
     width: 16,
     height: 16,
     borderWidth: 2,
-    borderColor: TEXT_LIGHT,
+    borderColor: COLORS.textSecondary,
     transform: [{ rotate: '45deg' }],
     opacity: 0.7,
   },
@@ -315,18 +304,13 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderWidth: 2,
-    borderColor: TEXT_LIGHT,
+    borderColor: COLORS.textSecondary,
     transform: [{ rotate: '45deg' }],
     opacity: 0.7,
   },
   metaText: {
     fontSize: 15,
-    color: TEXT_LIGHT,
-    opacity: 0.9,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
+    color: COLORS.textSecondary,
   },
   bookmarkButton: {
     width: 48,
@@ -334,9 +318,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
-    backgroundColor: 'rgba(139, 122, 184, 0.1)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
+    backgroundColor: COLORS.surfaceLight,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     ...Platform.select({
       web: {
         transition: 'all 0.3s ease',
@@ -359,7 +343,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 2.5,
     borderTopWidth: 2.5,
     borderBottomWidth: 8,
-    borderColor: TEXT_LIGHT,
+    borderColor: COLORS.textSecondary,
     borderTopLeftRadius: 2,
     borderTopRightRadius: 2,
     opacity: 0.6,
@@ -377,24 +361,24 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   aboutIcon: {
     width: 28,
     height: 28,
     borderRadius: 14,
     borderWidth: 2.5,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
   },
   responsibilitiesIcon: {
     width: 28,
     height: 28,
     borderWidth: 2.5,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
     transform: [{ rotate: '45deg' }],
   },
   qualificationsIcon: {
@@ -402,41 +386,24 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     borderWidth: 2.5,
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.primary,
   },
   sectionHeading: {
     fontSize: isDesktop ? 28 : 24,
-    fontWeight: 'bold',
-    color: WHITE,
-    fontFamily: Platform.select({
-      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      default: 'sans-serif',
-    }),
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    fontWeight: '700',
+    color: COLORS.white,
   },
   paragraph: {
     fontSize: 17,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     lineHeight: 28,
     marginBottom: 20,
-    opacity: 0.9,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   sectionSubtext: {
     fontSize: 17,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     lineHeight: 28,
     marginBottom: 20,
-    opacity: 0.9,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
   bulletItem: {
     flexDirection: 'row',
@@ -455,18 +422,13 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: COLORS.primary,
   },
   bulletText: {
     flex: 1,
     fontSize: 17,
-    color: TEXT_LIGHT,
+    color: COLORS.textSecondary,
     lineHeight: 28,
-    opacity: 0.9,
-    fontFamily: Platform.select({
-      web: 'system-ui, sans-serif',
-      default: 'sans-serif',
-    }),
   },
 });
 

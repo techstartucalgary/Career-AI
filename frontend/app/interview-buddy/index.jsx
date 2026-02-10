@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../../src/components/Header';
+import { THEME } from '../../src/styles/theme';
 import styles from './InterviewBuddyPage.styles';
 
 const InterviewBuddyPage = () => {
@@ -31,7 +32,7 @@ const InterviewBuddyPage = () => {
     <View style={styles.container}>
       <Header />
       <LinearGradient
-        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']}
+        colors={THEME.gradients.page}
         style={styles.gradient}
       >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
