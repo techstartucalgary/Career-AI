@@ -86,7 +86,6 @@ export default StyleSheet.create({
     ...Platform.select({
       web: {
         filter: 'blur(120px)',
-        animation: 'orbFloat1 20s ease-in-out infinite',
       },
     }),
   },
@@ -101,7 +100,6 @@ export default StyleSheet.create({
     ...Platform.select({
       web: {
         filter: 'blur(100px)',
-        animation: 'orbFloat2 25s ease-in-out infinite',
       },
     }),
   },
@@ -116,7 +114,6 @@ export default StyleSheet.create({
     ...Platform.select({
       web: {
         filter: 'blur(80px)',
-        animation: 'pulse 8s ease-in-out infinite',
       },
     }),
   },
@@ -361,7 +358,6 @@ export default StyleSheet.create({
     backgroundColor: COLORS.primary,
     ...Platform.select({
       web: {
-        animation: 'pulse 2s ease-in-out infinite',
         boxShadow: '0 0 12px rgba(167, 139, 250, 0.6)',
       },
     }),
@@ -385,7 +381,8 @@ export default StyleSheet.create({
     color: COLORS.primary,
     ...Platform.select({
       web: {
-        background: 'linear-gradient(135deg, #A78BFA 0%, #818CF8 100%)',
+        backgroundImage: 'linear-gradient(135deg, #A78BFA 0%, #818CF8 100%)',
+        backgroundClip: 'text',
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
       },
@@ -524,11 +521,6 @@ export default StyleSheet.create({
     width: 1,
     height: 60,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    ...Platform.select({
-      web: {
-        animation: 'scrollPulse 2s ease-in-out infinite',
-      },
-    }),
   },
 
   // ==================== PROBLEM SECTION ====================
@@ -541,9 +533,10 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     overflow: 'hidden',
+    backgroundColor: COLORS.surface,
     ...Platform.select({
       web: {
-        background: 'linear-gradient(135deg, rgba(18,18,26,0.8) 0%, rgba(12,12,18,0.9) 100%)',
+        backgroundImage: 'linear-gradient(135deg, rgba(18,18,26,0.8) 0%, rgba(12,12,18,0.9) 100%)',
         backdropFilter: 'blur(40px)',
       },
     }),
@@ -701,7 +694,6 @@ export default StyleSheet.create({
     backgroundColor: COLORS.primary,
     ...Platform.select({
       web: {
-        animation: 'progressFill 4s linear',
         width: '100%',
       },
     }),
@@ -798,7 +790,6 @@ export default StyleSheet.create({
     borderRadius: 2,
     ...Platform.select({
       web: {
-        animation: 'progressFill 2s ease-in-out infinite',
       },
     }),
   },
@@ -1188,8 +1179,7 @@ export default StyleSheet.create({
   letterLineTyping: {
     ...Platform.select({
       web: {
-        animation: 'typing 2s ease-in-out infinite',
-        background: 'linear-gradient(90deg, rgba(167,139,250,0.3) 0%, rgba(255,255,255,0.08) 50%, rgba(167,139,250,0.3) 100%)',
+        backgroundImage: 'linear-gradient(90deg, rgba(167,139,250,0.3) 0%, rgba(255,255,255,0.08) 50%, rgba(167,139,250,0.3) 100%)',
         backgroundSize: '200% 100%',
       },
     }),
@@ -1278,7 +1268,6 @@ export default StyleSheet.create({
     backgroundColor: '#EF4444',
     ...Platform.select({
       web: {
-        animation: 'pulse 1s ease-in-out infinite',
       },
     }),
   },
@@ -1305,7 +1294,6 @@ export default StyleSheet.create({
     backgroundColor: COLORS.primary,
     ...Platform.select({
       web: {
-        animation: 'waveform 0.5s ease-in-out infinite alternate',
       },
     }),
   },

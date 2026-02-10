@@ -87,10 +87,18 @@ const styles = StyleSheet.create({
     borderColor: BRIGHT_PURPLE,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: BRIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 16px rgba(167, 139, 250, 0.4)',
+      },
+      default: {
+        shadowColor: BRIGHT_PURPLE,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
+        elevation: 10,
+      },
+    }),
     elevation: 10,
   },
   avatarText: {
@@ -122,14 +130,17 @@ const styles = StyleSheet.create({
     padding: isDesktop ? 32 : isTablet ? 28 : 24,
     borderWidth: 1,
     borderColor: LIGHT_PURPLE,
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
     ...Platform.select({
       web: {
+        boxShadow: '0 8px 16px rgba(167, 139, 250, 0.2)',
         transition: 'all 0.3s ease',
+      },
+      default: {
+        shadowColor: LIGHT_PURPLE,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
+        elevation: 8,
       },
     }),
   },
@@ -378,14 +389,17 @@ const styles = StyleSheet.create({
     marginTop: 32,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: BRIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 10,
     ...Platform.select({
       web: {
+        boxShadow: '0 8px 16px rgba(167, 139, 250, 0.4)',
         transition: 'all 0.2s ease',
+      },
+      default: {
+        shadowColor: BRIGHT_PURPLE,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
+        elevation: 10,
       },
     }),
   },

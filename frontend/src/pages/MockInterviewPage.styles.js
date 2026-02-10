@@ -103,9 +103,16 @@ const styles = StyleSheet.create({
       web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       default: 'sans-serif',
     }),
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 16,
+    ...Platform.select({
+      web: {
+        textShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+      },
+      default: {
+        textShadowColor: 'rgba(0, 0, 0, 0.15)',
+        textShadowOffset: { width: 0, height: 4 },
+        textShadowRadius: 16,
+      },
+    }),
   },
   subtitle: {
     fontSize: 16,
@@ -158,11 +165,18 @@ const styles = StyleSheet.create({
   categoryCardHover: {
     transform: [{ translateY: -2 }],
     borderColor: COLORS.primary,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 8px rgba(167, 139, 250, 0.4)',
+      },
+      default: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 6,
+      },
+    }),
   },
   categoryIcon: {
     width: 32,

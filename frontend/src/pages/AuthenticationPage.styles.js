@@ -42,11 +42,18 @@ const styles = StyleSheet.create({
     padding: isDesktop ? 52 : isTablet ? 44 : 36,
     borderWidth: 1.5,
     borderColor: COLORS.borderLight,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.35,
-    shadowRadius: 32,
-    elevation: 16,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.35,
+        shadowRadius: 32,
+        elevation: 16,
+      },
+    }),
     position: 'relative',
     overflow: 'visible',
     ...Platform.select({
@@ -113,13 +120,18 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.white,
-    fontFamily: Platform.select({
-      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      default: 'sans-serif',
+    ...Platform.select({
+      web: {
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        textShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
+      },
+      default: {
+        fontFamily: 'sans-serif',
+        textShadowColor: 'rgba(0, 0, 0, 0.15)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 10,
+      },
     }),
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
   },
   titleSection: {
     marginBottom: 32,
@@ -131,13 +143,18 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     textAlign: 'center',
     marginBottom: 12,
-    fontFamily: Platform.select({
-      web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      default: 'sans-serif',
+    ...Platform.select({
+      web: {
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        textShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
+      },
+      default: {
+        fontFamily: 'sans-serif',
+        textShadowColor: 'rgba(0, 0, 0, 0.15)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 12,
+      },
     }),
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 12,
   },
   subtitle: {
     fontSize: 16,

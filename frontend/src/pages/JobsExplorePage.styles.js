@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     ...Platform.select({
       web: {
-        animation: 'pulse 2s ease-in-out infinite',
         boxShadow: '0 0 12px rgba(167, 139, 250, 0.6)',
       },
     }),

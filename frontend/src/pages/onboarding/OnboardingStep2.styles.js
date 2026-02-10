@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   },
   requiredLabel: {
     fontSize: 14,
-    color: WHITE,
+    color: COLORS.white,
     marginBottom: 12,
     fontWeight: '600',
     textAlign: isDesktop ? 'left' : 'center',

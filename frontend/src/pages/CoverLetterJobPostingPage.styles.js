@@ -1,26 +1,11 @@
 import { StyleSheet, Platform, Dimensions } from 'react-native';
+import { THEME } from '../styles/theme';
 
 const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-// Landing Page Color System
-const COLORS = {
-  bg: '#08080C',
-  bgAlt: '#0C0C12',
-  surface: '#12121A',
-  surfaceLight: '#1A1A24',
-  border: 'rgba(255,255,255,0.06)',
-  borderLight: 'rgba(255,255,255,0.1)',
-  primary: '#A78BFA',
-  primaryDark: '#8B5CF6',
-  primaryLight: '#C4B5FD',
-  accent: '#6366F1',
-  white: '#FFFFFF',
-  textPrimary: 'rgba(255,255,255,0.95)',
-  textSecondary: 'rgba(255,255,255,0.6)',
-  textMuted: 'rgba(255,255,255,0.4)',
-};
+const { colors: COLORS } = THEME;
 
 const styles = StyleSheet.create({
   container: {
@@ -64,7 +49,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     ...Platform.select({
       web: {
-        animation: 'pulse 2s ease-in-out infinite',
         boxShadow: '0 0 12px rgba(167, 139, 250, 0.6)',
       },
     }),
@@ -360,7 +344,7 @@ const styles = StyleSheet.create({
   },
   previewScroll: {
     flex: 1,
-    backgroundColor: PREVIEW_GRAY,
+    backgroundColor: COLORS.surfaceLight,
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
@@ -376,11 +360,11 @@ const styles = StyleSheet.create({
     }),
   },
   uploadButton: {
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: COLORS.darkPurple,
     borderRadius: 12,
     padding: 16,
     borderWidth: 2,
-    borderColor: LIGHT_PURPLE,
+    borderColor: COLORS.lightPurple,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
@@ -394,7 +378,7 @@ const styles = StyleSheet.create({
   },
   uploadButtonHover: {
     backgroundColor: 'rgba(139, 122, 184, 0.1)',
-    borderColor: BRIGHT_PURPLE,
+    borderColor: COLORS.brightPurple,
   },
   uploadIcon: {
     width: 48,
@@ -406,7 +390,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderWidth: 3,
-    borderColor: LIGHT_PURPLE,
+    borderColor: COLORS.lightPurple,
     borderTopWidth: 0,
     borderLeftWidth: 0,
     transform: [{ rotate: '-135deg' }],
@@ -415,7 +399,7 @@ const styles = StyleSheet.create({
     left: 8,
   },
   uploadButtonText: {
-    color: TEXT_LIGHT,
+    color: COLORS.textLight,
     fontSize: 16,
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
@@ -423,7 +407,7 @@ const styles = StyleSheet.create({
     }),
   },
   selectedFileText: {
-    color: BRIGHT_PURPLE,
+    color: COLORS.brightPurple,
     fontSize: 14,
     marginTop: 8,
     fontFamily: Platform.select({
