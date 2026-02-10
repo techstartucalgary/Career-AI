@@ -84,6 +84,8 @@ class MovementAnalyzer:
 
         self.frames = 0
         self.base_span = None
+        self.posture_bad_sec = 0.0
+
         self.eye_contact_frames = 0
         self.eye_ok_run = 0
 
@@ -389,6 +391,26 @@ class MovementAnalyzer:
         if energy is not None and span and span > 1e-6:
             energy = energy / span
 
+        # posture timer with hysteresis + decay
+        dt = 0.0 if self.t_prev is None else max(1e-3, t - self.t_prev)
+
+        if self.base_span is not None and span is not None:
+            ratio = span / max(1e-6, self.base_span)
+
+            # enter "bad posture" if ratio drops low enough
+            if ratio < 0.90:
+                self.posture_bad_sec += dt
+
+            # clear faster once you're clearly back to good
+            elif ratio > 0.93:
+                self.posture_bad_sec = max(0.0, self.posture_bad_sec - 2.5*dt)
+
+            # middle zone: slow decay
+            else:
+                self.posture_bad_sec = max(0.0, self.posture_bad_sec - 1.0*dt)
+        else:
+            self.posture_bad_sec = 0.0
+
         fidget = self._fidget_score(t, nose)
         fidget = self.ema["fidget"].update(fidget)
 
@@ -452,5 +474,6 @@ class MovementAnalyzer:
             "framing_proxy": framing,
             "upper_body_proxy": upper_body,
             "slouch": slouch,
+            "posture_bad_sec": self.posture_bad_sec,
         }
     

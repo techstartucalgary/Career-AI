@@ -30,6 +30,7 @@ def feedback_from_metrics(m):
     ta = m.get("torso_angle")
     ts = m.get("torso_sep")
     ss = m.get("shoulder_span")
+    pbs = m.get("posture_bad_sec")
     out = {"indicators": {}, "tips": [], "messages": []}
 
     move_state = _state(ms, 0.10, 0.35)
@@ -39,14 +40,14 @@ def feedback_from_metrics(m):
         out["tips"].append("Add a bit more natural hand movement.")
 
     eye_state = "ok" if eye is True else "low" if eye is False else "unknown"
-    if eye is False:
-        out["tips"].append("Look nearer the camera more often.")
-
     stare_state = _state(stare, 0.0, 6.0)
-    if stare is not None and stare > 6.0:
-        out["tips"].append("Break eye contact occasionally so it feels natural.")
-    
-    
+    # occasional eye feedback only
+    if stare is not None:
+        if stare > 6.0:
+            out["tips"].append("Break eye contact briefly - glance at the screen so it feels natural.")
+        elif eye is False and stare > 2.5:
+            out["tips"].append("Look toward the camera occasionally when speaking.")
+
     # Distance (upper-body framing): bigger = closer
     if d is None:
         dist_state = "unknown"
@@ -65,10 +66,10 @@ def feedback_from_metrics(m):
     #Camera centering
     if c is None:
         center_state = "unknown"
-    elif c > 0.30:
+    elif c > 0.18:
         center_state = "high"   # very off center
         out["tips"].append("Center yourself in the frame.")
-    elif c > 0.18:
+    elif c > 0.08:
         center_state = "low"    # slightly off
         out["tips"].append("Shift a bit to the center.")
     else:
@@ -95,13 +96,6 @@ def feedback_from_metrics(m):
             elif ratio < 0.90:
                 warn = True
 
-        # slouch-back cue (you sink away -> shoulder span shrinks)
-        if ss is not None:
-            if ss < 0.17:
-                bad = True
-            elif ss < 0.20:
-                warn = True
-
         # hips-based cues if available (optional)
         if ta is not None and ts is not None:
             if ta > 0.28 or ts < 0.14:
@@ -109,14 +103,15 @@ def feedback_from_metrics(m):
             elif ta > 0.20 or ts < 0.17:
                 warn = True
 
-        if bad:
+        if bad and pbs is not None and pbs > 2.0:
             posture_state = "high"
-            out["tips"].append("Posture: sit tall - don't sink back in the chair.")
-        elif warn:
+            out["tips"].append("Posture: sit tall, don't sink back in the chair.")
+        elif warn and pbs is not None and pbs > 1.5:
             posture_state = "low"
-            out["tips"].append("Posture: straighten up - move slightly forward.")
+            out["tips"].append("Posture: straighten up a bit.")
         else:
             posture_state = "ok"
+
 
 
     out["indicators"]["posture"] = {"value": ta, "state": posture_state}
