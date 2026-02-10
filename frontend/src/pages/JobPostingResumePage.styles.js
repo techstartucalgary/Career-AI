@@ -108,6 +108,12 @@ const styles = StyleSheet.create({
         backdropFilter: 'blur(20px)',
       },
     }),
+    minHeight: isDesktop ? 600 : 400,
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
   },
   rightPanel: {
     flex: 1,
@@ -122,6 +128,12 @@ const styles = StyleSheet.create({
         backdropFilter: 'blur(20px)',
       },
     }),
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+    position: 'relative',
   },
   section: {
     marginBottom: 30,
@@ -260,9 +272,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 400,
-    marginBottom: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
+    marginBottom: 80,
+    overflow: 'hidden',
+    position: 'relative',
   },
   previewIcon: {
     marginBottom: 16,
@@ -280,13 +294,39 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
   },
+  progressBarContainer: {
+    width: '80%',
+    height: 8,
+    backgroundColor: 'rgba(107, 114, 128, 0.2)',
+    borderRadius: 4,
+    marginTop: 16,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#10B981',
+    borderRadius: 4,
+    ...Platform.select({
+      web: {
+        transition: 'width 0.3s ease',
+      },
+    }),
+  },
   downloadButton: {
     backgroundColor: COLORS.primary,
+    position: 'absolute',
+    bottom: 32,
+    right: 32,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: 'center',
     alignSelf: 'flex-end',
+    shadowColor: LIGHT_PURPLE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
     ...Platform.select({
       web: {
         cursor: 'pointer',
@@ -307,6 +347,111 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
+  },
+  generateButtonDisabled: {
+    opacity: 0.5,
+    ...Platform.select({
+      web: {
+        cursor: 'not-allowed',
+      },
+    }),
+  },
+  downloadButtonDisabled: {
+    opacity: 0.5,
+    ...Platform.select({
+      web: {
+        cursor: 'not-allowed',
+      },
+    }),
+  },
+  errorContainer: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+  },
+  errorText: {
+    color: '#FCA5A5',
+    fontSize: 14,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  previewScroll: {
+    flex: 1,
+    backgroundColor: PREVIEW_GRAY,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    minHeight: 400,
+  },
+  resumePreviewText: {
+    fontSize: 14,
+    color: '#1F2937',
+    lineHeight: 22,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  uploadButton: {
+    backgroundColor: DARK_PURPLE,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: LIGHT_PURPLE,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 120,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+      },
+    }),
+  },
+  uploadButtonHover: {
+    backgroundColor: 'rgba(139, 122, 184, 0.1)',
+    borderColor: BRIGHT_PURPLE,
+  },
+  uploadIcon: {
+    width: 48,
+    height: 48,
+    marginBottom: 12,
+    position: 'relative',
+  },
+  uploadIconArrow: {
+    width: 32,
+    height: 32,
+    borderWidth: 3,
+    borderColor: LIGHT_PURPLE,
+    borderTopWidth: 0,
+    borderLeftWidth: 0,
+    transform: [{ rotate: '-135deg' }],
+    position: 'absolute',
+    top: 8,
+    left: 8,
+  },
+  uploadButtonText: {
+    color: TEXT_LIGHT,
+    fontSize: 16,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  selectedFileText: {
+    color: BRIGHT_PURPLE,
+    fontSize: 14,
+    marginTop: 8,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
   },
 });
 

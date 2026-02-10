@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useMessages } from '../contexts/MessagesContext';
-import './Header.css';
+import { apiFetch, clearAuthToken } from '../services/api';
 import styles from './Header.styles';
 
 const Header = () => {
@@ -17,6 +17,16 @@ const Header = () => {
     { label: 'AI Cover Letter', route: '/cover-letter'},
     { label: 'Interview Prep', route: '/interview-buddy'},
   ];
+
+  const handleLogout = async () => {
+    try {
+      await apiFetch('/logout');
+    } catch (error) {
+      // Ignore logout failures and clear local auth state
+    }
+    clearAuthToken();
+    router.replace('/authentication');
+  };
 
   return (
     <View style={styles.header}>
@@ -52,7 +62,7 @@ const Header = () => {
             </Pressable>
             <Pressable 
               style={styles.logoutButton}
-              onPress={() => router.push('/authentication')}
+              onPress={handleLogout}
             >
               <Text style={styles.logoutButtonText}>Log Out</Text>
               <View style={styles.arrowIcon}>

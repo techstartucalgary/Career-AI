@@ -12,6 +12,7 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
   const [locationInput, setLocationInput] = useState('');
   const [focusedInput, setFocusedInput] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const handleAddPosition = () => {
     if (positionInput.trim() && !localData.positions.includes(positionInput.trim())) {
@@ -20,6 +21,9 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
         positions: [...prev.positions, positionInput.trim()]
       }));
       setPositionInput('');
+      if (errors.positions) {
+        setErrors(prev => ({ ...prev, positions: undefined }));
+      }
     }
   };
 
@@ -37,6 +41,9 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
         locations: [...prev.locations, locationInput.trim()]
       }));
       setLocationInput('');
+      if (errors.locations) {
+        setErrors(prev => ({ ...prev, locations: undefined }));
+      }
     }
   };
 
@@ -51,7 +58,20 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
     setLocalData(prev => ({ ...prev, workArrangement: arrangement }));
   };
 
+  const validate = () => {
+    const newErrors = {};
+    if (localData.positions.length === 0) {
+      newErrors.positions = 'Add at least one desired position';
+    }
+    if (localData.locations.length === 0) {
+      newErrors.locations = 'Add at least one desired location';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSave = () => {
+    if (!validate()) return;
     onNext(localData);
   };
 
@@ -69,7 +89,7 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
           {/* Left Column */}
           <View style={styles.formColumn}>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Positions</Text>
+              <Text style={styles.sectionTitle}>Positions*</Text>
               <View style={styles.inputWithButton}>
                 <TextInput
                   style={[
@@ -106,10 +126,13 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
                   ))}
                 </View>
               )}
+              {!!errors.positions && (
+                <Text style={styles.errorText}>{errors.positions}</Text>
+              )}
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Locations</Text>
+              <Text style={styles.sectionTitle}>Locations*</Text>
               <View style={styles.inputWithButton}>
                 <TextInput
                   style={[
@@ -146,13 +169,16 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
                   ))}
                 </View>
               )}
+              {!!errors.locations && (
+                <Text style={styles.errorText}>{errors.locations}</Text>
+              )}
             </View>
           </View>
 
           {/* Right Column */}
           <View style={styles.formColumn}>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Work Arrangement</Text>
+              <Text style={styles.sectionTitle}>Work Arrangement*</Text>
               <View style={styles.checkboxContainer}>
                 {[
                   { value: 'any', label: 'Any (Remote, Hybrid, On-Site)' },

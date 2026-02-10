@@ -250,6 +250,15 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     flex: 1,
   },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: 8,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
   navigation: {
     flexDirection: 'row',
     justifyContent: 'space-between',

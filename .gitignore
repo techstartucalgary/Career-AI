@@ -115,3 +115,10 @@ fabric.properties
 out
 /indiv-deliverables/
 /submissions/
+/.env
+/.vscode/
+.venv/
+.venv311/
+__pycache__/
+*.pyc
+*.pyo

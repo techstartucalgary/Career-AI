@@ -1,30 +1,82 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView, TextInput, Platform } from 'react-native';
+import { View, Text, Pressable, ScrollView, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import * as DocumentPicker from 'expo-document-picker';
 import Header from '../components/Header';
 import styles from './JobPostingResumePage.styles';
 import './JobPages.css';
+import { tailorResume, downloadPDFFromBase64 } from '../services/aiService';
+import PDFViewer from '../components/PDFViewer';
 
 const JobPostingResumePage = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [jobDescription, setJobDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
   const [selectedTags, setSelectedTags] = useState(['Student', 'AI', 'Software Development', 'Calgary']);
   const [hoveredButton, setHoveredButton] = useState(null);
+  const [generatedResume, setGeneratedResume] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [progressStep, setProgressStep] = useState('');
+  const [progress, setProgress] = useState(0);
 
   const removeTag = (tagToRemove) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
   };
 
-  const handleGenerateResume = () => {
-    // TODO: Implement resume generation logic
-    console.log('Generating resume...');
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        copyToCacheDirectory: true
+      });
+      
+      if (result.type === 'success' || !result.canceled) {
+        const uri = result.uri ?? result.assets?.[0]?.uri ?? result.assets?.[0]?.fileCopyUri;
+        const name = result.name ?? result.assets?.[0]?.name;
+        setSelectedFile({ uri, name });
+      }
+    } catch (error) {
+      setError('Error picking document: ' + error.message);
+    }
+  };
+
+  const handleGenerateResume = async () => {
+    if (!jobDescription.trim()) {
+      setError('Please enter a job description');
+      return;
+    }
+    if (!selectedFile) {
+      setError('Please upload your resume');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setProgress(0);
+    setProgressStep('Starting...');
+    
+    try {
+      const result = await tailorResume(selectedFile, jobDescription, {}, (data) => {
+        setProgressStep(data.step);
+        setProgress(data.progress);
+      });
+      setGeneratedResume(result);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+      setProgress(0);
+      setProgressStep('');
+    }
   };
 
   const handleDownloadPDF = () => {
-    // TODO: Implement PDF download logic
-    console.log('Downloading PDF...');
+    if (generatedResume?.pdf_base64) {
+      downloadPDFFromBase64(generatedResume.pdf_base64, 'tailored_resume.pdf');
+    }
   };
 
   return (
@@ -58,6 +110,7 @@ const JobPostingResumePage = () => {
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Job Posting</Text>
 
+                  
                   <View style={styles.searchBar}>
                     <View style={styles.searchIcon}>
                       <View style={styles.searchIconCircle} />
@@ -105,40 +158,93 @@ const JobPostingResumePage = () => {
                   />
                 </View>
 
+                {/* Your Current Resume Section */}
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Your Current Resume</Text>
+                  <Pressable
+                    style={[
+                      styles.uploadButton,
+                      hoveredButton === 'upload' && styles.uploadButtonHover
+                    ]}
+                    onPress={pickDocument}
+                    onHoverIn={() => Platform.OS === 'web' && setHoveredButton('upload')}
+                    onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                  >
+                    <View style={styles.uploadIcon}>
+                      <View style={styles.uploadIconArrow} />
+                    </View>
+                    <Text style={styles.uploadButtonText}>
+                      {selectedFile ? selectedFile.name : 'Upload Resume (PDF, DOC, DOCX)'}
+                    </Text>
+                  </Pressable>
+                  {selectedFile && (
+                    <Text style={styles.selectedFileText}>Selected: {selectedFile.name}</Text>
+                  )}
+                </View>
+
+                {error && (
+                  <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                )}
+
                 {/* Generate Resume Button */}
                 <Pressable
                   style={[
                     styles.generateButton,
-                    hoveredButton === 'generate' && styles.generateButtonHover
+                    hoveredButton === 'generate' && styles.generateButtonHover,
+                    isLoading && styles.generateButtonDisabled
                   ]}
                   onPress={handleGenerateResume}
                   onHoverIn={() => Platform.OS === 'web' && setHoveredButton('generate')}
                   onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                  disabled={isLoading}
                 >
-                  <Text style={styles.generateButtonText}>Generate Resume</Text>
+                  {isLoading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.generateButtonText}>Generate Resume</Text>
+                  )}
                 </Pressable>
               </View>
 
               {/* Right Panel - Resume Preview */}
               <View style={styles.rightPanel}>
                 <View style={styles.previewArea}>
-                  <View style={styles.previewIcon}>
-                    <View style={styles.documentIcon} />
-                  </View>
-                  <Text style={styles.previewText}>Your tailored resume will appear here</Text>
+                  {isLoading ? (
+                    <>
+                      <ActivityIndicator size="large" color="#10B981" />
+                      <Text style={[styles.previewText, { marginTop: 16, fontWeight: '600' }]}>{progressStep}</Text>
+                      <View style={styles.progressBarContainer}>
+                        <View style={[styles.progressBar, { width: `${progress}%` }]} />
+                      </View>
+                      <Text style={[styles.previewText, { marginTop: 8, fontSize: 14 }]}>{progress}%</Text>
+                    </>
+                  ) : generatedResume && generatedResume.pdf_base64 ? (
+                    <PDFViewer pdfBase64={generatedResume.pdf_base64} />
+                  ) : (
+                    <>
+                      <View style={styles.previewIcon}>
+                        <View style={styles.documentIcon} />
+                      </View>
+                      <Text style={styles.previewText}>Your tailored resume will appear here</Text>
+                    </>
+                  )}
                 </View>
 
-                <Pressable
-                  style={[
-                    styles.downloadButton,
-                    hoveredButton === 'download' && styles.downloadButtonHover
-                  ]}
-                  onPress={handleDownloadPDF}
-                  onHoverIn={() => Platform.OS === 'web' && setHoveredButton('download')}
-                  onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
-                >
-                  <Text style={styles.downloadButtonText}>Download PDF</Text>
-                </Pressable>
+                {generatedResume && (
+                  <Pressable
+                    style={[
+                      styles.downloadButton,
+                      hoveredButton === 'download' && styles.downloadButtonHover,
+                    ]}
+                    onPress={handleDownloadPDF}
+                    onHoverIn={() => Platform.OS === 'web' && setHoveredButton('download')}
+                    onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                  >
+                    <Text style={styles.downloadButtonText}>Download PDF</Text>
+                  </Pressable>
+                )}
               </View>
             </View>
           </View>
@@ -149,7 +255,4 @@ const JobPostingResumePage = () => {
 };
 
 export default JobPostingResumePage;
-
-
-
 

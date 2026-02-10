@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './AuthenticationPage.styles';
 import { THEME } from '../styles/theme';
+import { apiFetch, setAuthToken } from '../services/api';
 
 export default function AuthenticationPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function AuthenticationPage() {
   const [focusedInput, setFocusedInput] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredSwitch, setHoveredSwitch] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const validate = () => {
     const newErrors = {};
@@ -44,17 +46,47 @@ export default function AuthenticationPage() {
   const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true);
-    // Replace with your auth logic (Firebase, Supabase, etc.)
-    await new Promise(r => setTimeout(r, 1500));
-    setLoading(false);
-    // Navigate to onboarding for new sign-ups, Job Board for existing users
-    if (isSignUp) {
-      router.push({
-        pathname: '/onboarding',
-        params: { email: email }
-      });
-    } else {
-      router.push('/jobs');
+    setFormError('');
+    try {
+      if (isSignUp) {
+        const response = await apiFetch('/signup', {
+          method: 'POST',
+          body: JSON.stringify({
+            email,
+            password,
+            name,
+            demographics: {
+              sex,
+              gender,
+              disability,
+              race,
+            },
+          }),
+        });
+        if (response && response.data && response.data.token) {
+          setAuthToken(response.data.token);
+        }
+        router.push({
+          pathname: '/onboarding',
+          params: { email: email }
+        });
+      } else {
+        const response = await apiFetch('/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        });
+        if (response && response.data && response.data.token) {
+          setAuthToken(response.data.token);
+        }
+        router.push('/home');
+      }
+    } catch (error) {
+      setFormError(error.message || 'Authentication failed.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -330,6 +362,7 @@ export default function AuthenticationPage() {
                 )}
 
                 {/* Submit Button */}
+                {formError ? <Text style={styles.errorText}>{formError}</Text> : null}
                 <Pressable
                   style={[
                     styles.submitButton,

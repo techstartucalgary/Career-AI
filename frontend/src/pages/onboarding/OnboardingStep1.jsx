@@ -4,38 +4,63 @@ import { LinearGradient } from 'expo-linear-gradient';
 import styles from './OnboardingStep1.styles';
 
 const OnboardingStep1 = ({ formData, onNext, onBack }) => {
+  // Prevent going back without completing step
   const [localData, setLocalData] = useState({
     firstName: formData.firstName || '',
     lastName: formData.lastName || '',
     cellPhone: formData.cellPhone || '',
     linkedinUrl: formData.linkedinUrl || '',
     githubUrl: formData.githubUrl || '',
+    website: formData.website || '',
     location: formData.location || '',
   });
   const [focusedInput, setFocusedInput] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
+  const [errors, setErrors] = useState({});
 
   // Auto-fill from extracted resume data
   useEffect(() => {
     if (formData.extractedData) {
       const extracted = formData.extractedData;
+      
+      // Parse full name into first and last
+      const fullName = extracted.name || '';
+      const nameParts = fullName.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      
       setLocalData(prev => ({
         ...prev,
-        firstName: prev.firstName || extracted.firstName || '',
-        lastName: prev.lastName || extracted.lastName || '',
-        cellPhone: prev.cellPhone || extracted.phone || extracted.cellPhone || '',
-        linkedinUrl: prev.linkedinUrl || extracted.linkedin || extracted.linkedinUrl || '',
-        githubUrl: prev.githubUrl || extracted.github || extracted.githubUrl || '',
-        location: prev.location || extracted.location || extracted.city || '',
+        firstName: prev.firstName || firstName || '',
+        lastName: prev.lastName || lastName || '',
+        cellPhone: prev.cellPhone || extracted.phone || '',
+        linkedinUrl: prev.linkedinUrl || extracted.linkedin || '',
+        githubUrl: prev.githubUrl || extracted.github || '',
+        location: prev.location || extracted.location || '',
       }));
     }
   }, [formData.extractedData]);
 
   const handleChange = (field, value) => {
     setLocalData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!localData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!localData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!localData.cellPhone.trim()) newErrors.cellPhone = 'Phone number is required';
+    if (!localData.linkedinUrl.trim()) newErrors.linkedinUrl = 'LinkedIn URL is required';
+    if (!localData.location.trim()) newErrors.location = 'Location is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleContinue = () => {
+    if (!validate()) return;
     onNext(localData);
   };
 
@@ -59,11 +84,12 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
           {/* Left Column */}
           <View style={styles.formColumn}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>First name</Text>
+              <Text style={styles.label}>First name*</Text>
               <TextInput
                 style={[
                   styles.input,
-                  focusedInput === 'firstName' && styles.inputFocused
+                  focusedInput === 'firstName' && styles.inputFocused,
+                  errors.firstName && styles.inputError
                 ]}
                 placeholder="Enter Here"
                 placeholderTextColor="#8B7AB8"
@@ -72,14 +98,18 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 onFocus={() => setFocusedInput('firstName')}
                 onBlur={() => setFocusedInput(null)}
               />
+              {!!errors.firstName && (
+                <Text style={styles.errorText}>{errors.firstName}</Text>
+              )}
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Linkedin URL</Text>
+              <Text style={styles.label}>LinkedIn URL*</Text>
               <TextInput
                 style={[
                   styles.input,
-                  focusedInput === 'linkedinUrl' && styles.inputFocused
+                  focusedInput === 'linkedinUrl' && styles.inputFocused,
+                  errors.linkedinUrl && styles.inputError
                 ]}
                 placeholder="www.linkedin.com/in/example"
                 placeholderTextColor="#8B7AB8"
@@ -89,14 +119,35 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 onFocus={() => setFocusedInput('linkedinUrl')}
                 onBlur={() => setFocusedInput(null)}
               />
+              {!!errors.linkedinUrl && (
+                <Text style={styles.errorText}>{errors.linkedinUrl}</Text>
+              )}
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Location</Text>
+              <Text style={styles.label}>Personal Website</Text>
               <TextInput
                 style={[
                   styles.input,
-                  focusedInput === 'location' && styles.inputFocused
+                  focusedInput === 'website' && styles.inputFocused
+                ]}
+                placeholder="https://your-portfolio.com"
+                placeholderTextColor="#8B7AB8"
+                value={localData.website}
+                onChangeText={(value) => handleChange('website', value)}
+                autoCapitalize="none"
+                onFocus={() => setFocusedInput('website')}
+                onBlur={() => setFocusedInput(null)}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Location*</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  focusedInput === 'location' && styles.inputFocused,
+                  errors.location && styles.inputError
                 ]}
                 placeholder="City, Country"
                 placeholderTextColor="#8B7AB8"
@@ -105,17 +156,21 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 onFocus={() => setFocusedInput('location')}
                 onBlur={() => setFocusedInput(null)}
               />
+              {!!errors.location && (
+                <Text style={styles.errorText}>{errors.location}</Text>
+              )}
             </View>
           </View>
 
           {/* Right Column */}
           <View style={styles.formColumn}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Last name</Text>
+              <Text style={styles.label}>Last name*</Text>
               <TextInput
                 style={[
                   styles.input,
-                  focusedInput === 'lastName' && styles.inputFocused
+                  focusedInput === 'lastName' && styles.inputFocused,
+                  errors.lastName && styles.inputError
                 ]}
                 placeholder="Enter Here"
                 placeholderTextColor="#8B7AB8"
@@ -124,14 +179,18 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 onFocus={() => setFocusedInput('lastName')}
                 onBlur={() => setFocusedInput(null)}
               />
+              {!!errors.lastName && (
+                <Text style={styles.errorText}>{errors.lastName}</Text>
+              )}
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Cell Phone Number</Text>
+              <Text style={styles.label}>Cell Phone Number*</Text>
               <TextInput
                 style={[
                   styles.input,
-                  focusedInput === 'cellPhone' && styles.inputFocused
+                  focusedInput === 'cellPhone' && styles.inputFocused,
+                  errors.cellPhone && styles.inputError
                 ]}
                 placeholder="(--) --- ----"
                 placeholderTextColor="#8B7AB8"
@@ -141,10 +200,13 @@ const OnboardingStep1 = ({ formData, onNext, onBack }) => {
                 onFocus={() => setFocusedInput('cellPhone')}
                 onBlur={() => setFocusedInput(null)}
               />
+              {!!errors.cellPhone && (
+                <Text style={styles.errorText}>{errors.cellPhone}</Text>
+              )}
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Github URL</Text>
+              <Text style={styles.label}>GitHub URL</Text>
               <TextInput
                 style={[
                   styles.input,

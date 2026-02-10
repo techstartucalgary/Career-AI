@@ -6,7 +6,7 @@ import MessagesOverlay from '../src/components/MessagesOverlay';
 export default function RootLayout() {
   return (
     <MessagesProvider>
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }} />
       <MessagesOverlay />
     </MessagesProvider>
