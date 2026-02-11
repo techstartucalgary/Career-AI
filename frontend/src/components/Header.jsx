@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useMessages } from '../contexts/MessagesContext';
-import { apiFetch, clearAuthToken } from '../services/api';
+import { apiFetch, getAuthToken, clearAuthToken } from '../services/api';
 import styles from './Header.styles';
 import verexaLogo from '../assets/verexalogo.png';
 
@@ -11,6 +11,8 @@ const Header = () => {
   const segments = useSegments();
   const currentRoute = segments.length > 0 ? '/' + segments.join('/') : '/';
   const { openMessages } = useMessages();
+
+  const isLoggedIn = !!getAuthToken();
 
   const navItems = [
     { label: 'Job Board', route: '/jobs'},
@@ -29,11 +31,15 @@ const Header = () => {
     router.replace('/authentication');
   };
 
+  const handleLogin = () => {
+    router.push('/authentication');
+  };
+
   return (
     <View style={styles.header}>
       <View style={styles.container}>
         <View style={styles.nav}>
-          <Pressable onPress={() => router.push('/jobs')} style={styles.logoContainer}>
+          <Pressable onPress={() => router.push(isLoggedIn ? '/jobs' : '/authentication')} style={styles.logoContainer}>
             <Image 
               source={verexaLogo} 
               style={styles.logoImage}
@@ -41,37 +47,54 @@ const Header = () => {
             />
           </Pressable>
           
-          <View style={styles.navLinks}>
-            {navItems.map((item) => {
-              const isActive = currentRoute === item.route || currentRoute.startsWith(item.route + '/');
-              return (
-                <Pressable 
-                  key={item.route}
-                  onPress={() => router.push(item.route)}
-                  style={styles.navLinkContainer}
-                >
-                  <Text style={[styles.navLink, isActive && styles.navLinkActive]}>
-                    {item.label}
-                  </Text>
-            </Pressable>
-              );
-            })}
-          </View>
+          {isLoggedIn && (
+            <View style={styles.navLinks}>
+              {navItems.map((item) => {
+                const isActive = currentRoute === item.route || currentRoute.startsWith(item.route + '/');
+                return (
+                  <Pressable 
+                    key={item.route}
+                    onPress={() => router.push(item.route)}
+                    style={styles.navLinkContainer}
+                  >
+                    <Text style={[styles.navLink, isActive && styles.navLinkActive]}>
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
           
           <View style={styles.buttonGroup}>
-            <Pressable onPress={openMessages} style={styles.messagesButton}>
-              <Text style={styles.messagesButtonText}>Messages</Text>
-            </Pressable>
-            <Pressable 
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <Text style={styles.logoutButtonText}>Log Out</Text>
-              <View style={styles.arrowIcon}>
-                <View style={styles.arrowLine} />
-                <View style={styles.arrowHead} />
-              </View>
-            </Pressable>
+            {isLoggedIn && (
+              <Pressable onPress={openMessages} style={styles.messagesButton}>
+                <Text style={styles.messagesButtonText}>Messages</Text>
+              </Pressable>
+            )}
+            {isLoggedIn ? (
+              <Pressable 
+                style={styles.logoutButton}
+                onPress={handleLogout}
+              >
+                <Text style={styles.logoutButtonText}>Log Out</Text>
+                <View style={styles.arrowIcon}>
+                  <View style={styles.arrowLine} />
+                  <View style={styles.arrowHead} />
+                </View>
+              </Pressable>
+            ) : (
+              <Pressable 
+                style={styles.logoutButton}
+                onPress={handleLogin}
+              >
+                <Text style={styles.logoutButtonText}>Log In</Text>
+                <View style={styles.arrowIcon}>
+                  <View style={styles.arrowLine} />
+                  <View style={styles.arrowHead} />
+                </View>
+              </Pressable>
+            )}
           </View>
         </View>
       </View>

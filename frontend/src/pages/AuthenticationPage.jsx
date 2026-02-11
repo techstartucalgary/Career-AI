@@ -43,16 +43,16 @@ export default function AuthenticationPage() {
     if (!validate()) return;
     setLoading(true);
     setErrors({});
-    
+
     try {
-      const url = isSignUp 
-        ? 'http://localhost:8000/signup' 
+      const url = isSignUp
+        ? 'http://localhost:8000/signup'
         : 'http://localhost:8000/login';
-      
+
       const payload = isSignUp
         ? { email, password, name }
         : { email, password };
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -60,20 +60,20 @@ export default function AuthenticationPage() {
         },
         body: JSON.stringify(payload),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Authentication failed');
       }
-      
+
       // Save the authentication token
       if (data.data && data.data.token) {
         setAuthToken(data.data.token);
       }
-      
+
       setLoading(false);
-      
+
       // Navigate to onboarding for new sign-ups, home for existing users
       if (isSignUp) {
         router.push({
@@ -81,7 +81,7 @@ export default function AuthenticationPage() {
           params: { email: email }
         });
       } else {
-        router.push('/home');
+        router.push('/jobs');
       }
     } catch (error) {
       setLoading(false);
@@ -200,8 +200,8 @@ export default function AuthenticationPage() {
 
               {/* Logo/Icon Section */}
               <View style={styles.logoContainer}>
-                <Image 
-                  source={verexaLogo} 
+                <Image
+                  source={verexaLogo}
                   style={styles.logoImage}
                   resizeMode="contain"
                 />
