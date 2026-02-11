@@ -7,6 +7,7 @@ import { THEME } from '../src/styles/theme';
 import OnboardingStep1 from '../src/pages/onboarding/OnboardingStep1';
 import OnboardingStep2 from '../src/pages/onboarding/OnboardingStep2';
 import OnboardingStep3 from '../src/pages/onboarding/OnboardingStep3';
+import OnboardingStep4 from '../src/pages/onboarding/OnboardingStep4';
 import styles from './OnboardingPage.styles';
 import { apiFetch } from '../src/services/api';
 
@@ -33,19 +34,25 @@ const OnboardingPage = () => {
     positions: [],
     locations: [],
     workArrangement: 'any',
+    // Step 4 (Demographics) data
+    sex: '',
+    gender: '',
+    disability: '',
+    race: '',
   });
 
   const handleNext = async (stepData) => {
     const nextData = { ...formData, ...stepData };
     setFormData(nextData);
-    
-    if (currentStep < 3) {
+
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
       return;
     }
-    
-    // Only call API when completing final step (step 3)
+
+    // Only call API when completing final step (step 4)
     try {
+      // Complete onboarding with profile and preferences
       await apiFetch('/onboarding/complete', {
         method: 'POST',
         body: JSON.stringify({
@@ -62,7 +69,24 @@ const OnboardingPage = () => {
         }),
       });
 
-      router.push('/home');
+      // Update demographics separately if any were provided
+      const demographics = {
+        sex: nextData.sex || null,
+        gender: nextData.gender || null,
+        disability: nextData.disability || null,
+        race: nextData.race || null,
+      };
+
+      // Only call demographics endpoint if at least one field is provided
+      const hasDemographics = Object.values(demographics).some(val => val);
+      if (hasDemographics) {
+        await apiFetch('/demographics', {
+          method: 'PUT',
+          body: JSON.stringify(demographics),
+        });
+      }
+
+      router.push('/jobs');
     } catch (error) {
       alert(error.message || 'Unable to complete onboarding.');
     }
@@ -87,6 +111,9 @@ const OnboardingPage = () => {
       case 3:
         // Step 3: Job Preferences
         return <OnboardingStep3 formData={formData} onNext={handleNext} onBack={handleBack} />;
+      case 4:
+        // Step 4: Demographics (optional)
+        return <OnboardingStep4 formData={formData} onNext={handleNext} onBack={handleBack} />;
       default:
         return null;
     }
@@ -103,7 +130,7 @@ const OnboardingPage = () => {
           <View style={styles.content}>
             {/* Step Indicators */}
             <View style={styles.stepIndicators}>
-              {[1, 2, 3].map((step) => (
+              {[1, 2, 3, 4].map((step) => (
                 <View
                   key={step}
                   style={[

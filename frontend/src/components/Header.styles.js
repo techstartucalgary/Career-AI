@@ -40,6 +40,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  logoImage: {
+    height: 40,
+    width: 150,
+  },
   logoCircle: {
     width: 32,
     height: 32,

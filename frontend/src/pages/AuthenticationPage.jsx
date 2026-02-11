@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, Pressable,
   StyleSheet, KeyboardAvoidingView, Platform,
-  ScrollView, ActivityIndicator
+  ScrollView, ActivityIndicator, Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './AuthenticationPage.styles';
 import { THEME } from '../styles/theme';
-import { apiFetch, setAuthToken } from '../services/api';
+import { setAuthToken } from '../services/api';
+import verexaLogo from '../assets/verexalogo.png';
 
 export default function AuthenticationPage() {
   const router = useRouter();
@@ -18,16 +19,11 @@ export default function AuthenticationPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
-  const [sex, setSex] = useState('');
-  const [gender, setGender] = useState('');
-  const [disability, setDisability] = useState('');
-  const [race, setRace] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [focusedInput, setFocusedInput] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredSwitch, setHoveredSwitch] = useState(false);
-  const [formError, setFormError] = useState('');
 
   const validate = () => {
     const newErrors = {};
@@ -46,47 +42,50 @@ export default function AuthenticationPage() {
   const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true);
-    setFormError('');
+    setErrors({});
+    
     try {
+      const url = isSignUp 
+        ? 'http://localhost:8000/signup' 
+        : 'http://localhost:8000/login';
+      
+      const payload = isSignUp
+        ? { email, password, name }
+        : { email, password };
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Authentication failed');
+      }
+      
+      // Save the authentication token
+      if (data.data && data.data.token) {
+        setAuthToken(data.data.token);
+      }
+      
+      setLoading(false);
+      
+      // Navigate to onboarding for new sign-ups, home for existing users
       if (isSignUp) {
-        const response = await apiFetch('/signup', {
-          method: 'POST',
-          body: JSON.stringify({
-            email,
-            password,
-            name,
-            demographics: {
-              sex,
-              gender,
-              disability,
-              race,
-            },
-          }),
-        });
-        if (response && response.data && response.data.token) {
-          setAuthToken(response.data.token);
-        }
         router.push({
           pathname: '/onboarding',
           params: { email: email }
         });
       } else {
-        const response = await apiFetch('/login', {
-          method: 'POST',
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        });
-        if (response && response.data && response.data.token) {
-          setAuthToken(response.data.token);
-        }
         router.push('/home');
       }
     } catch (error) {
-      setFormError(error.message || 'Authentication failed.');
-    } finally {
       setLoading(false);
+      setErrors({ general: error.message || 'Authentication failed. Please try again.' });
     }
   };
 
@@ -94,13 +93,18 @@ export default function AuthenticationPage() {
   const SelectField = ({ value, onValueChange, options, placeholder, focused, onFocus, onBlur }) => {
     const [isOpen, setIsOpen] = useState(false);
 
-    const handleToggle = () => {
-      setIsOpen((prev) => {
-        const next = !prev;
-        if (next) onFocus();
-        else onBlur();
-        return next;
-      });
+    const handleToggle = (e) => {
+      // Prevent event propagation to avoid double-click issues
+      if (e && e.stopPropagation) {
+        e.stopPropagation();
+      }
+      if (!isOpen) {
+        setIsOpen(true);
+        onFocus();
+      } else {
+        setIsOpen(false);
+        onBlur();
+      }
     };
 
     const handleSelect = (option) => {
@@ -122,8 +126,7 @@ export default function AuthenticationPage() {
             focused && styles.inputFocused,
             isOpen && styles.selectInputOpen
           ]}
-          // RN-web sometimes requires 2 clicks with onPress due to focus/press ordering.
-          onPressIn={handleToggle}
+          onPress={handleToggle}
           hitSlop={0}
           accessibilityRole="button"
           accessibilityLabel={`Toggle ${placeholder}`}
@@ -197,10 +200,11 @@ export default function AuthenticationPage() {
 
               {/* Logo/Icon Section */}
               <View style={styles.logoContainer}>
-                <View style={styles.logoCircle}>
-                  <View style={styles.logoStar} />
-                </View>
-                <Text style={styles.logoText}>Verexa</Text>
+                <Image 
+                  source={verexaLogo} 
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
               </View>
 
               {/* Title Section */}
@@ -217,6 +221,11 @@ export default function AuthenticationPage() {
 
               {/* Form Section */}
               <View style={styles.formSection}>
+                {errors.general && (
+                  <View style={styles.errorBox}>
+                    <Text style={styles.errorBoxText}>{errors.general}</Text>
+                  </View>
+                )}
                 {isSignUp && (
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Full Name</Text>
@@ -232,9 +241,6 @@ export default function AuthenticationPage() {
                       onChangeText={setName}
                       onFocus={() => setFocusedInput('name')}
                       onBlur={() => setFocusedInput(null)}
-                      autoComplete="name"
-                      name="name"
-                      id="name"
                     />
                     {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
                   </View>
@@ -256,9 +262,6 @@ export default function AuthenticationPage() {
                     autoCapitalize="none"
                     onFocus={() => setFocusedInput('email')}
                     onBlur={() => setFocusedInput(null)}
-                    autoComplete="email"
-                    name="email"
-                    id="email"
                   />
                   {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
                 </View>
@@ -278,9 +281,6 @@ export default function AuthenticationPage() {
                     secureTextEntry
                     onFocus={() => setFocusedInput('password')}
                     onBlur={() => setFocusedInput(null)}
-                    autoComplete={isSignUp ? 'new-password' : 'current-password'}
-                    name="password"
-                    id="password"
                   />
                   {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
                 </View>
@@ -301,80 +301,12 @@ export default function AuthenticationPage() {
                       secureTextEntry
                       onFocus={() => setFocusedInput('confirmPassword')}
                       onBlur={() => setFocusedInput(null)}
-                      autoComplete="new-password"
-                      name="confirmPassword"
-                      id="confirmPassword"
                     />
                     {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
                   </View>
                 )}
 
-                {/* Demographic Information Section */}
-                {isSignUp && (
-                  <>
-                    <View style={styles.demographicSection}>
-                      <Text style={styles.demographicTitle}>Demographic Information (Optional)</Text>
-                      <Text style={styles.demographicSubtitle}>
-                        This information helps us provide better opportunities and is kept confidential
-                      </Text>
-                    </View>
-
-                    <View style={[styles.inputGroup, focusedInput === 'sex' && styles.inputGroupOpen]}>
-                      <Text style={styles.label}>Sex</Text>
-                      <SelectField
-                        value={sex}
-                        onValueChange={setSex}
-                        options={['', 'Male', 'Female', 'Intersex', 'Prefer not to say']}
-                        placeholder="Select sex"
-                        focused={focusedInput === 'sex'}
-                        onFocus={() => setFocusedInput('sex')}
-                        onBlur={() => setFocusedInput(null)}
-                      />
-                    </View>
-
-                    <View style={[styles.inputGroup, focusedInput === 'gender' && styles.inputGroupOpen]}>
-                      <Text style={styles.label}>Gender</Text>
-                      <SelectField
-                        value={gender}
-                        onValueChange={setGender}
-                        options={['', 'Man', 'Woman', 'Non-binary', 'Genderqueer', 'Two-Spirit', 'Another gender', 'Prefer not to say']}
-                        placeholder="Select gender"
-                        focused={focusedInput === 'gender'}
-                        onFocus={() => setFocusedInput('gender')}
-                        onBlur={() => setFocusedInput(null)}
-                      />
-                    </View>
-
-                    <View style={[styles.inputGroup, focusedInput === 'disability' && styles.inputGroupOpen]}>
-                      <Text style={styles.label}>Disability Status</Text>
-                      <SelectField
-                        value={disability}
-                        onValueChange={setDisability}
-                        options={['', 'Yes, I have a disability', 'No, I do not have a disability', 'Prefer not to say']}
-                        placeholder="Select disability status"
-                        focused={focusedInput === 'disability'}
-                        onFocus={() => setFocusedInput('disability')}
-                        onBlur={() => setFocusedInput(null)}
-                      />
-                    </View>
-
-                    <View style={[styles.inputGroup, focusedInput === 'race' && styles.inputGroupOpen]}>
-                      <Text style={styles.label}>Race/Ethnicity</Text>
-                      <SelectField
-                        value={race}
-                        onValueChange={setRace}
-                        options={['', 'American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'Native Hawaiian or Other Pacific Islander', 'White', 'Two or more races', 'Another race/ethnicity', 'Prefer not to say']}
-                        placeholder="Select race/ethnicity"
-                        focused={focusedInput === 'race'}
-                        onFocus={() => setFocusedInput('race')}
-                        onBlur={() => setFocusedInput(null)}
-                      />
-                    </View>
-                  </>
-                )}
-
                 {/* Submit Button */}
-                {formError ? <Text style={styles.errorText}>{formError}</Text> : null}
                 <Pressable
                   style={[
                     styles.submitButton,
