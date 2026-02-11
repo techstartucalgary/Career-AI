@@ -1,0 +1,56 @@
+As an AMD intern, you’ll be placed at the epicenter of the AI ecosystem, working alongside experts and industry pioneers. You’ll do important work, learn new skills, expand your network, and gain real-world experience on projects that impact millions of end-users worldwide. Whether you’re an undergrad or a PhD student, your contributions matter—and your experience here will be a launchpad for what comes next.
+
+Job Details
+
+Location: Calgary, Alberta, Canada
+
+Onsite/Hybrid: This role requires the student to work full time 37.5 hrs a week, either in a hybrid or onsite work structure throughout the duration of the co-op/intern term.
+
+Winter Duration
+
+4 Months: January 2026 to April 2026
+8 Months: January 2026 to August 2026
+
+
+Summer Duration
+
+4 Months: May 2026 to August 2026
+8 Months: May 2026 to December 2026
+What You Will Be Doing
+
+We are seeking highly motivated Software Engineering intern/co-op to join our team at AMD. In this role –
+
+We will assign you responsibilities in which you will work closely with our software engineers to build and maintain our software applications
+
+We will provide training on the full software creation process, from design and built to testing and deployment 
+We will encourage you to build scripts that automate some of our software development process 
+We will help you learn debugging methodologies to investigate the root cause of software issues 
+In certain projects we may have your involvement in crafting technical/functional documents and reports as needed 
+
+
+Who We Are Looking For
+
+You are currently enrolled in a Canada based University into a Bachelors degree program majoring in Computer Engineering, Electrical Engineering, Computer Science or related discipline 
+If you have knowledge / experience with any of the following technical skills (or related areas) and are enthusiastic about this role, we strongly encourage you to apply – 
+Software engineering concepts, principles, and theories 
+
+C/C++ programming and Scripting language like Python, Windows PowerShell, Linux shell script, Perl, Java, Javascript, UML 
+
+Operating systems UNIX/Linux OS 
+
+Databases, MySQL, PostgreSQL, MongoDB 
+
+Cloud computing platforms, Azure 
+
+Web development frameworks, Django, Rails, Spring Boot 
+
+Mark up languages like HTML, XML, XSL 
+
+Defect tracking, testing, debugging 
+
+Git, Github, Perforce 
+
+Security technologies, OAuth, SSL, or TLS 
+
+PC / CPU architecture, Embedded systems, microcontrollers 
+Note: By submitting your application, you are indicating your interest in AMD intern positions. We are recruiting for multiple positions, and if your experience aligns with any of intern opportunities, a recruiter will contact you
