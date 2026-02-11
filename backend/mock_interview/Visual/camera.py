@@ -3,6 +3,13 @@ import numpy as np
 import mediapipe as mp
 import time
 
+from analysis import MovementAnalyzer
+from feedback import feedback_from_metrics
+analyzer = MovementAnalyzer()
+metrics_log = []
+
+
+
 # Mediapipe Holistic 
 mp_holistic = mp.solutions.holistic
 holistic = mp_holistic.Holistic(
@@ -14,6 +21,7 @@ holistic = mp_holistic.Holistic(
 # Used for drawing hands cleanly
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
+
 
 # Webcam 
 cap = cv2.VideoCapture(0)
@@ -34,6 +42,13 @@ MOUTH_IDXS = [
     78, 95, 88, 178, 87, 14, 13, 312, 317, 402
 ]
 
+
+def draw_hud(img, lines, x=30, y=40, dy=38):
+    for i, s in enumerate(lines):
+        cv2.putText(img, s, (x, y + i*dy),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255,255,255), 2)
+
+
 while True:
     ok, frame = cap.read()
     if not ok:
@@ -45,6 +60,18 @@ while True:
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = holistic.process(rgb)
 
+    h, w = frame.shape[:2]
+    is_speaking = None  
+    metrics = analyzer.update(results, frame, w, h, is_speaking=is_speaking)
+   
+
+#MIRROR FOR DISPLAY
+    disp = cv2.flip(frame, 1)
+    fb = feedback_from_metrics(metrics)
+    ind = fb.get("indicators", {})
+    metrics_log.append(metrics)
+   
+        
     # -------------------- POSE --------------------
     if results.pose_landmarks:
         mp_drawing.draw_landmarks(
@@ -110,8 +137,27 @@ while True:
             x2, y2 = int(end.x*w), int(end.y*h)
             cv2.line(frame, (x1,y1), (x2,y2), (0,255,0), 2)
 
-    #MIRROR FOR DISPLAY
-    disp = cv2.flip(frame, 1)
+    lines = [
+        f"Movement: {ind.get('movement', {}).get('state', 'unknown')}",
+        f"Posture:  {ind.get('posture', {}).get('state', 'unknown')}",
+        f"Center:   {ind.get('centered', {}).get('state', 'unknown')}",
+        f"Distance: {ind.get('distance', {}).get('state', 'unknown')}",
+        f"Eye:      {ind.get('eye_contact', {}).get('state', 'unknown')}",
+    ]
+
+
+    draw_hud(disp, lines, x=30, y=40, dy=34)
+
+    tips = (fb.get("messages") or []) + (fb.get("tips") or [])
+    # de-duplicate while preserving order
+    seen = set()
+    tips = [t for t in tips if not (t in seen or seen.add(t))]
+
+    y0 = disp.shape[0] - 120
+    for i, t in enumerate(tips[:4]):
+        cv2.putText(disp, t, (30, y0 + i*30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
+
 
     #LABEL HANDS AFTER FLIP
     if results.right_hand_landmarks:
@@ -126,7 +172,9 @@ while True:
                     cv2.FONT_HERSHEY_SIMPLEX,
                     1.2, (255,0,255), 3)
 
-    cv2.imshow("Holistic Tracking (No Crashes)", disp)
+    
+    
+    cv2.imshow("Holistic Tracking", disp)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
