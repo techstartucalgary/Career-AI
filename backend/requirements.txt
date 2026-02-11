@@ -17,3 +17,10 @@ reportlab
 python-dotenv
 spacy
 python-docx
+google-generativeai
+google-cloud-texttospeech
+google-cloud-speech
+sounddevice
+numpy
+opencv-python
+mediapipe

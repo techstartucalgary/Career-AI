@@ -15,6 +15,9 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
   // Preview Screen Styles
   previewContainer: {
     flex: 1,
@@ -82,6 +85,88 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: isDesktop ? 1200 : isTablet ? 900 : '100%',
     paddingHorizontal: 20,
+    flexWrap: 'wrap',
+  },
+  dropdownGroup: {
+    minWidth: 200,
+    gap: 6,
+  },
+  dropdownLabel: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  dropdownSelect: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    color: COLORS.textPrimary,
+    borderRadius: 10,
+    border: `1px solid ${COLORS.borderLight}`,
+    padding: 10,
+    fontSize: 14,
+    outlineWidth: 0,
+  },
+  jobInputOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+    padding: 20,
+  },
+  jobInputCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 24,
+    padding: isDesktop ? 40 : isTablet ? 32 : 24,
+    width: '100%',
+    maxWidth: 600,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    maxHeight: '80vh',
+  },
+  jobInputTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.white,
+    marginBottom: 24,
+  },
+  jobInputGroup: {
+    marginBottom: 20,
+  },
+  jobInputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+  },
+  jobInputText: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  jobInputButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  jobInputButtonDisabled: {
+    opacity: 0.5,
+  },
+  jobInputButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
   controlButton: {
     flexDirection: 'row',
@@ -334,6 +419,74 @@ const styles = StyleSheet.create({
   },
   questionHeader: {
     marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  orbPanel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  orb: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: COLORS.primary,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 10px rgba(167, 139, 250, 0.6)',
+      },
+    }),
+  },
+  orbActive: {
+    transform: [{ scale: 1.1 }],
+    backgroundColor: COLORS.primaryDark,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 18px rgba(167, 139, 250, 0.9)',
+      },
+    }),
+  },
+  orbTextWrapper: {
+    gap: 2,
+  },
+  orbLabel: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  orbStatus: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+  },
+  speakingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  speakingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.borderLight,
+  },
+  speakingDotActive: {
+    backgroundColor: COLORS.primary,
+  },
+  speakingText: {
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    fontWeight: '600',
   },
   questionBadge: {
     alignSelf: 'flex-start',
@@ -368,6 +521,35 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     flexDirection: 'row',
     gap: 16,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  questionBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
+    borderWidth: 0,
+    borderColor: 'transparent',
+    pointerEvents: 'none',
+  },
+  questionBorderActive: {
+    borderWidth: 3,
+    borderColor: '#A78BFA',
+    ...Platform.select({
+      web: {
+        boxShadow: 'inset 0 0 20px rgba(167, 139, 250, 0.4), 0 0 20px rgba(167, 139, 250, 0.6)',
+      },
+      default: {
+        shadowColor: '#A78BFA',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 15,
+        elevation: 15,
+      },
+    }),
   },
   questionIcon: {
     width: 40,
@@ -411,6 +593,25 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     fontWeight: '500',
   },
+  postureCard: {
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  postureTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  postureMessage: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+  },
   answerSection: {
     marginBottom: 24,
   },
@@ -440,6 +641,38 @@ const styles = StyleSheet.create({
   answerInputPlaceholder: {
     opacity: 0.6,
   },
+  answerTextInput: {
+    marginTop: 12,
+    minHeight: 80,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    color: COLORS.textPrimary,
+    fontSize: 16,
+    lineHeight: 22,
+    textAlignVertical: 'top',
+  },
+  transcriptionBox: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.3)',
+  },
+  transcriptionLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  transcriptionText: {
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    lineHeight: 22,
+  },
   interviewControls: {
     flexDirection: 'row',
     gap: 16,
@@ -465,6 +698,9 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     backgroundColor: 'rgba(167, 139, 250, 0.1)',
   },
+  interviewButtonDisabled: {
+    opacity: 0.5,
+  },
   skipButtonText: {
     color: COLORS.textPrimary,
     fontSize: 16,
@@ -485,6 +721,9 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
   submitButtonHover: {
     backgroundColor: COLORS.primaryDark,
     transform: [{ translateY: -2 }],
@@ -504,6 +743,123 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: '600',
+  },
+  // New styles for recording, scrolling, and file upload
+  questionsScroll: {
+    flex: isDesktop ? 1 : undefined,
+  },
+  videoWrapperSpeaking: {
+    borderColor: '#A78BFA',
+    borderWidth: 3,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 20px rgba(167, 139, 250, 0.6)',
+      },
+      default: {
+        shadowColor: '#A78BFA',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 20,
+        elevation: 20,
+      },
+    }),
+  },
+  videoWrapperRecording: {
+    borderColor: '#A78BFA',
+    borderWidth: 4,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 30px rgba(167, 139, 250, 0.8)',
+        animation: 'pulse 2s infinite',
+      },
+      default: {
+        shadowColor: '#A78BFA',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 1,
+        shadowRadius: 25,
+        elevation: 25,
+      },
+    }),
+  },
+  recordingContainer: {
+    marginVertical: 12,
+    alignItems: 'center',
+  },
+  recordButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(167, 139, 250, 0.3)',
+    gap: 10,
+    minWidth: 200,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      },
+    }),
+  },
+  recordButtonActive: {
+    backgroundColor: 'rgba(220, 38, 38, 0.2)',
+    borderColor: '#DC2626',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 12px rgba(220, 38, 38, 0.4)',
+      },
+    }),
+  },
+  recordButtonText: {
+    color: COLORS.textPrimary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  recordIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(167, 139, 250, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recordingIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#DC2626',
+  },
+  micIcon: {
+    width: 12,
+    height: 12,
+    borderRadius: 2,
+    backgroundColor: COLORS.primary,
+  },
+  fileUploadLabel: {
+    display: 'block',
+    cursor: 'pointer',
+  },
+  fileUploadButton: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 2,
+    borderColor: 'dashed',
+    borderColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 80,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  fileUploadButtonText: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
 
