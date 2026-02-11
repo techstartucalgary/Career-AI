@@ -72,8 +72,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLORS.border,
     marginBottom: 40,
-    paddingBottom: isDesktop ? 48 : 40,
-    overflow: 'hidden',
+    overflow: 'visible',
+    zIndex: 2,
     ...Platform.select({
       web: {
         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
@@ -91,20 +91,22 @@ const styles = StyleSheet.create({
   formRow: {
     flexDirection: isDesktop ? 'row' : 'column',
     gap: isDesktop ? 48 : 32,
-    marginBottom: isDesktop ? 60 : 40,
+    overflow: 'visible',
   },
   formColumn: {
     flex: isDesktop ? 1 : undefined,
     width: isDesktop ? undefined : '100%',
-    gap: isDesktop ? 40 : 32,
+    gap: 32,
+    overflow: 'visible',
   },
   inputGroup: {
     width: '100%',
     marginBottom: 0,
-    position: 'relative',
+    overflow: 'visible',
   },
   inputGroupOpen: {
     zIndex: 1000,
+    overflow: 'visible',
   },
   label: {
     fontSize: 16,
@@ -115,9 +117,11 @@ const styles = StyleSheet.create({
   selectContainer: {
     position: 'relative',
     width: '100%',
+    overflow: 'visible',
   },
   selectContainerOpen: {
     zIndex: 1000,
+    overflow: 'visible',
   },
   selectInput: {
     flexDirection: 'row',
@@ -204,7 +208,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
-    maxHeight: 140,
+    maxHeight: 200,
     zIndex: 1001,
     overflow: 'hidden',
     ...Platform.select({
@@ -221,7 +225,7 @@ const styles = StyleSheet.create({
     }),
   },
   selectOptionsScroll: {
-    maxHeight: 140,
+    maxHeight: 200,
   },
   selectOption: {
     paddingVertical: 12,
@@ -252,6 +256,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 1000,
     paddingHorizontal: isDesktop ? 48 : 0,
+    zIndex: 0,
   },
   backButton: {
     backgroundColor: 'rgba(255,255,255,0.04)',
