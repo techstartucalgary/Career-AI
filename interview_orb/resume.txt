@@ -1,0 +1,41 @@
+Saqib Mazhar
+Calgary, AB | (403) 412 5895 | saqibmazhar.com | saqibmaz@gmail.com | linkedin.com/in/saqib-mazhar | github.com/saqibx
+
+EDUCATION
+Bachelor of Science, Computer Science					 	             September 2023 – Present
+University of Calgary											                  Calgary, AB
+
+WORK EXPERIENCE
+Applications Integration Intern		 			         		                   January 2026 – Present
+Nimble Science											          	                  Calgary, AB
+Supported product development through testing, validation, and documentation of software configurations and integrations, contributing to design controls, verification records, and risk-aware change processes across the product lifecycle.
+Built and maintained user-facing web portals and internal tools, integrating third-party software into a regulated medical device environment while ensuring data integrity, traceability, and compliance with ISO 13485 and IEC 62304 requirements.
+Collaborated cross-functionally with operations, QA, and external vendors to prototype, test, and iterate on software-backed systems, balancing rapid development with regulatory and quality constraints.
+
+AI Developer 			 	     						             September 2025 – Present
+Verexa													               Calgary, AB
+Architected a production-grade AI career platform with 3,500+ lines of Python, designing modular LLM services for interview simulation, resume optimization, and evaluation workflows.
+Built an LLM orchestration pipeline using Google Gemini with structured outputs, temperature tuning, semantic embeddings, and automated refinement, improving resume–job match scores from ~60% to 85%.
+Implemented async/await concurrency and intelligent caching, cutting end-to-end interview generation time from 8 minutes to ~3 minutes and reducing inference costs by 48%.
+
+CO-VP External									                      August 2024 – Present
+Tech Start UCalgary											                  Calgary, AB
+Managed external relations by building partnerships with industry contacts, securing sponsorships, and coordinating outreach to support Tech Start UCalgary’s events and initiatives.
+Led a team of 4 to secure 4+ corporate sponsors and partners to fund hackathons, Networking nights, and Tech Talks.
+
+PROJECTS
+
+Fraud Detection Engine						      	           
+Designed a real-time fraud detection platform with Kafka for transaction streaming and Redis for high-speed state caching
+Deployed scalable microservices with Docker Compose, enabling event-driven anomaly scoring via REST APIs
+Integrated a Python anomaly detection module (Isolation Forests + z-score) to score and flag suspicious transactions.
+
+Second Brain - An Agentic Knowledge System     				                           
+Built an agent-driven system to collect, organize, and query personal knowledge across notes, documents, and scanned material.
+Created ingestion and embedding pipelines for text from Notion, Google Drive, and handwritten notes using OCR and vector search for fast semantic retrieval.
+Implemented retrieval-augmented Q&A over the full knowledge base using LangChain and Gemini, and deployed the system on GCP with secure API management.
+
+SKILLS
+
+Languages: Python, Java, SQL, Bash, C#
+Frameworks/Tools: Flask, Spring Boot, Kafka, Docker, LangChain, GCP,  AWS, CI/CD (CodeMagic, Github Actions), AI/ML
