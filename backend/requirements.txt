@@ -15,4 +15,5 @@ sentence-transformers
 pypdf
 reportlab
 python-dotenv
-spacypython-docx
+spacy
+python-docx

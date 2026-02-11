@@ -155,8 +155,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   templateCard: {
-    flex: isDesktop ? 0.48 : 1,
-    minWidth: isDesktop ? 140 : '100%',
+    flexBasis: isDesktop ? '47%' : '100%',
+    flexGrow: 0,
+    flexShrink: 0,
     backgroundColor: COLORS.surfaceLight,
     borderRadius: 12,
     padding: 16,
