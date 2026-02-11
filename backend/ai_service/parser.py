@@ -36,20 +36,34 @@ class ResumeParser:
     def extract_text_from_pdf(self, pdf_path: str) -> str:
         """
         Extract all text from a PDF file.
+        Also handles DOCX files by extracting text directly.
         
         Args:
-            pdf_path: Path to PDF file
+            pdf_path: Path to PDF or DOCX file
             
         Returns:
             Extracted text as string
             
         Raises:
-            FileNotFoundError: If PDF doesn't exist
-            Exception: If PDF is corrupted or unreadable
+            FileNotFoundError: If file doesn't exist
+            Exception: If file is corrupted or unreadable
         """
         print(f"\n📄 Extracting text from {pdf_path}...")
         
         try:
+            # Check if it's a DOCX file
+            from pathlib import Path as PathlibPath
+            file_ext = PathlibPath(pdf_path).suffix.lower()
+            
+            if file_ext in ['.docx', '.doc']:
+                print(f"  📋 Detected {file_ext} file, extracting text directly...")
+                from docx import Document
+                doc = Document(pdf_path)
+                text = "\n".join([p.text for p in doc.paragraphs])
+                print(f"  ✓ Extracted {len(text)} characters from DOCX")
+                return text
+            
+            # Handle PDF files
             loader = PyPDFLoader(pdf_path)
             pages = loader.load()
             text = "\n".join([p.page_content for p in pages])
@@ -58,9 +72,9 @@ class ResumeParser:
             return text
             
         except FileNotFoundError:
-            raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+            raise FileNotFoundError(f"File not found: {pdf_path}")
         except Exception as e:
-            raise Exception(f"Failed to extract PDF text: {str(e)}")
+            raise Exception(f"Failed to extract text: {str(e)}")
     
     def parse_resume_text(self, resume_text: str) -> ResumeData:
         """

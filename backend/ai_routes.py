@@ -20,6 +20,19 @@ from langchain_core.messages import HumanMessage
 from ai_service.service import ResumeTailoringService
 from ai_service.ai_service import AIService
 
+
+def get_file_extension(filename: str) -> str:
+    """Get file extension from filename, handling edge cases"""
+    if not filename:
+        return ".pdf"
+    ext = Path(filename).suffix.lower()
+    # Validate extension
+    if ext in ['.pdf', '.docx', '.doc', '.txt']:
+        return ext
+    # Default to pdf if unknown
+    return ".pdf"
+
+
 # Create router
 router = APIRouter(prefix="/api", tags=["AI Services"])
 
@@ -57,8 +70,69 @@ async def analyze_resume(
             "success": True,
             "analysis": analysis,
             "questions": questions,
-            "match_score": semantic_analysis.overall_score if semantic_analysis else None
+            "match_score": semantic_analysis.overall_match if semantic_analysis else None
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+DEFAULT_ATS_JOB_DESCRIPTION = (
+    "General ATS-ready resume evaluation for software roles. "
+    "Focus on relevant technical skills, measurable impact, and role-aligned experience. "
+    "Include programming languages, frameworks, databases, cloud, CI/CD, and project outcomes."
+)
+
+
+@router.post("/ats-score")
+async def ats_score(
+    document_file: UploadFile = File(...),
+    job_description: str = Form(default="")
+):
+    """Calculate ATS match score using semantic matching"""
+    try:
+        if not job_description or not job_description.strip():
+            job_description = DEFAULT_ATS_JOB_DESCRIPTION
+
+        try:
+            from ai_service.semantic_matcher import SemanticMatcher
+            from ai_service.parser import ResumeParser
+        except ModuleNotFoundError as exc:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Missing dependency for ATS scoring: {exc.name}. Install backend requirements and spaCy model.",
+            )
+
+        filename = document_file.filename or "document.pdf"
+        suffix = Path(filename).suffix.lower() or ".pdf"
+        if suffix != ".pdf":
+            raise HTTPException(status_code=400, detail="Only PDF files are supported for ATS scoring")
+
+        temp_dir = tempfile.gettempdir()
+        temp_file_path = Path(temp_dir) / f"ats_{datetime.now().timestamp()}{suffix}"
+
+        with open(temp_file_path, "wb") as buffer:
+            buffer.write(await document_file.read())
+
+        resume_parser = ResumeParser()
+        semantic_matcher = SemanticMatcher()
+
+        document_text = resume_parser.extract_text_from_pdf(str(temp_file_path))
+        semantic_analysis = semantic_matcher.find_semantic_matches(document_text, job_description)
+
+        temp_file_path.unlink()
+
+        match_score = round(semantic_analysis.overall_match * 100, 1)
+        coverage_score = round(semantic_analysis.coverage * 100, 1)
+
+        return {
+            "success": True,
+            "match_score": match_score,
+            "coverage": coverage_score,
+            "top_missing_skills": semantic_analysis.top_missing_skills,
+            "top_matching_skills": semantic_analysis.top_matching_skills,
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -90,9 +164,10 @@ async def tailor_resume(
             # Parse user answers
             answers = json.loads(user_answers) if user_answers else {}
 
-            # Save uploaded file temporarily
+            # Save uploaded file temporarily with correct extension
             temp_dir = tempfile.gettempdir()
-            temp_file_path = Path(temp_dir) / f"resume_{datetime.now().timestamp()}.pdf"
+            file_ext = get_file_extension(resume_file.filename)
+            temp_file_path = Path(temp_dir) / f"resume_{datetime.now().timestamp()}{file_ext}"
 
             with open(temp_file_path, "wb") as buffer:
                 buffer.write(await resume_file.read())
@@ -118,7 +193,10 @@ async def tailor_resume(
             ai_service.generate_resume_pdf(tailored_resume, str(output_path))
 
             # Clean up temp input file
-            temp_file_path.unlink()
+            try:
+                temp_file_path.unlink()
+            except:
+                pass
 
             # Read PDF and encode
             with open(output_path, "rb") as pdf_file:
@@ -160,9 +238,10 @@ async def generate_cover_letter(
                 yield f"data: {json.dumps({'error': 'Missing job_description'})}\n\n"
                 return
             
-            # Save uploaded file temporarily
+            # Save uploaded file temporarily with correct extension
             temp_dir = tempfile.gettempdir()
-            temp_file_path = Path(temp_dir) / f"resume_{datetime.now().timestamp()}.pdf"
+            file_ext = get_file_extension(resume_file.filename)
+            temp_file_path = Path(temp_dir) / f"resume_{datetime.now().timestamp()}{file_ext}"
             
             with open(temp_file_path, "wb") as buffer:
                 buffer.write(await resume_file.read())
@@ -228,7 +307,10 @@ JSON:"""
             ai_service.generate_cover_letter_pdf(cover_letter, resume, str(output_path))
             
             # Clean up temp input file
-            temp_file_path.unlink()
+            try:
+                temp_file_path.unlink()
+            except:
+                pass
             
             # Read PDF and encode
             with open(output_path, "rb") as pdf_file:

@@ -80,6 +80,7 @@ export const tailorResume = async (resumeFile, jobDescription, userAnswers = {},
     }
   }
 
+  console.log('Resume result:', result);
   return result;
 };
 

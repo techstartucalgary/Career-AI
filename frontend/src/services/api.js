@@ -10,7 +10,7 @@ const resolveApiBaseUrl = () => {
   return 'http://localhost:8000';
 };
 
-const API_BASE_URL = resolveApiBaseUrl();
+export const API_BASE_URL = resolveApiBaseUrl();
 const TOKEN_KEY = 'career_ai_token';
 
 // Memory fallback for environments without localStorage

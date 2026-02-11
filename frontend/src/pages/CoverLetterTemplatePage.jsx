@@ -1,19 +1,40 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView, TextInput, Platform } from 'react-native';
+import { View, Text, Pressable, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import Header from '../components/Header';
 import styles from './CoverLetterTemplatePage.styles';
 import './JobPages.css';
+import { generateCoverLetter, downloadPDFFromBase64 } from '../services/aiService';
+import PDFViewer from '../components/PDFViewer';
+
+const DEFAULT_OPTIMIZATION_JOB_DESCRIPTION =
+  'General ATS-ready cover letter for software roles. Emphasize relevant technical skills, measurable impact, and role-aligned experience. Highlight programming languages, frameworks, databases, cloud, CI/CD, and project outcomes.';
+
+// Extract keywords from job description for highlighting
+const extractKeywords = (jobDescription) => {
+  if (!jobDescription) return [];
+  
+  // Common keywords to look for
+  const commonKeywords = ['python', 'javascript', 'java', 'react', 'node', 'sql', 'database', 'api', 'rest', 'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'agile', 'scrum', 'ci/cd', 'testing', 'automation', 'design', 'architecture', 'system', 'data', 'analytics', 'machine', 'learning', 'ai', 'ml', 'web', 'mobile', 'backend', 'frontend', 'fullstack', 'devops', 'cloud', 'microservices'];
+  
+  const lowerDesc = jobDescription.toLowerCase();
+  return commonKeywords.filter(keyword => lowerDesc.includes(keyword));
+};
 
 const CoverLetterTemplatePage = () => {
-  const router = useRouter();
   const { mode } = useLocalSearchParams();
   const [selectedFile, setSelectedFile] = useState(null);
   const [templateMode, setTemplateMode] = useState(mode === 'optimize' ? 'optimize' : 'template'); // 'template' or 'optimize'
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
+  const [generatedCoverLetter, setGeneratedCoverLetter] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [progressStep, setProgressStep] = useState('');
+  const [progress, setProgress] = useState(0);
+  const [keywords, setKeywords] = useState([]);
 
   const pickDocument = async () => {
     try {
@@ -25,7 +46,8 @@ const CoverLetterTemplatePage = () => {
       if (result.type === 'success' || !result.canceled) {
         const uri = result.uri ?? result.assets?.[0]?.uri ?? result.assets?.[0]?.fileCopyUri;
         const name = result.name ?? result.assets?.[0]?.name;
-        setSelectedFile({ uri, name });
+        const mimeType = result.mimeType ?? result.assets?.[0]?.mimeType;
+        setSelectedFile({ uri, name, mimeType });
         setTemplateMode('optimize');
       }
     } catch (error) {
@@ -33,15 +55,55 @@ const CoverLetterTemplatePage = () => {
     }
   };
 
-  const handleGenerateCoverLetter = () => {
+  const handleGenerateCoverLetter = async () => {
+    if (templateMode === 'optimize') {
+      if (!selectedFile?.uri) {
+        setError('Upload your cover letter to optimize.');
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
+      setGeneratedCoverLetter(null);
+      setProgress(0);
+      setProgressStep('Starting optimization...');
+      
+      // Extract keywords from job description
+      const extractedKeywords = extractKeywords(DEFAULT_OPTIMIZATION_JOB_DESCRIPTION);
+      setKeywords(extractedKeywords);
+
+      try {
+        const result = await generateCoverLetter(
+          selectedFile,
+          DEFAULT_OPTIMIZATION_JOB_DESCRIPTION,
+          (update) => {
+            if (typeof update?.progress === 'number') {
+              setProgress(update.progress);
+            }
+            if (update?.step) {
+              setProgressStep(update.step);
+            }
+          }
+        );
+        setGeneratedCoverLetter(result);
+      } catch (err) {
+        setError(err?.message || 'Cover letter optimization failed.');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
     // TODO: Implement cover letter generation logic
     console.log('Generating cover letter...');
   };
 
   const handleDownloadPDF = () => {
-    // TODO: Implement PDF download logic
-    console.log('Downloading PDF...');
+    if (!generatedCoverLetter?.pdf_base64) {
+      return;
+    }
+    downloadPDFFromBase64(generatedCoverLetter.pdf_base64, 'optimized_cover_letter.pdf');
   };
+
+  const canDownload = !!generatedCoverLetter?.pdf_base64;
 
   return (
     <View style={styles.container}>
@@ -180,25 +242,85 @@ const CoverLetterTemplatePage = () => {
 
               {/* Right Panel - Cover Letter Preview */}
               <View style={styles.rightPanel}>
-                <View style={styles.previewArea}>
-                  <View style={styles.previewIcon}>
-                    <View style={styles.documentIcon} />
+                  <View style={styles.previewArea}>
+                  {isLoading ? (
+                    <>
+                      <ActivityIndicator size="large" color="#A78BFA" />
+                      <Text style={[styles.previewText, { marginTop: 16, fontWeight: '600' }]}>{progressStep}</Text>
+                      <View style={styles.progressBarContainer}>
+                        <View style={[styles.progressBar, { width: `${progress}%` }]} />
+                      </View>
+                      <Text style={[styles.previewText, { marginTop: 8, fontSize: 14 }]}>{progress}%</Text>
+                    </>
+                  ) : generatedCoverLetter && generatedCoverLetter.pdf_base64 ? (
+                    <>
+                      <ScrollView style={styles.resumeContentScroll}>
+                        <View style={styles.coverLetterContent}>
+                          {generatedCoverLetter.cover_letter && (
+                            <>
+                              <Text style={styles.coverLetterDate}>{new Date().toLocaleDateString()}</Text>
+                              {generatedCoverLetter.cover_letter.full_text && (
+                                <Text style={styles.coverLetterBody}>{generatedCoverLetter.cover_letter.full_text}</Text>
+                              )}
+                            </>
+                          )}
+                        </View>
+                      </ScrollView>
+                      <Pressable
+                        style={[
+                          styles.downloadButton,
+                          !canDownload && styles.downloadButtonDisabled,
+                          hoveredButton === 'download' && canDownload && styles.downloadButtonHover,
+                        ]}
+                        onPress={handleDownloadPDF}
+                        onHoverIn={() => Platform.OS === 'web' && setHoveredButton('download')}
+                        onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                        disabled={!canDownload}
+                      >
+                        {Platform.OS === 'web' ? (
+                          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} style={{ color: '#fff' }}>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                        ) : (
+                          <Text style={styles.downloadButtonText}>↓</Text>
+                        )}
+                      </Pressable>
+                    </>
+                  ) : (
+                    <>
+                      <View style={styles.placeholderContent}>
+                        <View style={styles.placeholderLine} />
+                        <View style={[styles.placeholderLine, { width: '85%' }]} />
+                        <View style={[styles.placeholderLine, { marginTop: 24, width: '95%' }]} />
+                        <View style={[styles.placeholderLine, { width: '90%' }]} />
+                        <View style={[styles.placeholderLine, { width: '88%' }]} />
+                        <View style={[styles.placeholderLine, { marginTop: 24, width: '92%' }]} />
+                        <View style={[styles.placeholderLine, { width: '87%' }]} />
+                      </View>
+                      <Text style={styles.previewText}>Your optimized cover letter will appear here</Text>
+                      <Pressable
+                        style={[
+                          styles.downloadButton,
+                          styles.downloadButtonDisabled,
+                        ]}
+                        disabled={true}
+                      >
+                        {Platform.OS === 'web' ? (
+                          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} style={{ color: '#fff' }}>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                        ) : (
+                          <Text style={styles.downloadButtonText}>↓</Text>
+                        )}
+                      </Pressable>
+                    </>
+                  )}
                   </View>
-                  <Text style={styles.previewText}>Your cover letter will appear here</Text>
                 </View>
-
-                <Pressable
-                  style={[
-                    styles.downloadButton,
-                    hoveredButton === 'download' && styles.downloadButtonHover
-                  ]}
-                  onPress={handleDownloadPDF}
-                  onHoverIn={() => Platform.OS === 'web' && setHoveredButton('download')}
-                  onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
-                >
-                  <Text style={styles.downloadButtonText}>Download PDF</Text>
-                </Pressable>
-              </View>
             </View>
           </View>
         </ScrollView>

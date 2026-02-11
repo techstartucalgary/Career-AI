@@ -237,16 +237,110 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  atsScorePanel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.35)',
+    flex: 1,
+    minHeight: 64,
+    justifyContent: 'space-between',
+    paddingRight: 12,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+      },
+    }),
+  },
+  atsScorePanelHover: {
+    backgroundColor: 'rgba(167, 139, 250, 0.18)',
+    borderColor: 'rgba(167, 139, 250, 0.5)',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 24px rgba(167, 139, 250, 0.2)',
+        transform: 'translateY(-2px)',
+      },
+    }),
+  },
+  atsScoreInfo: {
+    flex: 1,
+  },
+  atsScoreTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    marginBottom: 4,
+  },
+  atsScoreDesc: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+  },
+  atsScoreMeta: {
+    fontSize: 12,
+    color: '#16A34A',
+    marginTop: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(34, 197, 94, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.25)',
+    alignSelf: 'flex-start',
+    fontWeight: '600',
+  },
+  atsScoreError: {
+    fontSize: 12,
+    color: '#F87171',
+    marginTop: 6,
+  },
+  progressRing: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressRingFallback: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 999,
+    borderWidth: 4,
+    borderColor: COLORS.primary,
+  },
+  progressText: {
+    position: 'absolute',
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
   previewArea: {
     flex: 1,
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: 'rgba(167, 139, 250, 0.08)',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 400,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: 'rgba(167, 139, 250, 0.2)',
+    overflow: 'hidden',
+    position: 'relative',
+    padding: 32,
+  },
+  placeholderContent: {
+    position: 'absolute',
+    top: 40,
+    left: 40,
+    right: 40,
+    gap: 12,
+  },
+  placeholderLine: {
+    height: 12,
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    borderRadius: 6,
+    width: '100%',
   },
   previewIcon: {
     marginBottom: 16,
@@ -261,8 +355,11 @@ const styles = StyleSheet.create({
   },
   previewText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
+    color: '#E5E7EB',
     textAlign: 'center',
+    fontWeight: '500',
+    position: 'relative',
+    zIndex: 5,
   },
   progressBarContainer: {
     width: '80%',
@@ -274,7 +371,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#10B981',
+    backgroundColor: COLORS.primary,
     borderRadius: 4,
     ...Platform.select({
       web: {
@@ -284,24 +381,28 @@ const styles = StyleSheet.create({
   },
   downloadButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
+    borderRadius: 999,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
     alignItems: 'center',
-    alignSelf: 'flex-end',
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    zIndex: 10,
     ...Platform.select({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
-        boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
+        boxShadow: '0 2px 12px rgba(167, 139, 250, 0.3)',
       },
     }),
   },
   downloadButtonHover: {
-    transform: [{ translateY: -2 }],
     ...Platform.select({
       web: {
-        boxShadow: '0 8px 30px rgba(167, 139, 250, 0.4)',
+        boxShadow: '0 4px 20px rgba(167, 139, 250, 0.4)',
+        transform: 'translateY(-2px)',
       },
     }),
   },
@@ -342,10 +443,15 @@ const styles = StyleSheet.create({
       default: 'sans-serif',
     }),
   },
+  actionRow: {
+    flexDirection: isDesktop ? 'row' : 'column',
+    gap: 16,
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+  },
   previewScroll: {
     flex: 1,
     backgroundColor: COLORS.surfaceLight,
-    borderRadius: 12,
     padding: 20,
     marginBottom: 20,
     minHeight: 400,
@@ -358,6 +464,13 @@ const styles = StyleSheet.create({
       web: 'system-ui, sans-serif',
       default: 'sans-serif',
     }),
+  },
+  downloadButtonInline: {
+    flex: 1,
+    alignSelf: 'stretch',
+  },
+  downloadButtonDisabled: {
+    opacity: 0.6,
   },
   uploadButton: {
     backgroundColor: COLORS.darkPurple,
@@ -414,6 +527,59 @@ const styles = StyleSheet.create({
       web: 'system-ui, sans-serif',
       default: 'sans-serif',
     }),
+  },
+  resumeContentScroll: {
+    flex: 1,
+    maxHeight: 600,
+    width: '100%',
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    overflow: 'hidden',
+  },
+  coverLetterContent: {
+    padding: 32,
+    backgroundColor: '#1F2937',
+    borderRadius: 12,
+    fontFamily: Platform.select({
+      web: 'Georgia, serif',
+      default: 'serif',
+    }),
+  },
+  coverLetterHeader: {
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  coverLetterName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#F3F4F6',
+    marginBottom: 4,
+  },
+  coverLetterContactInfo: {
+    fontSize: 11,
+    color: '#9CA3AF',
+  },
+  coverLetterDate: {
+    fontSize: 12,
+    color: '#D1D5DB',
+    marginBottom: 20,
+  },
+  coverLetterBody: {
+    fontSize: 12,
+    color: '#D1D5DB',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  coverLetterClosing: {
+    fontSize: 12,
+    color: '#D1D5DB',
+    marginBottom: 12,
+  },
+  coverLetterSignature: {
+    fontSize: 12,
+    color: '#F3F4F6',
+    fontWeight: '500',
   },
 });
 

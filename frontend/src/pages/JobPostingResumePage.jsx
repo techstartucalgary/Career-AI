@@ -8,19 +8,171 @@ import styles from './JobPostingResumePage.styles';
 import './JobPages.css';
 import { tailorResume, downloadPDFFromBase64 } from '../services/aiService';
 import PDFViewer from '../components/PDFViewer';
+import { API_BASE_URL } from '../services/api';
+
+const ProgressRing = ({ progress = 0, size = 60, strokeWidth = 4, color = '#A78BFA' }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  return (
+    <View style={[styles.progressRing, { width: size, height: size }]}>
+      {Platform.OS === 'web' ? (
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="rgba(255,255,255,0.1)"
+            strokeWidth={strokeWidth}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        </svg>
+      ) : (
+        <View style={styles.progressRingFallback} />
+      )}
+      <Text style={styles.progressText}>{Math.round(progress)}%</Text>
+    </View>
+  );
+};
+
+const formatApiError = (detail) => {
+  if (Array.isArray(detail)) {
+    return detail.map((item) => item?.msg).filter(Boolean).join(' ');
+  }
+  if (detail && typeof detail === 'object') {
+    return JSON.stringify(detail);
+  }
+  return detail || 'ATS scoring failed.';
+};
+
+const buildAtsFormData = async (file, jobDescription) => {
+  const formData = new FormData();
+  const name = file?.name || 'document.pdf';
+  const type = file?.mimeType || 'application/pdf';
+
+  if (Platform.OS === 'web') {
+    const response = await fetch(file.uri);
+    const blob = await response.blob();
+    formData.append('document_file', new File([blob], name, { type }));
+  } else {
+    formData.append('document_file', {
+      uri: file.uri,
+      name,
+      type,
+    });
+  }
+
+  formData.append('job_description', jobDescription);
+  return formData;
+};
+
+const buildAtsFormDataFromBase64 = async (base64, filename, jobDescription) => {
+  const formData = new FormData();
+  const name = filename || 'document.pdf';
+  const type = 'application/pdf';
+
+  if (Platform.OS === 'web') {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i += 1) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type });
+    formData.append('document_file', new File([blob], name, { type }));
+  } else {
+    formData.append('document_file', {
+      uri: `data:${type};base64,${base64}`,
+      name,
+      type,
+    });
+  }
+
+  formData.append('job_description', jobDescription);
+  return formData;
+};
+
+// Extract keywords from job description for highlighting
+const extractKeywords = (jobDescription) => {
+  if (!jobDescription) return [];
+  
+  // Common keywords to look for
+  const commonKeywords = ['python', 'javascript', 'java', 'react', 'node', 'sql', 'database', 'api', 'rest', 'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'agile', 'scrum', 'ci/cd', 'testing', 'automation', 'design', 'architecture', 'system', 'data', 'analytics', 'machine', 'learning', 'ai', 'ml', 'web', 'mobile', 'backend', 'frontend', 'fullstack', 'devops', 'cloud', 'microservices'];
+  
+  const lowerDesc = jobDescription.toLowerCase();
+  return commonKeywords.filter(keyword => lowerDesc.includes(keyword));
+};
+
+// Highlight keywords in text
+const highlightKeywords = (text, keywords, styles) => {
+  if (!keywords || keywords.length === 0) return <Text style={styles.entryBullet}>{text}</Text>;
+  
+  let parts = [text];
+  keywords.forEach(keyword => {
+    const newParts = [];
+    parts.forEach(part => {
+      if (typeof part === 'string') {
+        const regex = new RegExp(`(${keyword})`, 'gi');
+        const split = part.split(regex);
+        split.forEach((segment, idx) => {
+          if (regex.test(segment)) {
+            newParts.push(
+              <Text key={`${keyword}-${idx}`} style={[styles.entryBullet, styles.bulletHighlighted]}>
+                {segment}
+              </Text>
+            );
+          } else if (segment) {
+            newParts.push(segment);
+          }
+        });
+      } else {
+        newParts.push(part);
+      }
+    });
+    parts = newParts;
+  });
+
+  return (
+    <Text style={styles.entryBullet}>
+      {parts.map((part, idx) => 
+        typeof part === 'string' ? part : part
+      )}
+    </Text>
+  );
+};
 
 const JobPostingResumePage = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [jobDescription, setJobDescription] = useState('');
+  const [keywords, setKeywords] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedTags, setSelectedTags] = useState(['Student', 'AI', 'Software Development', 'Calgary']);
   const [hoveredButton, setHoveredButton] = useState(null);
+  const [hoveredAts, setHoveredAts] = useState(false);
   const [generatedResume, setGeneratedResume] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [progressStep, setProgressStep] = useState('');
   const [progress, setProgress] = useState(0);
+  const [originalAtsScore, setOriginalAtsScore] = useState(null);
+  const [finalAtsScore, setFinalAtsScore] = useState(null);
+  const [atsImprovement, setAtsImprovement] = useState(null);
+  const [atsLoading, setAtsLoading] = useState(false);
+  const [atsError, setAtsError] = useState('');
+  const [pdfGenerating, setPdfGenerating] = useState(false);
 
   const removeTag = (tagToRemove) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
@@ -36,10 +188,70 @@ const JobPostingResumePage = () => {
       if (result.type === 'success' || !result.canceled) {
         const uri = result.uri ?? result.assets?.[0]?.uri ?? result.assets?.[0]?.fileCopyUri;
         const name = result.name ?? result.assets?.[0]?.name;
-        setSelectedFile({ uri, name });
+        const mimeType = result.mimeType ?? result.assets?.[0]?.mimeType;
+        setSelectedFile({ uri, name, mimeType });
       }
     } catch (error) {
       setError('Error picking document: ' + error.message);
+    }
+  };
+
+  const calculateAtsScoreForFile = async () => {
+    if (!selectedFile?.uri) {
+      setAtsError('Upload your resume to calculate ATS score.');
+      return null;
+    }
+    if (!jobDescription.trim()) {
+      setAtsError('Paste a job description to calculate ATS score.');
+      return null;
+    }
+
+    try {
+      const formData = await buildAtsFormData(selectedFile, jobDescription);
+
+      const response = await fetch(`${API_BASE_URL}/api/ats-score`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
+
+      if (!response.ok) {
+        throw new Error(formatApiError(data?.detail || data?.message));
+      }
+
+      return data?.match_score ?? 0;
+    } catch (error) {
+      setAtsError(error?.message || 'ATS scoring failed.');
+      return null;
+    }
+  };
+
+  const calculateAtsScoreForBase64 = async (pdfBase64, filename) => {
+    if (!pdfBase64 || !jobDescription.trim()) {
+      return null;
+    }
+
+    try {
+      const formData = await buildAtsFormDataFromBase64(pdfBase64, filename, jobDescription);
+
+      const response = await fetch(`${API_BASE_URL}/api/ats-score`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : null;
+
+      if (!response.ok) {
+        throw new Error(formatApiError(data?.detail || data?.message));
+      }
+
+      return data?.match_score ?? 0;
+    } catch (error) {
+      setAtsError(error?.message || 'ATS scoring failed.');
+      return null;
     }
   };
 
@@ -58,18 +270,45 @@ const JobPostingResumePage = () => {
     setProgress(0);
     setProgressStep('Starting...');
     
+    // Extract keywords from job description
+    const extractedKeywords = extractKeywords(jobDescription);
+    setKeywords(extractedKeywords);
+    
     try {
-      const result = await tailorResume(selectedFile, jobDescription, {}, (data) => {
-        setProgressStep(data.step);
-        setProgress(data.progress);
-      });
+      setAtsLoading(true);
+      setAtsError('');
+
+      const [result, originalScore] = await Promise.all([
+        tailorResume(selectedFile, jobDescription, {}, (data) => {
+          setProgressStep(data.step);
+          setProgress(data.progress);
+        }),
+        calculateAtsScoreForFile(),
+      ]);
+
       setGeneratedResume(result);
+
+      let finalScore = null;
+      if (result?.pdf_base64) {
+        finalScore = await calculateAtsScoreForBase64(result.pdf_base64, 'tailored_resume.pdf');
+      }
+
+      if (originalScore !== null) {
+        setOriginalAtsScore(originalScore);
+      }
+      if (finalScore !== null) {
+        setFinalAtsScore(finalScore);
+      }
+      if (originalScore !== null && finalScore !== null) {
+        setAtsImprovement(finalScore - originalScore);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
       setProgress(0);
       setProgressStep('');
+      setAtsLoading(false);
     }
   };
 
@@ -78,6 +317,8 @@ const JobPostingResumePage = () => {
       downloadPDFFromBase64(generatedResume.pdf_base64, 'tailored_resume.pdf');
     }
   };
+
+  const canDownload = Boolean(generatedResume?.pdf_base64);
 
   return (
     <View style={styles.container}>
@@ -213,7 +454,7 @@ const JobPostingResumePage = () => {
                 <View style={styles.previewArea}>
                   {isLoading ? (
                     <>
-                      <ActivityIndicator size="large" color="#10B981" />
+                      <ActivityIndicator size="large" color="#A78BFA" />
                       <Text style={[styles.previewText, { marginTop: 16, fontWeight: '600' }]}>{progressStep}</Text>
                       <View style={styles.progressBarContainer}>
                         <View style={[styles.progressBar, { width: `${progress}%` }]} />
@@ -221,30 +462,181 @@ const JobPostingResumePage = () => {
                       <Text style={[styles.previewText, { marginTop: 8, fontSize: 14 }]}>{progress}%</Text>
                     </>
                   ) : generatedResume && generatedResume.pdf_base64 ? (
-                    <PDFViewer pdfBase64={generatedResume.pdf_base64} />
+                    <>
+                      <ScrollView style={styles.resumeContentScroll}>
+                        <View style={styles.resumeContent}>
+                          {/* Extract the actual resume data */}
+                          {generatedResume && (generatedResume.resume_data || generatedResume.tailored_resume) && (
+                            <>
+                              {/* Header */}
+                              {(generatedResume.resume_data?.header || generatedResume.tailored_resume?.header) && (
+                                <View style={styles.resumeSection}>
+                                  <Text style={styles.resumeName}>{(generatedResume.resume_data?.header || generatedResume.tailored_resume?.header)?.name}</Text>
+                                  <Text style={styles.resumeContactInfo}>
+                                    {[
+                                      generatedResume.resume_data?.header?.email || generatedResume.tailored_resume?.header?.email,
+                                      generatedResume.resume_data?.header?.phone || generatedResume.tailored_resume?.header?.phone,
+                                      generatedResume.resume_data?.header?.location || generatedResume.tailored_resume?.header?.location
+                                    ]
+                                      .filter(Boolean)
+                                      .join(' • ')}
+                                  </Text>
+                                  {(generatedResume.resume_data?.header?.summary || generatedResume.tailored_resume?.header?.summary) && (
+                                    <Text style={styles.resumeSummary}>{generatedResume.resume_data?.header?.summary || generatedResume.tailored_resume?.header?.summary}</Text>
+                                  )}
+                                </View>
+                              )}
+
+                              {/* Experience */}
+                              {(generatedResume.resume_data?.experience || generatedResume.tailored_resume?.experience)?.length > 0 && (
+                                <View style={styles.resumeSection}>
+                                  <Text style={styles.resumeSectionTitle}>EXPERIENCE</Text>
+                                  {(generatedResume.resume_data?.experience || generatedResume.tailored_resume?.experience)?.map((exp, idx) => (
+                                    <View key={idx} style={styles.resumeEntry}>
+                                      <View style={styles.entryHeader}>
+                                        <Text style={styles.entryTitle}>{exp.title}</Text>
+                                        <Text style={styles.entryDate}>
+                                          {exp.start_date && exp.end_date 
+                                            ? `${exp.start_date} - ${exp.end_date}`
+                                            : exp.duration || 'Present'}
+                                        </Text>
+                                      </View>
+                                      <Text style={styles.entryCompany}>{exp.company}</Text>
+                                      {exp.location && (
+                                        <Text style={styles.entryLocation}>{exp.location}</Text>
+                                      )}
+                                      {exp.bullets && exp.bullets.map((bullet, bidx) => (
+                                        <View key={bidx} style={{ flexDirection: 'row' }}>
+                                          <Text style={[styles.entryBullet, { marginRight: 4 }]}>•</Text>
+                                          {highlightKeywords(typeof bullet === 'string' ? bullet : bullet.text || bullet, keywords, styles)}
+                                        </View>
+                                      ))}
+                                    </View>
+                                  ))}
+                                </View>
+                              )}
+
+                              {/* Education */}
+                              {(generatedResume.resume_data?.education || generatedResume.tailored_resume?.education)?.length > 0 && (
+                                <View style={styles.resumeSection}>
+                                  <Text style={styles.resumeSectionTitle}>EDUCATION</Text>
+                                  {(generatedResume.resume_data?.education || generatedResume.tailored_resume?.education)?.map((edu, idx) => (
+                                    <View key={idx} style={styles.resumeEntry}>
+                                      <View style={styles.entryHeader}>
+                                        <Text style={styles.entryTitle}>{edu.degree}</Text>
+                                        <Text style={styles.entryDate}>{edu.graduation_date}</Text>
+                                      </View>
+                                      <Text style={styles.entryCompany}>{edu.school}</Text>
+                                      {edu.location && (
+                                        <Text style={styles.entryLocation}>{edu.location}</Text>
+                                      )}
+                                      {edu.gpa && (
+                                        <Text style={styles.entryLocation}>GPA: {edu.gpa}</Text>
+                                      )}
+                                    </View>
+                                  ))}
+                                </View>
+                              )}
+
+                              {/* Skills */}
+                              {(generatedResume.resume_data?.skills || generatedResume.tailored_resume?.skills)?.length > 0 && (
+                                <View style={styles.resumeSection}>
+                                  <Text style={styles.resumeSectionTitle}>SKILLS</Text>
+                                  <Text style={styles.resumeSkills}>
+                                    {(generatedResume.resume_data?.skills || generatedResume.tailored_resume?.skills)?.map(s => s.name || s).join(' • ')}
+                                  </Text>
+                                </View>
+                              )}
+                            </>
+                          )}
+                        </View>
+                      </ScrollView>
+                      <Pressable
+                        style={[
+                          styles.downloadButton,
+                          !canDownload && styles.downloadButtonDisabled,
+                          hoveredButton === 'download' && canDownload && styles.downloadButtonHover,
+                        ]}
+                        onPress={handleDownloadPDF}
+                        onHoverIn={() => Platform.OS === 'web' && setHoveredButton('download')}
+                        onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                        disabled={!canDownload}
+                      >
+                        {pdfGenerating ? (
+                          <ActivityIndicator size={20} color="#fff" />
+                        ) : Platform.OS === 'web' ? (
+                          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} style={{ color: '#fff' }}>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                        ) : (
+                          <Text style={styles.downloadButtonText}>↓</Text>
+                        )}
+                      </Pressable>
+                    </>
                   ) : (
                     <>
-                      <View style={styles.previewIcon}>
-                        <View style={styles.documentIcon} />
+                      <View style={styles.placeholderContent}>
+                        <View style={styles.placeholderLine} />
+                        <View style={[styles.placeholderLine, { width: '85%' }]} />
+                        <View style={[styles.placeholderLine, { marginTop: 24, width: '95%' }]} />
+                        <View style={[styles.placeholderLine, { width: '90%' }]} />
+                        <View style={[styles.placeholderLine, { width: '88%' }]} />
+                        <View style={[styles.placeholderLine, { marginTop: 24, width: '92%' }]} />
+                        <View style={[styles.placeholderLine, { width: '87%' }]} />
                       </View>
                       <Text style={styles.previewText}>Your tailored resume will appear here</Text>
+                      <Pressable
+                        style={[
+                          styles.downloadButton,
+                          styles.downloadButtonDisabled,
+                        ]}
+                        disabled={true}
+                      >
+                        {Platform.OS === 'web' ? (
+                          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} style={{ color: '#fff' }}>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                        ) : (
+                          <Text style={styles.downloadButtonText}>↓</Text>
+                        )}
+                      </Pressable>
                     </>
                   )}
                 </View>
 
-                {generatedResume && (
-                  <Pressable
+                <View style={styles.actionRow}>
+                  <View 
                     style={[
-                      styles.downloadButton,
-                      hoveredButton === 'download' && styles.downloadButtonHover,
+                      styles.atsScorePanel,
+                      hoveredAts && styles.atsScorePanelHover,
                     ]}
-                    onPress={handleDownloadPDF}
-                    onHoverIn={() => Platform.OS === 'web' && setHoveredButton('download')}
-                    onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                    onMouseEnter={() => Platform.OS === 'web' && setHoveredAts(true)}
+                    onMouseLeave={() => Platform.OS === 'web' && setHoveredAts(false)}
                   >
-                    <Text style={styles.downloadButtonText}>Download PDF</Text>
-                  </Pressable>
-                )}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 }}>
+                      <ProgressRing progress={finalAtsScore ?? 0} size={70} strokeWidth={5} color="#A78BFA" />
+                      <View style={styles.atsScoreInfo}>
+                        <Text style={styles.atsScoreTitle}>ATS Match Score</Text>
+                        {atsLoading && (
+                          <Text style={styles.atsScoreDesc}>Analyzing ATS match...</Text>
+                        )}
+                        {!atsLoading && finalAtsScore === null && !atsError && (
+                          <Text style={styles.atsScoreDesc}>Generate a resume to see your score</Text>
+                        )}
+                        {atsImprovement !== null && (
+                          <Text style={styles.atsScoreMeta}>
+                            {`${atsImprovement >= 0 ? '+' : ''}${atsImprovement.toFixed(1)}% vs original`}
+                          </Text>
+                        )}
+                        {!!atsError && <Text style={styles.atsScoreError}>{atsError}</Text>}
+                      </View>
+                    </View>
+                  </View>
+                </View>
               </View>
             </View>
           </View>
