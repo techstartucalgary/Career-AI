@@ -16,3 +16,10 @@ pypdf
 reportlab
 python-dotenv
 spacypython-docx
+google-generativeai
+google-cloud-texttospeech
+google-cloud-speech
+sounddevice
+numpy
+opencv-python
+mediapipe
