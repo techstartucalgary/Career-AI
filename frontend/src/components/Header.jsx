@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, Image } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useMessages } from '../contexts/MessagesContext';
 import { apiFetch, clearAuthToken } from '../services/api';
 import styles from './Header.styles';
+import verexaLogo from '../assets/verexalogo.png';
 
 const Header = () => {
   const router = useRouter();
@@ -33,10 +34,11 @@ const Header = () => {
       <View style={styles.container}>
         <View style={styles.nav}>
           <Pressable onPress={() => router.push('/jobs')} style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
-              <View style={styles.logoStar} />
-            </View>
-            <Text style={styles.logoText}>Verexa</Text>
+            <Image 
+              source={verexaLogo} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </Pressable>
           
           <View style={styles.navLinks}>

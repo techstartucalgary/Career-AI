@@ -93,6 +93,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
+  logoImage: {
+    height: 60,
+    width: 200,
+  },
   logoCircle: {
     width: 64,
     height: 64,
@@ -239,6 +243,24 @@ const styles = StyleSheet.create({
     color: COLORS.danger,
     fontSize: 12,
     marginTop: 6,
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
+  errorBox: {
+    backgroundColor: 'rgba(220, 38, 38, 0.15)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 1.5,
+    borderColor: COLORS.danger,
+  },
+  errorBoxText: {
+    color: COLORS.danger,
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '500',
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
       default: 'sans-serif',
