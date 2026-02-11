@@ -1,5 +1,6 @@
 import JobPostingResumePage from '../../src/pages/JobPostingResumePage';
-export default JobPostingResumePage;
+import withAuth from '../../src/components/withAuth';
+export default withAuth(JobPostingResumePage);
 
 
 

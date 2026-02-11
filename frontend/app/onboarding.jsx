@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, Redirect } from 'expo-router';
 import Header from '../src/components/Header';
 import { THEME } from '../src/styles/theme';
 import OnboardingStep1 from '../src/pages/onboarding/OnboardingStep1';
@@ -9,11 +9,13 @@ import OnboardingStep2 from '../src/pages/onboarding/OnboardingStep2';
 import OnboardingStep3 from '../src/pages/onboarding/OnboardingStep3';
 import OnboardingStep4 from '../src/pages/onboarding/OnboardingStep4';
 import styles from './OnboardingPage.styles';
-import { apiFetch } from '../src/services/api';
+import { apiFetch, getAuthToken } from '../src/services/api';
 
 const OnboardingPage = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentStep, setCurrentStep] = useState(1); // step 1 is Resume Upload
   const [formData, setFormData] = useState({
     // User email from sign-up
@@ -40,6 +42,24 @@ const OnboardingPage = () => {
     disability: '',
     race: '',
   });
+
+  useEffect(() => {
+    const token = getAuthToken();
+    setIsAuthenticated(!!token);
+    setIsAuthChecking(false);
+  }, []);
+
+  if (isAuthChecking) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0f0f1a' }}>
+        <ActivityIndicator size="large" color="#8b5cf6" />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/authentication" />;
+  }
 
   const handleNext = async (stepData) => {
     const nextData = { ...formData, ...stepData };

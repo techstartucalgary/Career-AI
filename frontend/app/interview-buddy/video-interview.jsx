@@ -5,7 +5,8 @@ import { useRouter } from 'expo-router';
 import Header from '../../src/components/Header';
 import { THEME } from '../../src/styles/theme';
 import styles from './VideoInterviewPage.styles';
-import { startInterview, startInterviewWithJobAndResume, sendInterviewResponse, analyzePostureFrame } from '../../src/services/interviewService';
+import { startInterview, startInterviewWithJobAndResume, sendInterviewResponse, analyzePostureFrame, getLiveFeedback } from '../../src/services/interviewService';
+import withAuth from '../../src/components/withAuth';
 
 // Web video component
 const WebVideo = ({ videoRef, style }) => {
@@ -136,15 +137,49 @@ const VideoInterviewPage = () => {
   const [hoveredButton, setHoveredButton] = useState(null);
   const [jobDescription, setJobDescription] = useState('');
   const [resume, setResume] = useState('');
+  const [resumeFile, setResumeFile] = useState(null);
   const [showJobInput, setShowJobInput] = useState(true);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const audioRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const speechRecognitionRef = useRef(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState(null);
   const [isParsingResume, setIsParsingResume] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const [interimTranscript, setInterimTranscript] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [liveFeedback, setLiveFeedback] = useState(null);
+  const [postureAnimating, setPostureAnimating] = useState(false);
+  const feedbackTimeoutRef = useRef(null);
+  const lastPostureTipRef = useRef('');
+
+  // Helper function to add punctuation to transcript
+  const addPunctuation = (text) => {
+    if (!text) return text;
+    
+    // Capitalize first letter
+    let result = text.charAt(0).toUpperCase() + text.slice(1);
+    
+    // Add periods after common ending patterns
+    result = result
+      // Add period at end if missing
+      .replace(/([a-zA-Z])\s*$/g, '$1.')
+      // Capitalize after periods
+      .replace(/\.\s+([a-z])/g, (match, letter) => '. ' + letter.toUpperCase())
+      // Handle question words
+      .replace(/\b(what|where|when|why|how|who|which|can|could|would|should|is|are|do|does|did)\b([^.?]*?)(?=[.\s]*$)/gi, 
+        (match, qWord, rest) => qWord + rest + '?')
+      // Remove duplicate punctuation
+      .replace(/([.?!])+/g, '$1')
+      // Fix spacing
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    return result;
+  };
 
   const interviewQuestions = [
     'Tell me about yourself and why you are interested in this position.',
@@ -191,9 +226,17 @@ const VideoInterviewPage = () => {
     }
 
     try {
+      // Audio constraints with voice isolation (noise suppression)
+      const audioConstraints = {
+        ...(selectedMicrophone?.deviceId ? { deviceId: { exact: selectedMicrophone.deviceId } } : {}),
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      };
+      
       const constraints = {
         video: selectedCamera?.deviceId ? { deviceId: { exact: selectedCamera.deviceId } } : true,
-        audio: selectedMicrophone?.deviceId ? { deviceId: { exact: selectedMicrophone.deviceId } } : true,
+        audio: audioConstraints,
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -233,6 +276,37 @@ const VideoInterviewPage = () => {
       }
     };
   }, [screen, selectedCamera, selectedMicrophone]);
+
+  // Inject CSS keyframes for feedback pulse animation
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const styleId = 'feedback-pulse-animation';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+          @keyframes feedbackPulse {
+            0%, 100% { box-shadow: 0 6px 30px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255,255,255,0.1); }
+            50% { box-shadow: 0 8px 40px rgba(59, 130, 246, 0.6), inset 0 1px 0 rgba(255,255,255,0.15); }
+          }
+          @keyframes feedbackPulseGreen {
+            0%, 100% { box-shadow: 0 6px 30px rgba(34, 197, 94, 0.4), inset 0 1px 0 rgba(255,255,255,0.1); }
+            50% { box-shadow: 0 8px 40px rgba(34, 197, 94, 0.6), inset 0 1px 0 rgba(255,255,255,0.15); }
+          }
+          @keyframes feedbackPulseYellow {
+            0%, 100% { box-shadow: 0 6px 30px rgba(251, 191, 36, 0.4), inset 0 1px 0 rgba(255,255,255,0.1); }
+            50% { box-shadow: 0 8px 40px rgba(251, 191, 36, 0.6), inset 0 1px 0 rgba(255,255,255,0.15); }
+          }
+          @keyframes posturePulse {
+            0% { transform: scale(1); box-shadow: 0 4px 16px rgba(167, 139, 250, 0.15); }
+            50% { transform: scale(1.01); box-shadow: 0 8px 28px rgba(167, 139, 250, 0.4); }
+            100% { transform: scale(1); box-shadow: 0 4px 16px rgba(167, 139, 250, 0.15); }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+  }, []);
 
   // Handle loading screen animation
   useEffect(() => {
@@ -279,7 +353,17 @@ const VideoInterviewPage = () => {
 
       try {
         const data = await analyzePostureFrame(sessionId, imageBase64);
-        if (active) setPostureFeedback(data.feedback || null);
+        if (active) {
+          const newFeedback = data.feedback || null;
+          setPostureFeedback(newFeedback);
+          // Trigger animation if tip changed
+          const newTip = newFeedback?.tips?.[0] || '';
+          if (newTip && newTip !== lastPostureTipRef.current) {
+            lastPostureTipRef.current = newTip;
+            setPostureAnimating(true);
+            setTimeout(() => setPostureAnimating(false), 1500);
+          }
+        }
       } catch (err) {
         if (active) {
           const message = String(err.message || '');
@@ -301,18 +385,172 @@ const VideoInterviewPage = () => {
     };
   }, [screen, cameraReady, sessionId, postureAvailable]);
 
+  // Start always-on speech recognition
+  const startSpeechRecognition = () => {
+    if (Platform.OS !== 'web') return;
+    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+      console.warn('Speech recognition not supported');
+      return;
+    }
+    
+    // Stop existing recognition if any
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop();
+      } catch (e) {}
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+    
+    recognition.onresult = (event) => {
+      let interim = '';
+      let final = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          // Add punctuation to final results
+          final += addPunctuation(transcript) + ' ';
+        } else {
+          interim += transcript;
+        }
+      }
+      
+      if (final) {
+        setLiveTranscript(prev => {
+          const newTranscript = prev + final;
+          // Also update userAnswer in real-time
+          setUserAnswer(newTranscript.trim());
+          return newTranscript;
+        });
+      }
+      setInterimTranscript(interim);
+    };
+    
+    recognition.onerror = (event) => {
+      // "no-speech" is normal - happens when user pauses speaking
+      if (event.error === 'no-speech') {
+        // Silently ignore - this is expected
+        return;
+      } else if (event.error === 'aborted') {
+        // Don't restart if aborted intentionally
+        return;
+      } else {
+        console.warn('Speech recognition error:', event.error);
+      }
+    };
+    
+    recognition.onend = () => {
+      // Auto-restart if still in interview mode
+      if (screen === 'interview' && !isSpeaking) {
+        setTimeout(() => {
+          if (screen === 'interview' && speechRecognitionRef.current) {
+            try {
+              recognition.start();
+              // Silent restart - no console log needed
+            } catch (e) {
+              // Ignore restart errors
+            }
+          }
+        }, 100);
+      }
+    };
+    
+    try {
+      recognition.start();
+      speechRecognitionRef.current = recognition;
+      setIsListening(true);
+      console.log('✓ Always-on speech recognition started');
+    } catch (e) {
+      console.warn('Failed to start speech recognition:', e);
+    }
+  };
+  
+  // Stop speech recognition
+  const stopSpeechRecognition = () => {
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop();
+      } catch (e) {}
+      speechRecognitionRef.current = null;
+    }
+    setIsListening(false);
+  };
+  
+  // Start/stop recognition based on screen and speaking state
+  useEffect(() => {
+    if (screen === 'interview' && cameraReady && !isSpeaking) {
+      // Small delay to let audio settle
+      const timer = setTimeout(() => {
+        startSpeechRecognition();
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      stopSpeechRecognition();
+    }
+    
+    return () => {
+      stopSpeechRecognition();
+    };
+  }, [screen, cameraReady, isSpeaking]);
+
   const handleStartRecording = () => {
+    // Reset transcripts
+    setLiveTranscript('');
+    setInterimTranscript('');
+    setUserAnswer('');
+    
+    // Start audio recording
     startRecording(mediaRecorderRef, audioChunksRef, setIsRecording);
   };
 
   const handleStopRecording = async () => {
     stopRecording(mediaRecorderRef, audioChunksRef, setIsRecording, setRecordedBlob);
-    setTimeout(() => {
-      if (recordedBlob) {
-        handleSubmitAudio();
-      }
-    }, 100);
   };
+  
+  // Clear transcript for new question
+  const clearTranscript = () => {
+    setLiveTranscript('');
+    setInterimTranscript('');
+    setUserAnswer('');
+    setLiveFeedback(null);
+  };
+  
+  // Fetch live feedback when answer changes
+  useEffect(() => {
+    if (!userAnswer || userAnswer.length < 10 || !sessionId) {
+      return;
+    }
+    
+    // Debounce feedback requests
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    
+    feedbackTimeoutRef.current = setTimeout(async () => {
+      try {
+        const question = interviewerText || interviewQuestions[currentQuestion] || '';
+        const feedback = await getLiveFeedback(sessionId, question, userAnswer);
+        if (feedback && feedback.tips && feedback.tips.length > 0) {
+          setLiveFeedback(feedback);
+        }
+      } catch (err) {
+        // Silently fail - feedback is optional
+        console.log('Feedback error:', err);
+      }
+    }, 800); // Wait 0.8s after user stops speaking
+    
+    return () => {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, [userAnswer, sessionId]);
 
   const handleSubmitAudio = async () => {
     if (!recordedBlob) {
@@ -380,16 +618,55 @@ const VideoInterviewPage = () => {
   };
 
   const handleStart = async () => {
-    if (showJobInput && (!jobDescription.trim() || !resume.trim())) {
-      alert('Please enter both job description and resume');
+    if (!jobDescription.trim()) {
+      alert('Please enter a job description');
       return;
     }
+    if (!resumeFile && !resume.trim()) {
+      alert('Please upload your resume');
+      return;
+    }
+    
+    // Parse resume FIRST before showing loading screen
+    let resumeText = resume;
+    if (resumeFile && !resume.trim()) {
+      setIsParsingResume(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', resumeFile);
+        const response = await fetch('http://localhost:8000/api/interview/parse-resume', {
+          method: 'POST',
+          body: formData,
+        });
+        if (response.ok) {
+          const data = await response.json();
+          resumeText = data.resume_text || '';
+          setResume(resumeText);
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Failed to parse resume');
+        }
+      } catch (err) {
+        console.error('Resume parsing error:', err);
+        alert('Error parsing resume: ' + err.message);
+        setIsParsingResume(false);
+        return;
+      }
+      setIsParsingResume(false);
+    }
+    
+    // Verify we have resume text before proceeding
+    if (!resumeText.trim()) {
+      alert('Could not parse resume. Please try again or paste your resume as text.');
+      return;
+    }
+    
+    // NOW show loading screen and start interview
     setScreen('loading');
     setLoadingTasks({ questions: false, company: false, profile: false });
+    
     try {
-      const data = showJobInput
-        ? await startInterviewWithJobAndResume(jobDescription, resume)
-        : await startInterview();
+      const data = await startInterviewWithJobAndResume(jobDescription, resumeText);
       setSessionId(data.session_id);
       setInterviewerText(data.interviewer_text || '');
       setInterviewStatus(data.status || 'in_progress');
@@ -401,7 +678,8 @@ const VideoInterviewPage = () => {
       setShowJobInput(false);
     } catch (err) {
       console.error('Failed to start interview:', err);
-      setScreen('interview');
+      setScreen('preview');
+      alert('Failed to start interview: ' + err.message);
     }
   };
 
@@ -466,6 +744,7 @@ const VideoInterviewPage = () => {
         handleNextQuestion();
       }
       setUserAnswer('');
+      clearTranscript();  // Clear transcript after submitting
     } catch (err) {
       console.error('Failed to submit answer:', err);
     } finally {
@@ -475,6 +754,7 @@ const VideoInterviewPage = () => {
 
   const handleSkipQuestion = async () => {
     if (isSubmitting) return;
+    clearTranscript();  // Clear transcript when skipping
     if (sessionId) {
       setIsSubmitting(true);
       try {
@@ -503,222 +783,76 @@ const VideoInterviewPage = () => {
           colors={THEME.gradients.page}
           style={styles.gradient}
         >
-          <ScrollView style={styles.scrollView} contentContainerStyle={styles.previewContainer}>
-            <View style={styles.videoPreviewArea}>
-              {Platform.OS === 'web' && cameraReady ? (
-                <View style={styles.videoWrapper}>
-                  <WebVideo
-                    videoRef={videoRef}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      borderRadius: 16,
-                    }}
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.setupContainer}>
+            <View style={styles.setupCard}>
+              <Text style={styles.setupTitle}>Interview Setup</Text>
+              <Text style={styles.setupSubtitle}>Enter your details to begin the mock interview</Text>
+              
+              <View style={styles.jobInputGroup}>
+                <Text style={styles.jobInputLabel}>Job Description</Text>
+                <TextInput
+                  style={styles.jobInputText}
+                  placeholder="Paste the job description here..."
+                  placeholderTextColor="#8B7AB8"
+                  value={jobDescription}
+                  onChangeText={setJobDescription}
+                  multiline
+                />
+              </View>
+
+              <View style={styles.jobInputGroup}>
+                <Text style={styles.jobInputLabel}>Your Resume</Text>
+                {Platform.OS === 'web' ? (
+                  <label style={styles.fileUploadLabel}>
+                    <input
+                      type="file"
+                      accept=".pdf,.docx,.doc,.txt"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setResumeFile(file);
+                          setResume(''); // Clear any previously parsed text
+                        }
+                      }}
+                      style={{ display: 'none' }}
+                    />
+                    <View style={styles.fileUploadButton}>
+                      <Text style={styles.fileUploadButtonText}>
+                        {resumeFile ? `✓ ${resumeFile.name}` : '📄 Upload Resume (PDF/DOCX)'}
+                      </Text>
+                    </View>
+                  </label>
+                ) : (
+                  <TextInput
+                    style={styles.jobInputText}
+                    placeholder="Paste your resume here..."
+                    placeholderTextColor="#8B7AB8"
+                    value={resume}
+                    onChangeText={setResume}
+                    multiline
                   />
-                </View>
-              ) : (
-                <View style={styles.videoPlaceholder}>
-                  <View style={styles.placeholderIcon}>
-                    <View style={styles.placeholderHead} />
-                    <View style={styles.placeholderBody} />
-                  </View>
-                </View>
-              )}
-            </View>
-
-            <View style={styles.controlsBar}>
-              {Platform.OS === 'web' ? (
-                <View style={styles.dropdownGroup}>
-                  <label style={styles.dropdownLabel}>Microphone</label>
-                  <select
-                    value={selectedMicrophone?.deviceId || ''}
-                    onChange={(event) => {
-                      const device = audioDevices.find((d) => d.deviceId === event.target.value);
-                      if (device) {
-                        setSelectedMicrophone({ deviceId: device.deviceId, label: device.label || 'Microphone' });
-                      }
-                    }}
-                    style={styles.dropdownSelect}
-                  >
-                    <option value="">Default</option>
-                    {audioDevices.map((device) => (
-                      <option key={device.deviceId} value={device.deviceId}>
-                        {device.label || 'Microphone'}
-                      </option>
-                    ))}
-                  </select>
-                </View>
-              ) : (
-                <Pressable
-                  style={[
-                    styles.controlButton,
-                    styles.selectButton,
-                    hoveredButton === 'mic' && styles.controlButtonHover
-                  ]}
-                  onPress={handleSelectMicrophone}
-                  onHoverIn={() => Platform.OS === 'web' && setHoveredButton('mic')}
-                  onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
-                >
-                  <View style={styles.controlIcon}>
-                    <View style={styles.micIcon} />
-                  </View>
-                  <Text style={styles.controlButtonText}>
-                    {typeof selectedMicrophone === 'string'
-                      ? selectedMicrophone
-                      : selectedMicrophone?.label || 'Select Microphone'}
-                  </Text>
-                </Pressable>
-              )}
-
-              {Platform.OS === 'web' ? (
-                <View style={styles.dropdownGroup}>
-                  <label style={styles.dropdownLabel}>Camera</label>
-                  <select
-                    value={selectedCamera?.deviceId || ''}
-                    onChange={(event) => {
-                      const device = videoDevices.find((d) => d.deviceId === event.target.value);
-                      if (device) {
-                        setSelectedCamera({ deviceId: device.deviceId, label: device.label || 'Camera' });
-                      }
-                    }}
-                    style={styles.dropdownSelect}
-                  >
-                    <option value="">Default</option>
-                    {videoDevices.map((device) => (
-                      <option key={device.deviceId} value={device.deviceId}>
-                        {device.label || 'Camera'}
-                      </option>
-                    ))}
-                  </select>
-                </View>
-              ) : (
-                <Pressable
-                  style={[
-                    styles.controlButton,
-                    styles.selectButton,
-                    hoveredButton === 'camera' && styles.controlButtonHover
-                  ]}
-                  onPress={handleSelectCamera}
-                  onHoverIn={() => Platform.OS === 'web' && setHoveredButton('camera')}
-                  onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
-                >
-                  <View style={styles.controlIcon}>
-                    <View style={styles.cameraIcon} />
-                  </View>
-                  <Text style={styles.controlButtonText}>
-                    {typeof selectedCamera === 'string'
-                      ? selectedCamera
-                      : selectedCamera?.label || 'Select Camera'}
-                  </Text>
-                </Pressable>
-              )}
+                )}
+              </View>
 
               <Pressable
                 style={[
-                  styles.controlButton,
-                  styles.startButton,
-                  hoveredButton === 'start' && styles.startButtonHover
+                  styles.startInterviewButton,
+                  (!jobDescription.trim() || (!resumeFile && !resume.trim())) && styles.startInterviewButtonDisabled,
+                  isParsingResume && styles.startInterviewButtonDisabled
                 ]}
                 onPress={handleStart}
-                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('start')}
-                onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                disabled={!jobDescription.trim() || (!resumeFile && !resume.trim()) || isParsingResume}
               >
-                <Text style={styles.startButtonText}>Start</Text>
+                {isParsingResume ? (
+                  <>
+                    <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
+                    <Text style={styles.startInterviewButtonText}>Parsing Resume...</Text>
+                  </>
+                ) : (
+                  <Text style={styles.startInterviewButtonText}>Start Interview</Text>
+                )}
               </Pressable>
             </View>
-
-            {showJobInput && (
-              <View style={styles.jobInputOverlay}>
-                <View style={styles.jobInputCard}>
-                  <Text style={styles.jobInputTitle}>Enter Interview Details</Text>
-                  
-                  <View style={styles.jobInputGroup}>
-                    <Text style={styles.jobInputLabel}>Job Description</Text>
-                    <TextInput
-                      style={styles.jobInputText}
-                      placeholder="Paste job description here..."
-                      placeholderTextColor="#8B7AB8"
-                      value={jobDescription}
-                      onChangeText={setJobDescription}
-                      multiline
-                    />
-                  </View>
-
-                  <View style={styles.jobInputGroup}>
-                    <Text style={styles.jobInputLabel}>Your Resume</Text>
-                    {Platform.OS === 'web' ? (
-                      <label style={styles.fileUploadLabel}>
-                        <input
-                          type="file"
-                          accept=".pdf,.docx,.doc,.txt"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              setIsParsingResume(true);
-                              try {
-                                const formData = new FormData();
-                                formData.append('file', file);
-                                const response = await fetch('http://localhost:8000/api/interview/parse-resume', {
-                                  method: 'POST',
-                                  body: formData,
-                                });
-                                if (response.ok) {
-                                  const data = await response.json();
-                                  setResume(data.resume_text || '');
-                                } else {
-                                  const errorData = await response.json();
-                                  alert('Failed to parse resume: ' + (errorData.detail || 'Unknown error'));
-                                }
-                              } catch (err) {
-                                console.error('Resume upload error:', err);
-                                alert('Error uploading resume: ' + err.message);
-                              } finally {
-                                setIsParsingResume(false);
-                              }
-                            }
-                          }}
-                          style={{ display: 'none' }}
-                          disabled={isParsingResume}
-                        />
-                        <View style={styles.fileUploadButton}>
-                          {isParsingResume ? (
-                            <>
-                              <ActivityIndicator size="small" color="#A78BFA" />
-                              <Text style={styles.fileUploadButtonText}>Parsing resume...</Text>
-                            </>
-                          ) : (
-                            <Text style={styles.fileUploadButtonText}>
-                              {resume ? '✓ Resume Uploaded' : '📄 Upload Resume (PDF/DOCX)'}
-                            </Text>
-                          )}
-                        </View>
-                      </label>
-                    ) : (
-                      <TextInput
-                        style={styles.jobInputText}
-                        placeholder="Paste your resume here..."
-                        placeholderTextColor="#8B7AB8"
-                        value={resume}
-                        onChangeText={setResume}
-                        multiline
-                      />
-                    )}
-                  </View>
-
-                  <Pressable
-                    style={[
-                      styles.jobInputButton,
-                      (!jobDescription.trim() || !resume.trim()) && styles.jobInputButtonDisabled
-                    ]}
-                    onPress={handleStart}
-                    disabled={!jobDescription.trim() || !resume.trim()}
-                  >
-                    <Text style={styles.jobInputButtonText}>Start Interview</Text>
-                  </Pressable>
-                </View>
-              </View>
-            )}
           </ScrollView>
         </LinearGradient>
       </View>
@@ -881,13 +1015,13 @@ const VideoInterviewPage = () => {
               </Text>
             </View>
 
-            <View style={styles.postureCard}>
-              <Text style={styles.postureTitle}>Live Posture Feedback</Text>
+            <View style={[styles.postureCard, postureAnimating && styles.postureCardActive]}>
+              <Text style={styles.postureTitle}>💡 Live Posture Feedback</Text>
               {postureFeedback?.error ? (
                 <Text style={styles.postureMessage}>Posture analysis unavailable</Text>
               ) : postureFeedback?.tips?.length ? (
                 postureFeedback.tips.slice(0, 2).map((tip, index) => (
-                  <Text key={`${tip}-${index}`} style={styles.postureMessage}>{tip}</Text>
+                  <Text key={`${tip}-${index}`} style={styles.postureMessage}>• {tip}</Text>
                 ))
               ) : (
                 <Text style={styles.postureMessage}>Tracking posture...</Text>
@@ -896,69 +1030,93 @@ const VideoInterviewPage = () => {
 
             <View style={styles.answerSection}>
               <Text style={styles.answerLabel}>Your Response</Text>
-              <View style={styles.recordingContainer}>
-                <Pressable
-                  style={[
-                    styles.recordButton,
-                    isRecording && styles.recordButtonActive
-                  ]}
-                  onPress={isRecording ? handleStopRecording : handleStartRecording}
-                  disabled={isSubmitting}
-                >
-                  <View style={styles.recordIcon}>
-                    {isRecording ? (
-                      <View style={styles.recordingIndicator} />
-                    ) : (
-                      <View style={styles.micIcon} />
+              
+              {/* Always-on Live Transcription Box */}
+              <View style={[styles.liveTranscriptionBox, !isListening && styles.liveTranscriptionBoxInactive]}>
+                <View style={styles.liveTranscriptionHeader}>
+                  <View style={[styles.liveIndicator, isListening && styles.liveIndicatorActive]} />
+                  <Text style={styles.liveTranscriptionLabel}>
+                    {isSpeaking ? 'AI Speaking...' : isListening ? 'Listening' : 'Paused'}
+                  </Text>
+                  {userAnswer && (
+                    <Pressable 
+                      style={styles.clearButton}
+                      onPress={clearTranscript}
+                    >
+                      <Text style={styles.clearButtonText}>Clear</Text>
+                    </Pressable>
+                  )}
+                </View>
+                <Text style={styles.liveTranscriptionText}>
+                  {liveTranscript || userAnswer}
+                  <Text style={styles.interimText}>{interimTranscript}</Text>
+                  {!liveTranscript && !userAnswer && !interimTranscript && (
+                    <Text style={styles.listeningText}>
+                      {isSpeaking ? 'Waiting for AI to finish...' : 'Start speaking your answer...'}
+                    </Text>
+                  )}
+                </Text>
+              </View>
+              
+              {/* Live Feedback Box - Always visible when there's feedback */}
+              {liveFeedback && liveFeedback.tips && liveFeedback.tips.length > 0 && (
+                <View style={[styles.liveFeedbackBox,
+                  liveFeedback.sentiment === 'positive' && styles.liveFeedbackPositive,
+                  liveFeedback.sentiment === 'needs_work' && styles.liveFeedbackNeedsWork
+                ]}>
+                  <View style={styles.liveFeedbackHeader}>
+                    <Text style={styles.liveFeedbackTitle}>💡 Tips</Text>
+                    {liveFeedback.score !== undefined && (
+                      <Text style={[styles.liveFeedbackScore,
+                        liveFeedback.score >= 70 && styles.scoreGood,
+                        liveFeedback.score < 50 && styles.scoreNeedsWork
+                      ]}>
+                        {liveFeedback.score}%
+                      </Text>
                     )}
                   </View>
-                  <Text style={styles.recordButtonText}>
-                    {isRecording ? 'Stop Recording' : 'Speak Answer'}
+                  {liveFeedback.tips.map((tip, index) => (
+                    <Text key={index} style={styles.liveFeedbackTip}>• {tip}</Text>
+                  ))}
+                </View>
+              )}
+              
+              {/* Action Buttons */}
+              <View style={styles.answerControls}>
+                <Pressable
+                  style={[
+                    styles.answerButton,
+                    styles.skipButton,
+                    isSubmitting && styles.answerButtonDisabled,
+                    hoveredButton === 'skip' && styles.answerButtonHover
+                  ]}
+                  onPress={handleSkipQuestion}
+                  disabled={isSubmitting}
+                  onHoverIn={() => Platform.OS === 'web' && setHoveredButton('skip')}
+                  onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                >
+                  <Text style={styles.skipButtonText}>
+                    {currentQuestion < totalQuestions - 1 ? 'Skip' : 'Finish'}
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={[
+                    styles.answerButton,
+                    styles.submitButton,
+                    (!userAnswer.trim() || isSubmitting) && styles.submitButtonDisabled,
+                    hoveredButton === 'submit' && styles.submitButtonHover
+                  ]}
+                  onPress={() => handleSubmitAnswer()}
+                  disabled={!userAnswer.trim() || isSubmitting}
+                  onHoverIn={() => Platform.OS === 'web' && setHoveredButton('submit')}
+                  onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                >
+                  <Text style={styles.submitButtonText}>
+                    {isSubmitting ? 'Sending...' : currentQuestion < totalQuestions - 1 ? 'Next Question' : 'Complete Interview'}
                   </Text>
                 </Pressable>
               </View>
-              {userAnswer && (
-                <View style={styles.transcriptionBox}>
-                  <Text style={styles.transcriptionLabel}>Transcribed:</Text>
-                  <Text style={styles.transcriptionText}>{userAnswer}</Text>
-                </View>
-              )}
-            </View>
-
-            <View style={styles.interviewControls}>
-              <Pressable
-                style={[
-                  styles.interviewButton,
-                  styles.skipButton,
-                  isSubmitting && styles.interviewButtonDisabled,
-                  hoveredButton === 'skip' && styles.interviewButtonHover
-                ]}
-                onPress={handleSkipQuestion}
-                disabled={isSubmitting}
-                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('skip')}
-                onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
-              >
-                <Text style={styles.skipButtonText}>
-                  {currentQuestion < totalQuestions - 1 ? 'Skip' : 'Finish'}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[
-                  styles.interviewButton,
-                  styles.submitButton,
-                  (!userAnswer.trim() || isSubmitting) && styles.submitButtonDisabled,
-                  hoveredButton === 'submit' && styles.submitButtonHover
-                ]}
-                onPress={() => handleSubmitAnswer()}
-                disabled={!userAnswer.trim() || isSubmitting}
-                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('submit')}
-                onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
-              >
-                <Text style={styles.submitButtonText}>
-                  {isSubmitting ? 'Sending...' : currentQuestion < totalQuestions - 1 ? 'Next Question' : 'Complete Interview'}
-                </Text>
-              </Pressable>
             </View>
           </ScrollView>
         </View>
@@ -967,5 +1125,5 @@ const VideoInterviewPage = () => {
   );
 };
 
-export default VideoInterviewPage;
+export default withAuth(VideoInterviewPage);
 

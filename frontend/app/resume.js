@@ -1,2 +1,3 @@
 import ResumeBuilder from '../src/pages/ResumePage';
-export default ResumeBuilder;
+import withAuth from '../src/components/withAuth';
+export default withAuth(ResumeBuilder);

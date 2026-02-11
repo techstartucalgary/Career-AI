@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import Header from '../../src/components/Header';
 import { THEME } from '../../src/styles/theme';
 import styles from './InterviewBuddyPage.styles';
+import withAuth from '../../src/components/withAuth';
 
 const InterviewBuddyPage = () => {
   const router = useRouter();
@@ -94,4 +95,4 @@ const InterviewBuddyPage = () => {
   );
 };
 
-export default InterviewBuddyPage;
+export default withAuth(InterviewBuddyPage);

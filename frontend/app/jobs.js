@@ -1,3 +1,4 @@
 import JobsExplorePage from '../src/pages/JobsExplorePage';
-export default JobsExplorePage;
+import withAuth from '../src/components/withAuth';
+export default withAuth(JobsExplorePage);
 

@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import Header from '../../src/components/Header';
 import { THEME } from '../../src/styles/theme';
 import styles from './InterviewVideoInstructionsPage.styles';
+import withAuth from '../../src/components/withAuth';
 
 const InterviewVideoInstructionsPage = () => {
   const router = useRouter();
@@ -78,4 +79,4 @@ const InterviewVideoInstructionsPage = () => {
   );
 };
 
-export default InterviewVideoInstructionsPage;
+export default withAuth(InterviewVideoInstructionsPage);

@@ -1,2 +1,3 @@
 import CoverLetterBuilder from '../src/pages/CoverLetterPage';
-export default CoverLetterBuilder;
+import withAuth from '../src/components/withAuth';
+export default withAuth(CoverLetterBuilder);

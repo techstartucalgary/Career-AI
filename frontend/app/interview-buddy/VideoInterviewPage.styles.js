@@ -26,6 +26,84 @@ const styles = StyleSheet.create({
     padding: isDesktop ? 40 : isTablet ? 32 : 24,
     paddingTop: 100,
   },
+  // Setup Screen Styles (simplified start screen)
+  setupContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: isDesktop ? 40 : isTablet ? 32 : 24,
+    paddingTop: 120,
+  },
+  setupCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 24,
+    padding: isDesktop ? 48 : isTablet ? 40 : 32,
+    width: '100%',
+    maxWidth: 650,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.4,
+        shadowRadius: 40,
+        elevation: 20,
+      },
+    }),
+  },
+  setupTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.white,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  setupSubtitle: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    marginBottom: 32,
+    textAlign: 'center',
+  },
+  startInterviewButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    padding: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    marginTop: 32,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.35)',
+        transition: 'all 0.3s ease',
+      },
+      default: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 10,
+      },
+    }),
+  },
+  startInterviewButtonDisabled: {
+    opacity: 0.5,
+    ...Platform.select({
+      web: {
+        cursor: 'not-allowed',
+      },
+    }),
+  },
+  startInterviewButtonText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: '700',
+  },
   videoPreviewArea: {
     width: '100%',
     maxWidth: isDesktop ? 1200 : isTablet ? 900 : '100%',
@@ -594,26 +672,68 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   postureCard: {
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(167, 139, 250, 0.08)',
     borderRadius: 14,
-    padding: 16,
+    padding: 18,
     marginBottom: 24,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    borderWidth: 2,
+    borderColor: 'rgba(167, 139, 250, 0.3)',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 16px rgba(167, 139, 250, 0.15)',
+        transition: 'all 0.3s ease',
+      },
+      default: {
+        shadowColor: '#A78BFA',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 4,
+      },
+    }),
+  },
+  postureCardActive: {
+    borderColor: 'rgba(167, 139, 250, 0.6)',
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 6px 24px rgba(167, 139, 250, 0.3)',
+        animation: 'posturePulse 1.5s ease-in-out',
+      },
+    }),
   },
   postureTitle: {
     color: COLORS.textPrimary,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   postureMessage: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    lineHeight: 20,
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    lineHeight: 22,
+    fontWeight: '400',
   },
   answerSection: {
     marginBottom: 24,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
+        overflow: 'visible',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 4,
+      },
+    }),
   },
   answerLabel: {
     fontSize: 16,
@@ -673,6 +793,158 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     lineHeight: 22,
   },
+  // Live transcription styles
+  liveTranscriptionBox: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    borderWidth: 2,
+    borderColor: 'rgba(34, 197, 94, 0.5)',
+    minHeight: 80,
+  },
+  liveTranscriptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  liveTranscriptionBoxInactive: {
+    borderColor: 'rgba(100, 100, 100, 0.5)',
+    backgroundColor: 'rgba(100, 100, 100, 0.1)',
+  },
+  liveIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#666',
+    marginRight: 8,
+  },
+  liveIndicatorActive: {
+    backgroundColor: '#22C55E',
+    ...Platform.select({
+      web: {
+        animation: 'pulse 1.5s ease-in-out infinite',
+      },
+    }),
+  },
+  liveTranscriptionLabel: {
+    fontSize: 13,
+    color: '#22C55E',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    flex: 1,
+  },
+  clearButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  clearButtonText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  liveTranscriptionText: {
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    lineHeight: 24,
+    minHeight: 48,
+  },
+  interimText: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontStyle: 'italic',
+  },
+  listeningText: {
+    color: 'rgba(255, 255, 255, 0.4)',
+    fontStyle: 'italic',
+  },
+  // Live Feedback Box - Clean styling
+  liveFeedbackBox: {
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  liveFeedbackPositive: {
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    borderColor: 'rgba(34, 197, 94, 0.3)',
+  },
+  liveFeedbackNeedsWork: {
+    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+    borderColor: 'rgba(251, 191, 36, 0.3)',
+  },
+  liveFeedbackHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  liveFeedbackTitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: COLORS.textSecondary,
+  },
+  liveFeedbackScore: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(59, 130, 246, 1)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    borderRadius: 8,
+  },
+  scoreGood: {
+    color: '#22C55E',
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+  },
+  scoreNeedsWork: {
+    color: '#FBBF24',
+    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+  },
+  liveFeedbackTip: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    lineHeight: 22,
+    marginTop: 6,
+    fontWeight: '400',
+  },
+  // Answer Controls (buttons inside answer section)
+  answerControls: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+    justifyContent: 'flex-end',
+  },
+  answerButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      },
+    }),
+  },
+  answerButtonDisabled: {
+    opacity: 0.5,
+    ...Platform.select({
+      web: {
+        cursor: 'not-allowed',
+      },
+    }),
+  },
+  answerButtonHover: {
+    transform: [{ scale: 1.02 }],
+  },
   interviewControls: {
     flexDirection: 'row',
     gap: 16,
@@ -690,7 +962,7 @@ const styles = StyleSheet.create({
     }),
   },
   skipButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1.5,
     borderColor: COLORS.borderLight,
   },
@@ -703,7 +975,7 @@ const styles = StyleSheet.create({
   },
   skipButtonText: {
     color: COLORS.textPrimary,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
   },
   submitButton: {
@@ -747,6 +1019,11 @@ const styles = StyleSheet.create({
   // New styles for recording, scrolling, and file upload
   questionsScroll: {
     flex: isDesktop ? 1 : undefined,
+    ...Platform.select({
+      web: {
+        overflow: 'visible',
+      },
+    }),
   },
   videoWrapperSpeaking: {
     borderColor: '#A78BFA',

@@ -1,2 +1,3 @@
 import MockInterview from '../src/pages/MockInterviewPage';
-export default MockInterview;
+import withAuth from '../src/components/withAuth';
+export default withAuth(MockInterview);

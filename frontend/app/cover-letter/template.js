@@ -1,3 +1,4 @@
 import CoverLetterTemplatePage from '../../src/pages/CoverLetterTemplatePage';
-export default CoverLetterTemplatePage;
+import withAuth from '../../src/components/withAuth';
+export default withAuth(CoverLetterTemplatePage);
 

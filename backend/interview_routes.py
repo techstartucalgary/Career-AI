@@ -358,3 +358,77 @@ async def parse_resume(file: UploadFile = File(...)):
                 os.remove(temp_path)
             except Exception as cleanup_err:
                 print(f"Warning: Failed to clean up temp file: {cleanup_err}")
+
+
+class LiveFeedbackRequest(BaseModel):
+    session_id: str
+    question: str
+    answer: str
+
+
+@router.post("/live-feedback")
+async def get_live_feedback(request: LiveFeedbackRequest):
+    """
+    Get real-time feedback on interview answer using Gemini.
+    Returns quick tips while the user is speaking.
+    """
+    import requests
+    import json
+    
+    gemini_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    
+    if not gemini_api_key:
+        return {"feedback": None, "tips": []}
+    
+    if not request.answer or len(request.answer.strip()) < 10:
+        return {"feedback": None, "tips": []}
+    
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}"
+        
+        prompt = f"""You are an interview coach providing BRIEF real-time feedback.
+        
+Question: {request.question}
+Answer so far: {request.answer}
+
+Provide 1-2 SHORT tips (max 8 words each) to improve this answer. Focus on:
+- Specificity (add numbers/metrics)
+- Structure (STAR method)
+- Confidence language
+- Relevance to question
+
+Respond ONLY in this JSON format:
+{{"tips": ["tip 1", "tip 2"], "score": 0-100, "sentiment": "positive|neutral|needs_work"}}"""
+
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.3,
+                "maxOutputTokens": 150
+            }
+        }
+        
+        response = requests.post(url, json=payload, timeout=5)
+        
+        if response.status_code != 200:
+            return {"feedback": None, "tips": []}
+        
+        result = response.json()
+        text = result.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+        
+        # Parse JSON from response
+        import re
+        json_match = re.search(r'\{[^{}]*\}', text)
+        if json_match:
+            feedback_data = json.loads(json_match.group())
+            return {
+                "tips": feedback_data.get("tips", [])[:2],
+                "score": feedback_data.get("score", 50),
+                "sentiment": feedback_data.get("sentiment", "neutral")
+            }
+        
+        return {"feedback": None, "tips": []}
+        
+    except Exception as e:
+        print(f"Live feedback error: {e}")
+        return {"feedback": None, "tips": []}

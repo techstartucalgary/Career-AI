@@ -53,3 +53,11 @@ export const analyzePostureFrame = async (sessionId, imageBase64) => {
     image_base64: imageBase64,
   });
 };
+
+export const getLiveFeedback = async (sessionId, question, answer) => {
+  return jsonFetch('/interview/live-feedback', {
+    session_id: sessionId,
+    question: question,
+    answer: answer,
+  });
+};
