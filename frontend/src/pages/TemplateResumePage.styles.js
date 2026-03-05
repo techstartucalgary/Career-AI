@@ -175,6 +175,15 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     transform: [{ translateY: -2 }],
   },
+  templateCardSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: 'rgba(167, 139, 250, 0.08)',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 0 2px rgba(167,139,250,0.4)',
+      },
+    }),
+  },
   templatePreview: {
     width: '100%',
     height: 120,
