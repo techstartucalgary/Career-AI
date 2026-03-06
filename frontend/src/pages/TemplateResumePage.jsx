@@ -6,7 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import Header from '../components/Header';
 import styles from './TemplateResumePage.styles';
 import './JobPages.css';
-import { tailorResume, downloadPDFFromBase64 } from '../services/aiService';
+import { tailorResume, generateFromTemplate, downloadPDFFromBase64 } from '../services/aiService';
 import PDFViewer from '../components/PDFViewer';
 
 const DEFAULT_OPTIMIZATION_JOB_DESCRIPTION =
@@ -64,7 +64,9 @@ const highlightKeywords = (text, keywords, styles) => {
 const TemplateResumePage = () => {
   const { mode } = useLocalSearchParams();
   const [selectedFile, setSelectedFile] = useState(null);
+  const [templateFile, setTemplateFile] = useState(null); // optional file for template mode
   const [templateMode, setTemplateMode] = useState(mode === 'optimize' ? 'optimize' : 'template'); // 'template' or 'optimize'
+  const [selectedTemplate, setSelectedTemplate] = useState('classic');
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
   const [generatedResume, setGeneratedResume] = useState(null);
@@ -74,7 +76,7 @@ const TemplateResumePage = () => {
   const [progress, setProgress] = useState(0);
   const [keywords, setKeywords] = useState([]);
 
-  const pickDocument = async () => {
+  const pickDocument = async (forTemplateMode = false) => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
@@ -85,8 +87,13 @@ const TemplateResumePage = () => {
         const uri = result.uri ?? result.assets?.[0]?.uri ?? result.assets?.[0]?.fileCopyUri;
         const name = result.name ?? result.assets?.[0]?.name;
         const mimeType = result.mimeType ?? result.assets?.[0]?.mimeType;
-        setSelectedFile({ uri, name, mimeType });
-        setTemplateMode('optimize');
+        const file = { uri, name, mimeType };
+        if (forTemplateMode) {
+          setTemplateFile(file);
+        } else {
+          setSelectedFile(file);
+          setTemplateMode('optimize');
+        }
       }
     } catch (error) {
       console.error('Error picking document:', error);
@@ -94,45 +101,56 @@ const TemplateResumePage = () => {
   };
 
   const handleGenerateResume = async () => {
-    if (templateMode === 'optimize') {
-      if (!selectedFile?.uri) {
-        setError('Upload your resume to optimize.');
-        return;
-      }
+    if (templateMode === 'template') {
       setIsLoading(true);
       setError(null);
       setGeneratedResume(null);
-      setProgress(0);
-      setProgressStep('Starting optimization...');
-      
-      // Extract keywords from job description
-      const extractedKeywords = extractKeywords(DEFAULT_OPTIMIZATION_JOB_DESCRIPTION);
-      setKeywords(extractedKeywords);
-
+      setProgress(15);
+      setProgressStep('Loading your saved resume...');
       try {
-        const result = await tailorResume(
-          selectedFile,
-          DEFAULT_OPTIMIZATION_JOB_DESCRIPTION,
-          {},
-          (update) => {
-            if (typeof update?.progress === 'number') {
-              setProgress(update.progress);
-            }
-            if (update?.step) {
-              setProgressStep(update.step);
-            }
-          }
-        );
+        const result = await generateFromTemplate(selectedTemplate, (update) => {
+          if (typeof update?.progress === 'number') setProgress(update.progress);
+          if (update?.step) setProgressStep(update.step);
+        }, templateFile);
         setGeneratedResume(result);
       } catch (err) {
-        setError(err?.message || 'Resume optimization failed.');
+        setError(err?.message || 'Resume generation failed. Make sure you have uploaded a resume to your account.');
       } finally {
         setIsLoading(false);
       }
       return;
     }
-    // TODO: Implement resume generation logic
-    console.log('Generating resume...');
+
+    // Optimize mode
+    if (!selectedFile?.uri) {
+      setError('Upload your resume to optimize.');
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    setGeneratedResume(null);
+    setProgress(0);
+    setProgressStep('Starting optimization...');
+
+    const extractedKeywords = extractKeywords(DEFAULT_OPTIMIZATION_JOB_DESCRIPTION);
+    setKeywords(extractedKeywords);
+
+    try {
+      const result = await tailorResume(
+        selectedFile,
+        DEFAULT_OPTIMIZATION_JOB_DESCRIPTION,
+        {},
+        (update) => {
+          if (typeof update?.progress === 'number') setProgress(update.progress);
+          if (update?.step) setProgressStep(update.step);
+        }
+      );
+      setGeneratedResume(result);
+    } catch (err) {
+      setError(err?.message || 'Resume optimization failed.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDownloadPDF = () => {
@@ -214,23 +232,76 @@ const TemplateResumePage = () => {
                     {/* Template Selection */}
                     <View style={styles.section}>
                       <Text style={styles.sectionTitle}>Choose a Template</Text>
+                      <Text style={[styles.fileName, { marginBottom: 12, marginTop: 0 }]}>
+                        Uses your saved account resume, or upload one below.
+                      </Text>
+                      <Pressable
+                        style={[
+                          styles.uploadButton,
+                          { marginBottom: 8 },
+                          hoveredButton === 'templateUpload' && styles.uploadButtonHover
+                        ]}
+                        onPress={() => pickDocument(true)}
+                        onHoverIn={() => Platform.OS === 'web' && setHoveredButton('templateUpload')}
+                        onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                      >
+                        <Text style={styles.uploadButtonText}>
+                          {templateFile ? 'Change File' : 'Upload Resume (optional)'}
+                        </Text>
+                      </Pressable>
+                      {templateFile && (
+                        <Text style={[styles.fileName, { marginBottom: 12 }]}>
+                          {templateFile.name}
+                        </Text>
+                      )}
                       <View style={styles.templatesGrid}>
-                        {['Professional', 'Modern', 'Creative', 'Minimalist'].map((template, index) => (
+                        {[
+                          { id: 'classic', label: 'Classic', desc: 'Clean Helvetica, ATS-optimised' },
+                          { id: 'modern',  label: 'Modern',  desc: 'Serif font, left-aligned header' },
+                          { id: 'compact', label: 'Compact', desc: 'Smaller type, fits more content' },
+                        ].map((tmpl) => (
                           <Pressable
-                            key={index}
+                            key={tmpl.id}
                             style={[
                               styles.templateCard,
-                              hoveredTemplate === index && styles.templateCardHover
+                              selectedTemplate === tmpl.id && styles.templateCardSelected,
+                              hoveredTemplate === tmpl.id && selectedTemplate !== tmpl.id && styles.templateCardHover,
                             ]}
-                            onHoverIn={() => Platform.OS === 'web' && setHoveredTemplate(index)}
+                            onPress={() => setSelectedTemplate(tmpl.id)}
+                            onHoverIn={() => Platform.OS === 'web' && setHoveredTemplate(tmpl.id)}
                             onHoverOut={() => Platform.OS === 'web' && setHoveredTemplate(null)}
                           >
-                            <View style={styles.templatePreview}>
-                              <View style={styles.templateIcon}>
-                                <View style={styles.documentIcon} />
+                            <View style={[
+                              styles.templatePreview,
+                              selectedTemplate === tmpl.id && { backgroundColor: 'rgba(167,139,250,0.08)' }
+                            ]}>
+                              {/* Mini resume preview */}
+                              <View style={{ width: '80%', gap: 4 }}>
+                                <View style={{
+                                  height: tmpl.id === 'modern' ? 8 : 7,
+                                  width: tmpl.id === 'modern' ? '60%' : '75%',
+                                  alignSelf: tmpl.id === 'modern' ? 'flex-start' : 'center',
+                                  backgroundColor: selectedTemplate === tmpl.id ? '#A78BFA' : 'rgba(255,255,255,0.3)',
+                                  borderRadius: 2,
+                                }} />
+                                <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.15)', marginVertical: 4 }} />
+                                {[80, 65, 90, 70].map((w, i) => (
+                                  <View key={i} style={{
+                                    height: tmpl.id === 'compact' ? 4 : 5,
+                                    width: `${w}%`,
+                                    backgroundColor: 'rgba(255,255,255,0.15)',
+                                    borderRadius: 2,
+                                    marginBottom: tmpl.id === 'compact' ? 2 : 3,
+                                  }} />
+                                ))}
                               </View>
                             </View>
-                            <Text style={styles.templateName}>{template}</Text>
+                            <Text style={[styles.templateName, selectedTemplate === tmpl.id && { color: '#A78BFA' }]}>
+                              {tmpl.label}
+                            </Text>
+                            <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textAlign: 'center', marginTop: 2 }}>
+                              {tmpl.desc}
+                            </Text>
                           </Pressable>
                         ))}
                       </View>

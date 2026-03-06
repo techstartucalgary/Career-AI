@@ -10,7 +10,7 @@ from bson import ObjectId
 
 # JWT Configuration
 jwt_algo = "HS256"
-jwt_expire_minutes = 60 * 2  # 2 hour token
+jwt_expire_minutes = 60 * 24 * 7  # 7 day token
 jwt_secret = os.environ.get("JWT_SECRET", "dev-secret")
 
 

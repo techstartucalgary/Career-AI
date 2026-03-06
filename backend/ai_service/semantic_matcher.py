@@ -588,7 +588,7 @@ class SemanticMatcher:
 
         return True
 
-    def _extract_key_phrases(self, text: str, max_phrases: int = 15) -> List[str]:
+    def _extract_key_phrases(self, text: str, max_phrases: int = 25) -> List[str]:
         """
         Extract important phrases from text using spaCy NLP.
 
@@ -843,8 +843,54 @@ class SemanticMatcher:
                 matches.append(match_entry)
         
         # Calculate metrics
-        overall_match = float(similarity_matrix.max(axis=1).mean())
+        raw_match = float(similarity_matrix.max(axis=1).mean())
         coverage = len(matches) / len(job_phrases) if job_phrases else 0
+
+        # === Hybrid ATS Scoring ===
+        # Phrase-level cosine similarity from all-MiniLM-L6-v2 physically caps at ~0.65
+        # for resume/JD pairs. Treating raw cosine as a % gives structurally low scores.
+        # Instead, use three signals weighted by reliability:
+
+        # Signal 1: Taxonomy skill matching (most reliable for technical roles)
+        skill_match_score = 0.0
+        if job_skills:
+            total_confidence = 0.0
+            for job_skill in job_skills:
+                best_conf = 0.0
+                for resume_skill in resume_skills:
+                    is_match, conf = self.taxonomy.check_skill_match(job_skill, resume_skill)
+                    if is_match and conf > best_conf:
+                        best_conf = conf
+                total_confidence += best_conf
+            skill_match_score = total_confidence / len(job_skills)
+
+        # Signal 2: Keyword overlap on meaningful terms (catches non-taxonomy skills)
+        _stop = {
+            'the','and','for','are','you','that','with','this','have','from','will',
+            'your','not','but','can','all','been','they','their','our','who','has',
+            'its','what','we','be','is','in','of','to','a','an','as','at','by','on',
+            'or','if','it','do','no','up','so','us','my','also','into','such','more',
+            'well','each','than','when','while','how','use','used','using','new','high',
+            'work','role','team','able','good','great','strong','must','may','should',
+        }
+        jd_terms = {
+            w for w in re.findall(r'\b[a-zA-Z][a-zA-Z0-9+#./_-]{2,}\b', job_description.lower())
+            if w not in _stop and len(w) >= 3
+        }
+        resume_terms = {
+            w for w in re.findall(r'\b[a-zA-Z][a-zA-Z0-9+#./_-]{2,}\b', resume_text.lower())
+            if w not in _stop and len(w) >= 3
+        }
+        keyword_overlap = len(jd_terms & resume_terms) / len(jd_terms) if jd_terms else 0
+
+        # Signal 3: Normalized semantic similarity (holistic context signal)
+        normalized_semantic = max(0.0, min(1.0, (raw_match - 0.15) / 0.50))
+
+        # Weighted blend: skill match > keyword overlap > semantic
+        if job_skills:
+            overall_match = skill_match_score * 0.5 + keyword_overlap * 0.3 + normalized_semantic * 0.2
+        else:
+            overall_match = keyword_overlap * 0.6 + normalized_semantic * 0.4
 
         # Extract top missing skills - prioritize taxonomy skills over generic phrases
         missing_gaps = [g for g in gaps if g['status'] == 'missing']

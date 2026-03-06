@@ -26,8 +26,8 @@ OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.3"))
 
 # Semantic Matching Configuration
 SEMANTIC_MODEL = "all-MiniLM-L6-v2"
-SEMANTIC_SIMILARITY_THRESHOLD = 0.5
-SEMANTIC_WEAK_MATCH_THRESHOLD = 0.75
+SEMANTIC_SIMILARITY_THRESHOLD = 0.3
+SEMANTIC_WEAK_MATCH_THRESHOLD = 0.5
 
 # Context Window Limits (increased for better analysis)
 # Gemini 2.5 Flash supports 1M tokens - we can be generous

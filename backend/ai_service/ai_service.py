@@ -469,6 +469,11 @@ Generate 5-8 targeted questions. JSON:"""
 
         # NO keyword extraction - we don't want the LLM adding keywords from job description
 
+        # Send the full resume JSON without truncation so no entries are silently dropped.
+        # CONTEXT_RESUME_JSON is kept as a soft reference only; Gemini 2.5 Flash supports
+        # a 1M-token context window so this is safe in practice.
+        full_resume_json = json.dumps(original_data, indent=2)
+
         prompt = f"""You are an expert resume writer. Your ONLY job is to make existing bullet points clearer and more impactful.
 
 TASK: ONLY improve the WORDING of existing bullet points. DO NOT add ANY new skills, technologies, or tools.
@@ -479,7 +484,7 @@ DO NOT add any technologies, skills, or tools mentioned here to the resume.
 {job_description[:CONTEXT_JOB_DESCRIPTION]}
 
 === CURRENT RESUME (JSON) ===
-{json.dumps(original_data, indent=2)[:CONTEXT_RESUME_JSON]}
+{full_resume_json}
 
 === CANDIDATE'S ADDITIONAL INFO ===
 {qa_context}
@@ -584,18 +589,46 @@ JSON:"""
                     print(f"  ⚠ Missing {key}, using original")
                     data[key] = original_data[key]
 
-            # CRITICAL VALIDATION: Ensure count preservation
+            # CRITICAL VALIDATION: Ensure count preservation.
+            # Strategy: if the LLM dropped entries, merge — keep enhanced versions of entries
+            # that survived and patch in the originals for any that are missing.  This is
+            # far better than a full revert (which throws away all valid enhancements).
             if len(data['experience']) != len(original_data['experience']):
                 print(
                     f"  ❌ ERROR: LLM changed experience count from {len(original_data['experience'])} to {len(data['experience'])}")
-                print(f"  ⚠ Reverting to original experiences")
-                data['experience'] = original_data['experience']
+                print(f"  ⚠ Merging: keeping enhanced bullets where available, patching missing entries from original")
+                merged_experience = []
+                for orig_exp in original_data['experience']:
+                    # Look for a matching enhanced entry by title+company
+                    matched = None
+                    for new_exp in data['experience']:
+                        if new_exp.get('title') == orig_exp['title'] and new_exp.get('company') == orig_exp['company']:
+                            matched = new_exp
+                            break
+                    if matched:
+                        merged_experience.append(matched)
+                    else:
+                        print(f"    → Patching missing entry: {orig_exp['title']} at {orig_exp['company']}")
+                        merged_experience.append(orig_exp)
+                data['experience'] = merged_experience
 
             if len(data['projects']) != len(original_data['projects']):
                 print(
                     f"  ❌ ERROR: LLM changed project count from {len(original_data['projects'])} to {len(data['projects'])}")
-                print(f"  ⚠ Reverting to original projects")
-                data['projects'] = original_data['projects']
+                print(f"  ⚠ Merging: keeping enhanced bullets where available, patching missing projects from original")
+                merged_projects = []
+                for orig_proj in original_data['projects']:
+                    matched = None
+                    for new_proj in data['projects']:
+                        if new_proj.get('name') == orig_proj['name']:
+                            matched = new_proj
+                            break
+                    if matched:
+                        merged_projects.append(matched)
+                    else:
+                        print(f"    → Patching missing project: {orig_proj['name']}")
+                        merged_projects.append(orig_proj)
+                data['projects'] = merged_projects
 
             # Validate that titles/companies haven't changed
             for i, (orig, new) in enumerate(zip(original_data['experience'], data['experience'])):
@@ -648,9 +681,14 @@ JSON:"""
             original_tech = {term for term in tech_terms if term in original_full_text}
             print(f"    Original tech found: {original_tech if original_tech else 'None'}")
 
-            # Check each experience bullet for fabricated tech
+            # Check each experience bullet for fabricated tech.
+            # IMPORTANT: when a fabricated bullet is replaced we MUST always provide a
+            # substitute from the original so that no bullet is silently dropped.  If the
+            # original entry has no bullet at that position we fall back to the last
+            # available original bullet so the entry is never left empty.
             fabrication_detected = False
             for i, exp in enumerate(data['experience']):
+                orig_bullets = original_data['experience'][i]['bullets'] if i < len(original_data['experience']) else []
                 cleaned_bullets = []
                 for bullet in exp['bullets']:
                     bullet_lower = bullet.lower()
@@ -664,17 +702,26 @@ JSON:"""
                             break
 
                     if bullet_has_fabrication:
-                        # Use original bullet instead
-                        if i < len(original_data['experience']) and len(original_data['experience'][i]['bullets']) > len(cleaned_bullets):
-                            cleaned_bullets.append(original_data['experience'][i]['bullets'][len(cleaned_bullets)])
-                            print(f"      → Reverting to original bullet")
+                        # Always substitute with an original bullet so we never drop content.
+                        # Use the bullet at the same position, or the last one if out of range.
+                        sub_idx = min(len(cleaned_bullets), len(orig_bullets) - 1)
+                        if orig_bullets:
+                            cleaned_bullets.append(orig_bullets[sub_idx])
+                            print(f"      → Reverting to original bullet at index {sub_idx}")
+                        # else: original has no bullets either — nothing to add (rare edge case)
                     else:
                         cleaned_bullets.append(bullet)
+
+                # If after scanning we ended up with no bullets at all, restore full original
+                if not cleaned_bullets and orig_bullets:
+                    print(f"    ⚠ Experience {i+1} ended up with 0 bullets — restoring all original bullets")
+                    cleaned_bullets = list(orig_bullets)
 
                 data['experience'][i]['bullets'] = cleaned_bullets[:4]  # Also enforce 4 max
 
             # Check projects too
             for i, proj in enumerate(data['projects']):
+                orig_bullets = original_data['projects'][i]['bullets'] if i < len(original_data['projects']) else []
                 cleaned_bullets = []
                 for bullet in proj['bullets']:
                     bullet_lower = bullet.lower()
@@ -688,11 +735,16 @@ JSON:"""
                             break
 
                     if bullet_has_fabrication:
-                        if i < len(original_data['projects']) and len(original_data['projects'][i]['bullets']) > len(cleaned_bullets):
-                            cleaned_bullets.append(original_data['projects'][i]['bullets'][len(cleaned_bullets)])
-                            print(f"      → Reverting to original bullet")
+                        sub_idx = min(len(cleaned_bullets), len(orig_bullets) - 1)
+                        if orig_bullets:
+                            cleaned_bullets.append(orig_bullets[sub_idx])
+                            print(f"      → Reverting to original bullet at index {sub_idx}")
                     else:
                         cleaned_bullets.append(bullet)
+
+                if not cleaned_bullets and orig_bullets:
+                    print(f"    ⚠ Project {i+1} ended up with 0 bullets — restoring all original bullets")
+                    cleaned_bullets = list(orig_bullets)
 
                 data['projects'][i]['bullets'] = cleaned_bullets[:4]
 
@@ -700,6 +752,20 @@ JSON:"""
                 print("  ⚠️  FABRICATION WAS DETECTED AND BLOCKED")
             else:
                 print("  ✓ No fabrication detected")
+
+            # Final safety net: ensure no entry has an empty bullets list, which would
+            # cause ResumeData validation to raise and silently fall back to the original.
+            for i, exp in enumerate(data['experience']):
+                if not exp.get('bullets'):
+                    orig_bullets = original_data['experience'][i]['bullets'] if i < len(original_data['experience']) else []
+                    print(f"  ⚠ Experience {i+1} has no bullets after all checks — restoring original bullets")
+                    data['experience'][i]['bullets'] = orig_bullets
+
+            for i, proj in enumerate(data['projects']):
+                if not proj.get('bullets'):
+                    orig_bullets = original_data['projects'][i]['bullets'] if i < len(original_data['projects']) else []
+                    print(f"  ⚠ Project {i+1} has no bullets after all checks — restoring original bullets")
+                    data['projects'][i]['bullets'] = orig_bullets
 
             tailored = ResumeData(**data)
             total_time = time.time() - start_time
