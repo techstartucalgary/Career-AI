@@ -98,23 +98,45 @@ export const generateFromTemplate = async (templateId = 'classic', onProgress, r
     formData.append('resume_file', fileBlob, resumeFile.name);
   }
 
-  if (onProgress) onProgress({ progress: 15, step: 'Loading resume...' });
+  // Simulate progressive loading steps for better UX
+  const progressSteps = [
+    { progress: 15, step: 'Loading your resume data...' },
+    { progress: 35, step: 'Parsing resume content...' },
+    { progress: 55, step: 'Applying template styling...' },
+    { progress: 75, step: 'Generating PDF document...' },
+  ];
 
-  const response = await fetch(`${API_URL}/api/resume/generate-from-template`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
+  // Start progress simulation with slower pacing
+  let currentStepIndex = 0;
+  const progressInterval = setInterval(() => {
+    if (currentStepIndex < progressSteps.length && onProgress) {
+      onProgress(progressSteps[currentStepIndex]);
+      currentStepIndex++;
+    }
+  }, 800);
 
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.detail || 'Failed to generate resume from template.');
+  try {
+    const response = await fetch(`${API_URL}/api/resume/generate-from-template`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    clearInterval(progressInterval);
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to generate resume from template.');
+    }
+
+    const result = await response.json();
+    if (onProgress) onProgress({ progress: 100, step: 'Done!' });
+    
+    return result;
+  } catch (error) {
+    clearInterval(progressInterval);
+    throw error;
   }
-
-  if (onProgress) onProgress({ progress: 90, step: 'Generating PDF...' });
-  const result = await response.json();
-  if (onProgress) onProgress({ progress: 100, step: 'Done!' });
-  return result;
 };
 
 export const generateCoverLetter = async (resumeFile, jobDescription, onProgress, templateId = 'classic') => {

@@ -143,8 +143,8 @@ const TemplateResumePage = () => {
       setIsLoading(true);
       setError(null);
       setGeneratedResume(null);
-      setProgress(15);
-      setProgressStep('Loading your saved resume...');
+      setProgress(5);
+      setProgressStep('Initializing...');
       try {
         const result = await generateFromTemplate(selectedTemplate, (update) => {
           if (typeof update?.progress === 'number') setProgress(update.progress);
