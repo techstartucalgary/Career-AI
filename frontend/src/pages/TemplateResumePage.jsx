@@ -77,17 +77,55 @@ const TemplateResumePage = () => {
   const [keywords, setKeywords] = useState([]);
 
   const pickDocument = async (forTemplateMode = false) => {
+    // Use native HTML file input for web (works reliably with Vite)
+    if (Platform.OS === 'web') {
+      return new Promise((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        
+        const cleanup = () => {
+          document.body.removeChild(input);
+        };
+        
+        input.addEventListener('change', (e) => {
+          const pickedFile = e.target.files?.[0];
+          if (pickedFile) {
+            const uri = URL.createObjectURL(pickedFile);
+            const file = { uri, name: pickedFile.name, mimeType: pickedFile.type };
+            if (forTemplateMode) {
+              setTemplateFile(file);
+            } else {
+              setSelectedFile(file);
+              setTemplateMode('optimize');
+            }
+          }
+          cleanup();
+          resolve();
+        });
+        
+        // Handle cancel (user closes dialog without selecting)
+        input.addEventListener('cancel', () => {
+          cleanup();
+          resolve();
+        });
+        
+        input.click();
+      });
+    }
+
+    // Fallback to expo-document-picker for native platforms
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
         copyToCacheDirectory: true
       });
 
-      if (result.type === 'success' || !result.canceled) {
-        const uri = result.uri ?? result.assets?.[0]?.uri ?? result.assets?.[0]?.fileCopyUri;
-        const name = result.name ?? result.assets?.[0]?.name;
-        const mimeType = result.mimeType ?? result.assets?.[0]?.mimeType;
-        const file = { uri, name, mimeType };
+      if (result.canceled === false && result.assets?.[0]) {
+        const asset = result.assets[0];
+        const file = { uri: asset.uri, name: asset.name, mimeType: asset.mimeType };
         if (forTemplateMode) {
           setTemplateFile(file);
         } else {
@@ -317,7 +355,7 @@ const TemplateResumePage = () => {
                           styles.uploadButton,
                           hoveredButton === 'upload' && styles.uploadButtonHover
                         ]}
-                        onPress={pickDocument}
+                        onPress={() => pickDocument(false)}
                         onHoverIn={() => Platform.OS === 'web' && setHoveredButton('upload')}
                         onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
                       >
