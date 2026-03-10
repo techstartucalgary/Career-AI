@@ -121,6 +121,8 @@ const CoverLetterJobPostingPage = () => {
   const [jobDescription, setJobDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedTags, setSelectedTags] = useState(['Student', 'AI', 'Software Development', 'Calgary']);
+  const [selectedTemplate, setSelectedTemplate] = useState('classic');
+  const [hoveredTemplate, setHoveredTemplate] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredAts, setHoveredAts] = useState(false);
   const [generatedCoverLetter, setGeneratedCoverLetter] = useState(null);
@@ -244,7 +246,7 @@ const CoverLetterJobPostingPage = () => {
         generateCoverLetter(selectedFile, jobDescription, (data) => {
           setProgressStep(data.step);
           setProgress(data.progress);
-        }),
+        }, selectedTemplate),
         calculateAtsScoreForFile(),
       ]);
 
@@ -382,6 +384,54 @@ const CoverLetterJobPostingPage = () => {
                 {selectedFile && (
                   <Text style={styles.selectedFileText}>Selected: {selectedFile.name}</Text>
                 )}
+              </View>
+
+              {/* Template Selection */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Choose a Template</Text>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  {[
+                    { id: 'classic', label: 'Classic', desc: 'Helvetica, ATS-ready' },
+                    { id: 'modern',  label: 'Modern',  desc: 'Serif, left-aligned' },
+                    { id: 'compact', label: 'Compact', desc: 'Smaller, fits more' },
+                  ].map((tmpl) => (
+                    <Pressable
+                      key={tmpl.id}
+                      style={[
+                        {
+                          flex: 1,
+                          backgroundColor: selectedTemplate === tmpl.id
+                            ? 'rgba(167,139,250,0.12)'
+                            : 'rgba(255,255,255,0.04)',
+                          borderRadius: 10,
+                          borderWidth: 1,
+                          borderColor: selectedTemplate === tmpl.id
+                            ? '#A78BFA'
+                            : hoveredTemplate === tmpl.id
+                            ? 'rgba(167,139,250,0.4)'
+                            : 'rgba(255,255,255,0.1)',
+                          paddingVertical: 10,
+                          paddingHorizontal: 8,
+                          alignItems: 'center',
+                          ...Platform.select({ web: { cursor: 'pointer', transition: 'all 0.2s ease' } }),
+                        }
+                      ]}
+                      onPress={() => setSelectedTemplate(tmpl.id)}
+                      onHoverIn={() => Platform.OS === 'web' && setHoveredTemplate(tmpl.id)}
+                      onHoverOut={() => Platform.OS === 'web' && setHoveredTemplate(null)}
+                    >
+                      <Text style={{
+                        fontSize: 13,
+                        fontWeight: '600',
+                        color: selectedTemplate === tmpl.id ? '#A78BFA' : 'rgba(255,255,255,0.85)',
+                        marginBottom: 2,
+                      }}>{tmpl.label}</Text>
+                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+                        {tmpl.desc}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
               </View>
 
               {error && (
