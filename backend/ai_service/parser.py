@@ -168,6 +168,27 @@ JSON:"""
                                 print(f"    ⚠️ REMOVING hallucinated skill '{skill}' - not found in Skills section")
                         data['skills'][category] = validated_skills
 
+            # Sanitize None values in required string fields before validation
+            for edu in data.get('education', []):
+                if edu.get('graduation_date') is None:
+                    edu['graduation_date'] = ''
+                if edu.get('school') is None:
+                    edu['school'] = ''
+                if edu.get('degree') is None:
+                    edu['degree'] = ''
+            for exp in data.get('experience', []):
+                if exp.get('title') is None:
+                    exp['title'] = ''
+                if exp.get('company') is None:
+                    exp['company'] = ''
+                if exp.get('start_date') is None:
+                    exp['start_date'] = ''
+                if exp.get('end_date') is None:
+                    exp['end_date'] = ''
+            for proj in data.get('projects', []):
+                if proj.get('name') is None:
+                    proj['name'] = ''
+
             # Validate and create ResumeData
             resume = ResumeData(**data)
 

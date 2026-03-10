@@ -1,9 +1,10 @@
 """
 AI Routes - Resume and Cover Letter generation endpoints
 """
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pathlib import Path
+from typing import Optional
 import tempfile
 from datetime import datetime
 import json
@@ -14,11 +15,10 @@ import asyncio
 from langchain_core.messages import HumanMessage
 
 from ai_service.service import ResumeTailoringService
-import asyncio
-from langchain_core.messages import HumanMessage
-
-from ai_service.service import ResumeTailoringService
 from ai_service.ai_service import AIService
+from ai_service.pdf_generators import PDFGenerator
+from database import col
+from dependencies import get_current_user
 
 
 def get_file_extension(filename: str) -> str:
@@ -137,6 +137,76 @@ async def ats_score(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/resume/generate-from-template")
+async def generate_resume_from_template(
+    request: Request,
+    template_id: str = Form(default="classic"),
+    resume_file: Optional[UploadFile] = File(None),
+):
+    """Generate resume PDF from a template using saved or uploaded resume."""
+    authorization = request.headers.get("authorization") or request.headers.get("Authorization")
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authentication required")
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    valid_templates = {"classic", "modern", "compact"}
+    if template_id not in valid_templates:
+        template_id = "classic"
+
+    try:
+        temp_dir = tempfile.gettempdir()
+        ts = datetime.now().timestamp()
+        output_path = Path(temp_dir) / f"tmpl_out_{ts}.pdf"
+
+        if resume_file and resume_file.filename:
+            file_ext = get_file_extension(resume_file.filename)
+            input_path = Path(temp_dir) / f"tmpl_in_{ts}{file_ext}"
+            file_bytes = await resume_file.read()
+            with open(input_path, "wb") as f:
+                f.write(file_bytes)
+            resume_b64_save = base64.b64encode(file_bytes).decode("utf-8")
+            col.update_one({"_id": user_id}, {"$set": {
+                "resume.file_name": resume_file.filename,
+                "resume.file_data": resume_b64_save,
+                "resume.uploaded_at": datetime.utcnow().isoformat(),
+            }})
+        else:
+            user = col.find_one({"_id": user_id})
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            file_data_b64 = (user.get("resume") or {}).get("file_data")
+            if not file_data_b64:
+                raise HTTPException(status_code=400, detail="No resume found. Please upload a resume file.")
+            pdf_bytes = base64.b64decode(file_data_b64)
+            input_path = Path(temp_dir) / f"tmpl_in_{ts}.pdf"
+            with open(input_path, "wb") as f:
+                f.write(pdf_bytes)
+
+        resume = ai_service.parse_resume(str(input_path))
+        success = PDFGenerator.generate_resume_pdf(resume, str(output_path), template=template_id)
+        if not success:
+            raise HTTPException(status_code=500, detail="PDF generation failed")
+
+        with open(output_path, "rb") as f:
+            pdf_b64 = base64.b64encode(f.read()).decode("utf-8")
+
+        try:
+            input_path.unlink()
+            output_path.unlink()
+        except Exception:
+            pass
+
+        return {"success": True, "pdf_base64": pdf_b64, "template": template_id, "resume_data": resume.model_dump()}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/resume/tailor")
 async def tailor_resume(
     resume_file: UploadFile = File(...),
@@ -229,7 +299,8 @@ async def tailor_resume(
 @router.post("/cover-letter/generate")
 async def generate_cover_letter(
     resume_file: UploadFile = File(...),
-    job_description: str = Form(...)
+    job_description: str = Form(...),
+    template_id: str = Form(default="classic"),
 ):
     """Generate cover letter from resume and job description with streaming progress"""
     async def generate_with_progress():
@@ -304,7 +375,9 @@ JSON:"""
             await asyncio.sleep(1.5)
             
             output_path = Path(temp_dir) / f"cover_letter_{datetime.now().timestamp()}.pdf"
-            ai_service.generate_cover_letter_pdf(cover_letter, resume, str(output_path))
+            valid_cl_templates = {"classic", "modern", "compact"}
+            cl_template = template_id if template_id in valid_cl_templates else "classic"
+            ai_service.generate_cover_letter_pdf(cover_letter, resume, str(output_path), template=cl_template)
             
             # Clean up temp input file
             try:
@@ -341,8 +414,8 @@ JSON:"""
         except Exception as e:
             error_details = traceback.format_exc()
             print(f"Error in generate_cover_letter: {error_details}")
-            yield f"data: {json.dumps({'error': str(e)})}\\n\\n"
-    
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
     return StreamingResponse(generate_with_progress(), media_type="text/event-stream")
 
 
