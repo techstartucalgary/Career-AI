@@ -121,8 +121,6 @@ const CoverLetterJobPostingPage = () => {
   const [jobDescription, setJobDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedTags, setSelectedTags] = useState(['Student', 'AI', 'Software Development', 'Calgary']);
-  const [selectedTemplate, setSelectedTemplate] = useState('classic');
-  const [hoveredTemplate, setHoveredTemplate] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredAts, setHoveredAts] = useState(false);
   const [generatedCoverLetter, setGeneratedCoverLetter] = useState(null);
@@ -137,6 +135,8 @@ const CoverLetterJobPostingPage = () => {
   const [atsError, setAtsError] = useState('');
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [keywords, setKeywords] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState('classic');
+  const [hoveredTemplate, setHoveredTemplate] = useState(null);
 
   const removeTag = (tagToRemove) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
@@ -386,47 +386,36 @@ const CoverLetterJobPostingPage = () => {
                 )}
               </View>
 
-              {/* Template Selection */}
+              {/* Cover Letter Template Section */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Choose a Template</Text>
+                <Text style={styles.sectionTitle}>Cover Letter Style</Text>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   {[
-                    { id: 'classic', label: 'Classic', desc: 'Helvetica, ATS-ready' },
-                    { id: 'modern',  label: 'Modern',  desc: 'Serif, left-aligned' },
-                    { id: 'compact', label: 'Compact', desc: 'Smaller, fits more' },
+                    { id: 'classic', label: 'Classic', desc: 'Helvetica, clean' },
+                    { id: 'modern',  label: 'Modern',  desc: 'Serif, formal' },
+                    { id: 'compact', label: 'Compact', desc: 'Concise layout' },
                   ].map((tmpl) => (
                     <Pressable
                       key={tmpl.id}
-                      style={[
-                        {
-                          flex: 1,
-                          backgroundColor: selectedTemplate === tmpl.id
-                            ? 'rgba(167,139,250,0.12)'
-                            : 'rgba(255,255,255,0.04)',
-                          borderRadius: 10,
-                          borderWidth: 1,
-                          borderColor: selectedTemplate === tmpl.id
-                            ? '#A78BFA'
-                            : hoveredTemplate === tmpl.id
-                            ? 'rgba(167,139,250,0.4)'
-                            : 'rgba(255,255,255,0.1)',
-                          paddingVertical: 10,
-                          paddingHorizontal: 8,
-                          alignItems: 'center',
-                          ...Platform.select({ web: { cursor: 'pointer', transition: 'all 0.2s ease' } }),
-                        }
-                      ]}
                       onPress={() => setSelectedTemplate(tmpl.id)}
                       onHoverIn={() => Platform.OS === 'web' && setHoveredTemplate(tmpl.id)}
                       onHoverOut={() => Platform.OS === 'web' && setHoveredTemplate(null)}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 10,
+                        paddingHorizontal: 8,
+                        borderRadius: 10,
+                        borderWidth: 1.5,
+                        alignItems: 'center',
+                        borderColor: selectedTemplate === tmpl.id ? '#A78BFA' : 'rgba(255,255,255,0.1)',
+                        backgroundColor: selectedTemplate === tmpl.id ? 'rgba(167,139,250,0.08)' : 'rgba(255,255,255,0.03)',
+                        ...(Platform.OS === 'web' ? { cursor: 'pointer', transition: 'all 0.2s ease' } : {}),
+                      }}
                     >
-                      <Text style={{
-                        fontSize: 13,
-                        fontWeight: '600',
-                        color: selectedTemplate === tmpl.id ? '#A78BFA' : 'rgba(255,255,255,0.85)',
-                        marginBottom: 2,
-                      }}>{tmpl.label}</Text>
-                      <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+                      <Text style={{ color: selectedTemplate === tmpl.id ? '#A78BFA' : 'rgba(255,255,255,0.8)', fontWeight: '600', fontSize: 13 }}>
+                        {tmpl.label}
+                      </Text>
+                      <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, marginTop: 2 }}>
                         {tmpl.desc}
                       </Text>
                     </Pressable>
