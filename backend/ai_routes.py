@@ -1,10 +1,10 @@
 """
 AI Routes - Resume and Cover Letter generation endpoints
 """
-from fastapi import APIRouter, UploadFile, File, Form, Header, HTTPException, Request
-from typing import Optional
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pathlib import Path
+from typing import Optional
 import tempfile
 from datetime import datetime
 import json
@@ -143,16 +143,10 @@ async def generate_resume_from_template(
     template_id: str = Form(default="classic"),
     resume_file: Optional[UploadFile] = File(None),
 ):
-    """
-    Generate a resume PDF using a chosen visual template.
-    If resume_file is provided, uses it directly (and saves it to the account).
-    Otherwise, falls back to the resume saved in the user's account.
-    Templates: 'classic' (Helvetica), 'modern' (Times-Roman), 'compact' (small/tight).
-    """
+    """Generate resume PDF from a template using saved or uploaded resume."""
     authorization = request.headers.get("authorization") or request.headers.get("Authorization")
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Authentication required")
-
     token = authorization.split(" ", 1)[1]
     try:
         user_id = get_current_user(token)
@@ -169,13 +163,11 @@ async def generate_resume_from_template(
         output_path = Path(temp_dir) / f"tmpl_out_{ts}.pdf"
 
         if resume_file and resume_file.filename:
-            # Use the uploaded file directly
             file_ext = get_file_extension(resume_file.filename)
             input_path = Path(temp_dir) / f"tmpl_in_{ts}{file_ext}"
             file_bytes = await resume_file.read()
             with open(input_path, "wb") as f:
                 f.write(file_bytes)
-            # Save to account for future use
             resume_b64_save = base64.b64encode(file_bytes).decode("utf-8")
             col.update_one({"_id": user_id}, {"$set": {
                 "resume.file_name": resume_file.filename,
@@ -183,16 +175,12 @@ async def generate_resume_from_template(
                 "resume.uploaded_at": datetime.utcnow().isoformat(),
             }})
         else:
-            # Fall back to saved account resume
             user = col.find_one({"_id": user_id})
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
             file_data_b64 = (user.get("resume") or {}).get("file_data")
             if not file_data_b64:
-                raise HTTPException(
-                    status_code=400,
-                    detail="No resume found. Please upload a resume file."
-                )
+                raise HTTPException(status_code=400, detail="No resume found. Please upload a resume file.")
             pdf_bytes = base64.b64decode(file_data_b64)
             input_path = Path(temp_dir) / f"tmpl_in_{ts}.pdf"
             with open(input_path, "wb") as f:
@@ -212,12 +200,7 @@ async def generate_resume_from_template(
         except Exception:
             pass
 
-        return {
-            "success": True,
-            "pdf_base64": pdf_b64,
-            "template": template_id,
-            "resume_data": resume.model_dump(),
-        }
+        return {"success": True, "pdf_base64": pdf_b64, "template": template_id, "resume_data": resume.model_dump()}
     except HTTPException:
         raise
     except Exception as e:
@@ -394,7 +377,7 @@ JSON:"""
             output_path = Path(temp_dir) / f"cover_letter_{datetime.now().timestamp()}.pdf"
             valid_cl_templates = {"classic", "modern", "compact"}
             cl_template = template_id if template_id in valid_cl_templates else "classic"
-            PDFGenerator.generate_cover_letter_pdf(cover_letter, resume.header, str(output_path), template=cl_template)
+            ai_service.generate_cover_letter_pdf(cover_letter, resume, str(output_path), template=cl_template)
             
             # Clean up temp input file
             try:
@@ -431,8 +414,8 @@ JSON:"""
         except Exception as e:
             error_details = traceback.format_exc()
             print(f"Error in generate_cover_letter: {error_details}")
-            yield f"data: {json.dumps({'error': str(e)})}\\n\\n"
-    
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
     return StreamingResponse(generate_with_progress(), media_type="text/event-stream")
 
 

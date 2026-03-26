@@ -86,66 +86,10 @@ export const tailorResume = async (resumeFile, jobDescription, userAnswers = {},
   return result;
 };
 
-export const generateFromTemplate = async (templateId = 'classic', onProgress, resumeFile = null) => {
-  const token = getAuthToken();
-  if (!token) throw new Error('You must be logged in to use this feature.');
-
-  const formData = new FormData();
-  formData.append('template_id', templateId);
-
-  if (resumeFile) {
-    const fileBlob = await uriToBlob(resumeFile.uri);
-    formData.append('resume_file', fileBlob, resumeFile.name);
-  }
-
-  // Simulate progressive loading steps for better UX
-  const progressSteps = [
-    { progress: 15, step: 'Loading your resume data...' },
-    { progress: 35, step: 'Parsing resume content...' },
-    { progress: 55, step: 'Applying template styling...' },
-    { progress: 75, step: 'Generating PDF document...' },
-  ];
-
-  // Start progress simulation with slower pacing
-  let currentStepIndex = 0;
-  const progressInterval = setInterval(() => {
-    if (currentStepIndex < progressSteps.length && onProgress) {
-      onProgress(progressSteps[currentStepIndex]);
-      currentStepIndex++;
-    }
-  }, 800);
-
-  try {
-    const response = await fetch(`${API_URL}/api/resume/generate-from-template`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
-
-    clearInterval(progressInterval);
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.detail || 'Failed to generate resume from template.');
-    }
-
-    const result = await response.json();
-    if (onProgress) onProgress({ progress: 100, step: 'Done!' });
-    
-    return result;
-  } catch (error) {
-    clearInterval(progressInterval);
-    throw error;
-  }
-};
-
 export const generateCoverLetter = async (resumeFile, jobDescription, onProgress, templateId = 'classic') => {
   const formData = new FormData();
 
-  // Convert file to blob for web compatibility
   const fileBlob = await uriToBlob(resumeFile.uri);
-  const fileType = resumeFile.name.endsWith('.pdf') ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-
   formData.append('resume_file', fileBlob, resumeFile.name);
   formData.append('job_description', jobDescription);
   formData.append('template_id', templateId);
@@ -191,6 +135,37 @@ export const generateCoverLetter = async (resumeFile, jobDescription, onProgress
     }
   }
 
+  return result;
+};
+
+export const generateFromTemplate = async (templateId = 'classic', onProgress, resumeFile = null) => {
+  const token = getAuthToken();
+  if (!token) throw new Error('You must be logged in to use this feature.');
+
+  const formData = new FormData();
+  formData.append('template_id', templateId);
+
+  if (resumeFile) {
+    const fileBlob = await uriToBlob(resumeFile.uri);
+    formData.append('resume_file', fileBlob, resumeFile.name);
+  }
+
+  if (onProgress) onProgress({ progress: 15, step: 'Loading resume...' });
+
+  const response = await fetch(`${API_URL}/api/resume/generate-from-template`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to generate resume from template.');
+  }
+
+  if (onProgress) onProgress({ progress: 90, step: 'Generating PDF...' });
+  const result = await response.json();
+  if (onProgress) onProgress({ progress: 100, step: 'Done!' });
   return result;
 };
 

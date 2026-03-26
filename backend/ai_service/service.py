@@ -434,26 +434,18 @@ class ResumeTailoringService:
         return self.pdf_generator.generate_resume_pdf(resume, output_path)
     
     def generate_cover_letter_pdf(
-        self, 
-        cover_letter: CoverLetter, 
+        self,
+        cover_letter: CoverLetter,
         resume: ResumeData,
-        output_path: str
+        output_path: str,
+        template: str = 'classic'
     ) -> bool:
-        """
-        Generate cover letter PDF file.
-        
-        Args:
-            cover_letter: Cover letter data
-            resume: Resume (for contact info)
-            output_path: Where to save PDF
-            
-        Returns:
-            True if successful, False otherwise
-        """
+        """Generate cover letter PDF file."""
         return self.pdf_generator.generate_cover_letter_pdf(
             cover_letter,
             resume.header,
-            output_path
+            output_path,
+            template=template
         )
     
     # ============================================================
