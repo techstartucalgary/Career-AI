@@ -9,6 +9,9 @@ import JobPostingResumePage from './pages/JobPostingResumePage.jsx';
 import CoverLetterJobPostingPage from './pages/CoverLetterJobPostingPage.jsx';
 import InterviewBuddyPage from './pages/InterviewBuddyPage.jsx';
 import MockInterviewPage from './pages/MockInterviewPage.jsx';
+import PricingPage from './pages/PricingPage.jsx';
+import PaymentPage from './pages/PaymentPage.jsx';
+import PaymentSuccessPage from './pages/PaymentSuccessPage.jsx';
 
 const App = () => {
   return (
@@ -42,6 +45,21 @@ const App = () => {
           <Route path="/mock-interview" element={
             <ProtectedRoute>
               <MockInterviewPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/pricing" element={
+            <ProtectedRoute>
+              <PricingPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/payment" element={
+            <ProtectedRoute>
+              <PaymentPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/payment-success" element={
+            <ProtectedRoute>
+              <PaymentSuccessPage />
             </ProtectedRoute>
           } />
         </Routes>

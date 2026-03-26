@@ -20,7 +20,8 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: isDesktop ? 40 : isTablet ? 32 : 24,
-    paddingTop: 40,
+    paddingTop: 48,
+    paddingBottom: 56,
     maxWidth: 1000,
     alignSelf: 'center',
     width: '100%',
@@ -29,18 +30,20 @@ const styles = StyleSheet.create({
   // Hero Section
   heroSection: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 34,
     position: 'relative',
     overflow: 'hidden',
-    borderRadius: 24,
-    paddingVertical: 50,
-    backgroundColor: 'rgba(18, 18, 26, 0.7)',
+    borderRadius: 28,
+    paddingVertical: isDesktop ? 62 : 48,
+    paddingHorizontal: isDesktop ? 36 : 22,
+    backgroundColor: 'rgba(18, 18, 26, 0.82)',
     borderWidth: 1,
     borderColor: COLORS.border,
     width: '100%',
     ...Platform.select({
       web: {
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
+        boxShadow: '0 20px 56px rgba(0, 0, 0, 0.45)',
+        backdropFilter: 'blur(20px)',
       },
       default: {
         shadowColor: '#000',
@@ -53,21 +56,21 @@ const styles = StyleSheet.create({
   },
   heroBackgroundCircle1: {
     position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(139, 122, 184, 0.1)',
-    top: -40,
-    left: -40,
-  },
-  heroBackgroundCircle2: {
-    position: 'absolute',
     width: 250,
     height: 250,
     borderRadius: 125,
-    backgroundColor: 'rgba(167, 139, 250, 0.08)',
-    bottom: -60,
-    right: -60,
+    backgroundColor: 'rgba(139, 122, 184, 0.16)',
+    top: -80,
+    left: -70,
+  },
+  heroBackgroundCircle2: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+    bottom: -110,
+    right: -90,
   },
   heroContent: {
     alignItems: 'center',
@@ -103,7 +106,7 @@ const styles = StyleSheet.create({
     }),
   },
   heroTitle: {
-    fontSize: isDesktop ? 56 : isTablet ? 48 : 36,
+    fontSize: isDesktop ? 58 : isTablet ? 46 : 34,
     fontWeight: 'bold',
     color: COLORS.white,
     textAlign: 'center',
@@ -117,7 +120,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 20,
   },
   heroSubtitle: {
-    fontSize: isDesktop ? 20 : 18,
+    fontSize: isDesktop ? 19 : 17,
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: isDesktop ? 30 : 26,
@@ -128,15 +131,16 @@ const styles = StyleSheet.create({
   instructionsCard: {
     width: '100%',
     maxWidth: 800,
-    backgroundColor: COLORS.surface,
-    borderRadius: 24,
+    backgroundColor: 'rgba(18, 18, 26, 0.88)',
+    borderRadius: 22,
     padding: isDesktop ? 48 : isTablet ? 40 : 32,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     alignItems: 'center',
     ...Platform.select({
       web: {
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 14px 40px rgba(0, 0, 0, 0.35)',
+        backdropFilter: 'blur(16px)',
       },
       default: {
         shadowColor: '#000',
@@ -149,13 +153,13 @@ const styles = StyleSheet.create({
   },
   instructionsList: {
     width: '100%',
-    marginBottom: 40,
+    marginBottom: 30,
   },
   instructionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    marginBottom: 14,
+    backgroundColor: 'rgba(255,255,255,0.04)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -194,7 +198,7 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     flex: 1,
-    fontSize: isDesktop ? 18 : 16,
+    fontSize: isDesktop ? 17 : 15,
     color: COLORS.textSecondary,
     lineHeight: 24,
   },
@@ -202,9 +206,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 40,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 34,
     gap: 12,
     ...Platform.select({
       web: {
