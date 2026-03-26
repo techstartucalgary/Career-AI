@@ -304,6 +304,19 @@ class ResumeTailoringService:
         """
         return self.ai_service._extract_priority_keywords(job_description)
 
+    def extract_highlight_keywords(
+        self,
+        job_description: str = "",
+        resume_text: str = "",
+        limit: int = 7
+    ) -> List[str]:
+        """Extract UI highlight keywords using the LLM with fallback logic."""
+        return self.ai_service.extract_keywords_for_highlighting(
+            job_description=job_description,
+            resume_text=resume_text,
+            limit=limit
+        )
+
     # ============================================================
     # COVER LETTER GENERATION
     # ============================================================

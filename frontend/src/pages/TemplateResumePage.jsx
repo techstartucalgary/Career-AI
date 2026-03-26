@@ -12,16 +12,6 @@ import PDFViewer from '../components/PDFViewer';
 const DEFAULT_OPTIMIZATION_JOB_DESCRIPTION =
   'General ATS-ready resume evaluation for software roles. Focus on relevant technical skills, measurable impact, and role-aligned experience. Include programming languages, frameworks, databases, cloud, CI/CD, and project outcomes.';
 
-// Extract keywords from job description for highlighting
-const extractKeywords = (jobDescription) => {
-  if (!jobDescription) return [];
-  
-  // Common keywords to look for
-  const commonKeywords = ['python', 'javascript', 'java', 'react', 'node', 'sql', 'database', 'api', 'rest', 'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'agile', 'scrum', 'ci/cd', 'testing', 'automation', 'design', 'architecture', 'system', 'data', 'analytics', 'machine', 'learning', 'ai', 'ml', 'web', 'mobile', 'backend', 'frontend', 'fullstack', 'devops', 'cloud', 'microservices'];
-  
-  const lowerDesc = jobDescription.toLowerCase();
-  return commonKeywords.filter(keyword => lowerDesc.includes(keyword));
-};
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -174,6 +164,7 @@ const TemplateResumePage = () => {
           if (update?.step) setProgressStep(update.step);
         }, templateFile);
         setGeneratedResume(result);
+        setKeywords(Array.isArray(result?.keywords) ? result.keywords.slice(0, 7) : []);
       } catch (err) {
         setError(err?.message || 'Resume generation failed. Make sure you have uploaded a resume to your account.');
       } finally {
@@ -193,8 +184,7 @@ const TemplateResumePage = () => {
     setProgress(0);
     setProgressStep('Starting optimization...');
 
-    const extractedKeywords = extractKeywords(DEFAULT_OPTIMIZATION_JOB_DESCRIPTION);
-    setKeywords(extractedKeywords);
+    setKeywords([]);
 
     try {
       const result = await tailorResume(
@@ -207,6 +197,7 @@ const TemplateResumePage = () => {
         }
       );
       setGeneratedResume(result);
+      setKeywords(Array.isArray(result?.keywords) ? result.keywords.slice(0, 7) : []);
     } catch (err) {
       setError(err?.message || 'Resume optimization failed.');
     } finally {

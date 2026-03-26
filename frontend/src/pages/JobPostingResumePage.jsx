@@ -104,16 +104,6 @@ const buildAtsFormDataFromBase64 = async (base64, filename, jobDescription) => {
   return formData;
 };
 
-// Extract keywords from job description for highlighting
-const extractKeywords = (jobDescription) => {
-  if (!jobDescription) return [];
-  
-  // Common keywords to look for
-  const commonKeywords = ['python', 'javascript', 'java', 'react', 'node', 'sql', 'database', 'api', 'rest', 'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'agile', 'scrum', 'ci/cd', 'testing', 'automation', 'design', 'architecture', 'system', 'data', 'analytics', 'machine', 'learning', 'ai', 'ml', 'web', 'mobile', 'backend', 'frontend', 'fullstack', 'devops', 'cloud', 'microservices'];
-  
-  const lowerDesc = jobDescription.toLowerCase();
-  return commonKeywords.filter(keyword => lowerDesc.includes(keyword));
-};
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -293,9 +283,7 @@ const JobPostingResumePage = () => {
     setProgress(0);
     setProgressStep('Starting...');
     
-    // Extract keywords from job description
-    const extractedKeywords = extractKeywords(jobDescription);
-    setKeywords(extractedKeywords);
+    setKeywords([]);
     
     try {
       setAtsLoading(true);
@@ -310,6 +298,7 @@ const JobPostingResumePage = () => {
       ]);
 
       setGeneratedResume(result);
+      setKeywords(Array.isArray(result?.keywords) ? result.keywords.slice(0, 7) : []);
 
       let finalScore = null;
       if (result?.pdf_base64) {

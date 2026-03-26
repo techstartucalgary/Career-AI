@@ -200,7 +200,19 @@ async def generate_resume_from_template(
         except Exception:
             pass
 
-        return {"success": True, "pdf_base64": pdf_b64, "template": template_id, "resume_data": resume.model_dump()}
+        keywords = ai_service.extract_highlight_keywords(
+            job_description="",
+            resume_text=resume.to_text(),
+            limit=7
+        )
+
+        return {
+            "success": True,
+            "pdf_base64": pdf_b64,
+            "template": template_id,
+            "resume_data": resume.model_dump(),
+            "keywords": keywords,
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -278,11 +290,18 @@ async def tailor_resume(
             print(f"⏱️  API /resume/tailor completed in {total_time:.1f}s")
 
             # Final result
+            keywords = ai_service.extract_highlight_keywords(
+                job_description=job_description,
+                resume_text=tailored_resume.to_text(),
+                limit=7
+            )
+
             result = {
                 "success": True,
                 "resume_text": tailored_resume.to_text(),
                 "resume_data": tailored_resume.dict(),
                 "pdf_base64": pdf_base64,
+                "keywords": keywords,
                 "feedback": {"status": "fast_mode", "time": f"{total_time:.1f}s"},
                 "progress": 100
             }
