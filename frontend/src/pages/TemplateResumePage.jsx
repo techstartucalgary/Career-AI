@@ -23,42 +23,65 @@ const extractKeywords = (jobDescription) => {
   return commonKeywords.filter(keyword => lowerDesc.includes(keyword));
 };
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // Highlight keywords in text
 const highlightKeywords = (text, keywords, styles) => {
-  if (!keywords || keywords.length === 0) return <Text style={styles.entryBullet}>{text}</Text>;
-  
-  let parts = [text];
-  keywords.forEach(keyword => {
-    const newParts = [];
-    parts.forEach(part => {
-      if (typeof part === 'string') {
-        const regex = new RegExp(`(${keyword})`, 'gi');
-        const split = part.split(regex);
-        split.forEach((segment, idx) => {
-          if (regex.test(segment)) {
-            newParts.push(
-              <Text key={`${keyword}-${idx}`} style={[styles.entryBullet, styles.bulletHighlighted]}>
-                {segment}
-              </Text>
-            );
-          } else if (segment) {
-            newParts.push(segment);
-          }
-        });
-      } else {
-        newParts.push(part);
-      }
-    });
-    parts = newParts;
-  });
+  const sourceText = typeof text === 'string' ? text : String(text || '');
+  if (!sourceText) return <Text style={styles.entryBullet} />;
+  if (!keywords || keywords.length === 0) return <Text style={styles.entryBullet}>{sourceText}</Text>;
 
-  return (
-    <Text style={styles.entryBullet}>
-      {parts.map((part, idx) => 
-        typeof part === 'string' ? part : part
-      )}
-    </Text>
-  );
+  const normalizedKeywords = Array.from(
+    new Set(
+      keywords
+        .filter(Boolean)
+        .map((keyword) => keyword.trim())
+        .filter((keyword) => keyword.length > 0)
+    )
+  ).sort((a, b) => b.length - a.length);
+
+  if (normalizedKeywords.length === 0) {
+    return <Text style={styles.entryBullet}>{sourceText}</Text>;
+  }
+
+  const alternation = normalizedKeywords.map(escapeRegex).join('|');
+  const regex = new RegExp(`(^|[^A-Za-z0-9])(${alternation})(?=$|[^A-Za-z0-9])`, 'gi');
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(sourceText)) !== null) {
+    const fullMatchStart = match.index;
+    const prefix = match[1] || '';
+    const keyword = match[2] || '';
+    const keywordStart = fullMatchStart + prefix.length;
+
+    if (fullMatchStart > lastIndex) {
+      parts.push(sourceText.slice(lastIndex, fullMatchStart));
+    }
+
+    if (prefix) {
+      parts.push(prefix);
+    }
+
+    parts.push(
+      <Text key={`kw-${keywordStart}-${keyword.toLowerCase()}`} style={[styles.entryBullet, styles.bulletHighlighted]}>
+        {keyword}
+      </Text>
+    );
+
+    lastIndex = keywordStart + keyword.length;
+
+    if (regex.lastIndex === match.index) {
+      regex.lastIndex += 1;
+    }
+  }
+
+  if (lastIndex < sourceText.length) {
+    parts.push(sourceText.slice(lastIndex));
+  }
+
+  return <Text style={styles.entryBullet}>{parts}</Text>;
 };
 
 const TemplateResumePage = () => {
@@ -407,27 +430,55 @@ const TemplateResumePage = () => {
                           {/* Extract the actual resume data */}
                           {generatedResume && (generatedResume.resume_data || generatedResume.tailored_resume) && (
                             <>
+                              {(() => {
+                                const resumeData = generatedResume.resume_data || generatedResume.tailored_resume;
+                                return (
+                                  <>
                               {/* Header */}
-                              {(generatedResume.resume_data?.header || generatedResume.tailored_resume?.header) && (
+                              {resumeData?.header && (
                                 <View style={styles.resumeSection}>
-                                  <Text style={styles.resumeName}>{(generatedResume.resume_data?.header || generatedResume.tailored_resume?.header)?.name}</Text>
+                                  <Text style={styles.resumeName}>{resumeData.header?.name}</Text>
                                   <Text style={styles.resumeContactInfo}>
                                     {[
-                                      generatedResume.resume_data?.header?.email || generatedResume.tailored_resume?.header?.email,
-                                      generatedResume.resume_data?.header?.phone || generatedResume.tailored_resume?.header?.phone,
-                                      generatedResume.resume_data?.header?.location || generatedResume.tailored_resume?.header?.location
+                                      resumeData.header?.email,
+                                      resumeData.header?.phone,
+                                      resumeData.header?.linkedin,
+                                      resumeData.header?.github,
+                                      resumeData.header?.location
                                     ]
                                       .filter(Boolean)
-                                      .join(' • ')}
+                                      .join(' | ')}
                                   </Text>
                                 </View>
                               )}
 
+                              {/* Education - matches PDF order */}
+                              {resumeData?.education?.length > 0 && (
+                                <View style={styles.resumeSection}>
+                                  <Text style={styles.resumeSectionTitle}>EDUCATION</Text>
+                                  {resumeData.education.map((edu, idx) => (
+                                    <View key={idx} style={styles.resumeEntry}>
+                                      <View style={styles.entryHeader}>
+                                        <Text style={styles.entryTitle}>{edu.degree}</Text>
+                                        <Text style={styles.entryDate}>{edu.graduation_date}</Text>
+                                      </View>
+                                      <Text style={styles.entryCompany}>{edu.school}</Text>
+                                      {edu.location && (
+                                        <Text style={styles.entryLocation}>{edu.location}</Text>
+                                      )}
+                                      {edu.gpa && (
+                                        <Text style={styles.entryLocation}>GPA: {edu.gpa}</Text>
+                                      )}
+                                    </View>
+                                  ))}
+                                </View>
+                              )}
+
                               {/* Experience */}
-                              {(generatedResume.resume_data?.experience || generatedResume.tailored_resume?.experience)?.length > 0 && (
+                              {resumeData?.experience?.length > 0 && (
                                 <View style={styles.resumeSection}>
                                   <Text style={styles.resumeSectionTitle}>EXPERIENCE</Text>
-                                  {(generatedResume.resume_data?.experience || generatedResume.tailored_resume?.experience)?.map((exp, idx) => (
+                                  {resumeData.experience.map((exp, idx) => (
                                     <View key={idx} style={styles.resumeEntry}>
                                       <View style={styles.entryHeader}>
                                         <Text style={styles.entryTitle}>{exp.title}</Text>
@@ -452,37 +503,49 @@ const TemplateResumePage = () => {
                                 </View>
                               )}
 
-                              {/* Education */}
-                              {(generatedResume.resume_data?.education || generatedResume.tailored_resume?.education)?.length > 0 && (
+                              {/* Projects - matches PDF content */}
+                              {resumeData?.projects?.length > 0 && (
                                 <View style={styles.resumeSection}>
-                                  <Text style={styles.resumeSectionTitle}>EDUCATION</Text>
-                                  {(generatedResume.resume_data?.education || generatedResume.tailored_resume?.education)?.map((edu, idx) => (
+                                  <Text style={styles.resumeSectionTitle}>PROJECTS</Text>
+                                  {resumeData.projects.map((project, idx) => (
                                     <View key={idx} style={styles.resumeEntry}>
                                       <View style={styles.entryHeader}>
-                                        <Text style={styles.entryTitle}>{edu.degree}</Text>
-                                        <Text style={styles.entryDate}>{edu.graduation_date}</Text>
+                                        <Text style={styles.entryTitle}>{project.name}</Text>
+                                        <Text style={styles.entryDate}>{project.dates || ''}</Text>
                                       </View>
-                                      <Text style={styles.entryCompany}>{edu.school}</Text>
-                                      {edu.location && (
-                                        <Text style={styles.entryLocation}>{edu.location}</Text>
+                                      {(project.technologies || []).length > 0 && (
+                                        <Text style={styles.entryCompany}>{project.technologies.join(' | ')}</Text>
                                       )}
-                                      {edu.gpa && (
-                                        <Text style={styles.entryLocation}>GPA: {edu.gpa}</Text>
-                                      )}
+                                      {project.bullets && project.bullets.map((bullet, bidx) => (
+                                        <View key={bidx} style={{ flexDirection: 'row' }}>
+                                          <Text style={[styles.entryBullet, { marginRight: 4 }]}>•</Text>
+                                          {highlightKeywords(typeof bullet === 'string' ? bullet : bullet.text || bullet, keywords, styles)}
+                                        </View>
+                                      ))}
                                     </View>
                                   ))}
                                 </View>
                               )}
 
                               {/* Skills */}
-                              {(generatedResume.resume_data?.skills || generatedResume.tailored_resume?.skills)?.length > 0 && (
+                              {resumeData?.skills && (
                                 <View style={styles.resumeSection}>
                                   <Text style={styles.resumeSectionTitle}>SKILLS</Text>
                                   <Text style={styles.resumeSkills}>
-                                    {(generatedResume.resume_data?.skills || generatedResume.tailored_resume?.skills)?.map(s => s.name || s).join(' • ')}
+                                    {Array.isArray(resumeData.skills)
+                                      ? resumeData.skills.map(s => s.name || s).join(' • ')
+                                      : [
+                                          ...(resumeData.skills.languages || []),
+                                          ...(resumeData.skills.frameworks || []),
+                                          ...(resumeData.skills.tools || []),
+                                          ...(resumeData.skills.other || []),
+                                        ].join(' • ')}
                                   </Text>
                                 </View>
                               )}
+                                  </>
+                                );
+                              })()}
                             </>
                           )}
                         </View>
