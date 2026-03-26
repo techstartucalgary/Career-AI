@@ -61,7 +61,7 @@ const InterviewVideoInstructionsPage = () => {
                   styles.continueButton,
                   hoveredButton && styles.continueButtonHover
                 ]}
-                onPress={() => router.replace('/interview-buddy/video-interview')}
+                onPress={() => router.push('/interview-buddy/video-interview')}
                 onHoverIn={() => Platform.OS === 'web' && setHoveredButton(true)}
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(false)}
               >

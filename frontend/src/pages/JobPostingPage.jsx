@@ -85,7 +85,7 @@ const JobPostingPage = () => {
                   styles.actionButton,
                   hoveredButton === 'interview' && styles.actionButtonHover
                 ]}
-                onPress={() => router.replace('/interview')}
+                onPress={() => router.push('/interview')}
                 onHoverIn={() => Platform.OS === 'web' && setHoveredButton('interview')}
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
@@ -99,7 +99,7 @@ const JobPostingPage = () => {
                   styles.actionButton,
                   hoveredButton === 'cover-letter' && styles.actionButtonHover
                 ]}
-                onPress={() => router.replace('/cover-letter')}
+                onPress={() => router.push('/cover-letter')}
                 onHoverIn={() => Platform.OS === 'web' && setHoveredButton('cover-letter')}
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
@@ -113,7 +113,7 @@ const JobPostingPage = () => {
                   styles.actionButton,
                   hoveredButton === 'resume' && styles.actionButtonHover
                 ]}
-                onPress={() => router.replace('/resume')}
+                onPress={() => router.push('/resume')}
                 onHoverIn={() => Platform.OS === 'web' && setHoveredButton('resume')}
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >

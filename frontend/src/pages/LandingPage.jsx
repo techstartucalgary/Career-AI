@@ -304,7 +304,7 @@ const LandingPage = () => {
           <View style={styles.heroButtons} className="hero-buttons-animate">
             <Pressable
               style={[styles.primaryButton, hoveredButton === 'primary' && styles.primaryButtonHover]}
-              onPress={() => router.replace('/authentication')}
+              onPress={() => router.push('/authentication')}
               onHoverIn={() => Platform.OS === 'web' && setHoveredButton('primary')}
               onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
             >
@@ -716,7 +716,7 @@ const LandingPage = () => {
 
             <Pressable
               style={[styles.ctaButton, hoveredButton === 'cta' && styles.ctaButtonHover]}
-              onPress={() => router.replace('/authentication')}
+              onPress={() => router.push('/authentication')}
               onHoverIn={() => Platform.OS === 'web' && setHoveredButton('cta')}
               onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
             >

@@ -32,14 +32,14 @@ const Header = () => {
   };
 
   const handleLogin = () => {
-    router.replace('/authentication');
+    router.push('/authentication');
   };
 
   return (
     <View style={styles.header}>
       <View style={styles.container}>
         <View style={styles.nav}>
-          <Pressable onPress={() => router.replace(isLoggedIn ? '/jobs' : '/authentication')} style={styles.logoContainer}>
+          <Pressable onPress={() => router.push(isLoggedIn ? '/jobs' : '/authentication')} style={styles.logoContainer}>
             <Image 
               source={verexaLogo} 
               style={styles.logoImage}
@@ -54,7 +54,7 @@ const Header = () => {
                 return (
                   <Pressable 
                     key={item.route}
-                    onPress={() => router.replace(item.route)}
+                    onPress={() => router.push(item.route)}
                     style={styles.navLinkContainer}
                   >
                     <Text style={[styles.navLink, isActive && styles.navLinkActive]}>
