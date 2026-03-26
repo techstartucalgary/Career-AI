@@ -106,7 +106,7 @@ const OnboardingPage = () => {
         });
       }
 
-      router.push('/jobs');
+      router.replace('/jobs');
     } catch (error) {
       alert(error.message || 'Unable to complete onboarding.');
     }
@@ -116,7 +116,7 @@ const OnboardingPage = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
-      router.push('/authentication');
+      router.replace('/authentication');
     }
   };
 

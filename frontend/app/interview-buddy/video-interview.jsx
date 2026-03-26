@@ -277,6 +277,46 @@ const VideoInterviewPage = () => {
     };
   }, [screen, selectedCamera, selectedMicrophone]);
 
+  // Comprehensive cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Stop any playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
+      // Stop media stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+      // Clear global stream reference
+      if (window._currentStream) {
+        window._currentStream.getTracks().forEach((track) => track.stop());
+        window._currentStream = null;
+      }
+      // Stop media recorder
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (e) {}
+        mediaRecorderRef.current = null;
+      }
+      // Stop speech recognition
+      if (speechRecognitionRef.current) {
+        try {
+          speechRecognitionRef.current.stop();
+        } catch (e) {}
+        speechRecognitionRef.current = null;
+      }
+      // Clear feedback timeout
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Inject CSS keyframes for feedback pulse animation
   useEffect(() => {
     if (Platform.OS === 'web') {

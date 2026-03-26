@@ -61,7 +61,7 @@ const CoverLetterPage = () => {
                     styles.optionCard,
                     hoveredCard === option.id && styles.optionCardHover
                   ]}
-                  onPress={() => router.push(option.route)}
+                  onPress={() => router.replace(option.route)}
                   onHoverIn={() => Platform.OS === 'web' && setHoveredCard(option.id)}
                   onHoverOut={() => Platform.OS === 'web' && setHoveredCard(null)}
                 >
