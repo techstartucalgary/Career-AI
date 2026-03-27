@@ -154,7 +154,8 @@ class ResumeTailoringService:
         job_description: str,
         user_answers: Dict[int, str],
         questions: list,
-        semantic_analysis: Optional[SemanticAnalysisResult] = None
+        semantic_analysis: Optional[SemanticAnalysisResult] = None,
+        github_context: Optional[str] = None,
     ) -> ResumeData:
         """
         Create tailored version of resume for specific job.
@@ -168,6 +169,7 @@ class ResumeTailoringService:
             user_answers: User's answers to enhancement questions
             questions: The questions that were asked
             semantic_analysis: Optional semantic analysis for targeted enhancement
+            github_context: Optional GitHub profile context string
 
         Returns:
             Enhanced ResumeData
@@ -177,7 +179,8 @@ class ResumeTailoringService:
             job_description,
             user_answers,
             questions,
-            semantic_analysis
+            semantic_analysis,
+            github_context=github_context,
         )
 
     def suggest_skill_additions(
@@ -315,7 +318,8 @@ class ResumeTailoringService:
         company_name: str,
         position: str,
         tone: Optional[CoverLetterTone] = None,
-        with_research: bool = True
+        with_research: bool = True,
+        github_context: Optional[str] = None,
     ) -> CoverLetter:
         """
         Generate personalized cover letter with automatic company research and tone detection.
@@ -345,7 +349,8 @@ class ResumeTailoringService:
             position,
             tone=tone,
             company_research=company_research,
-            hiring_manager=hiring_manager
+            hiring_manager=hiring_manager,
+            github_context=github_context,
         )
 
     def generate_cover_letter_variants(

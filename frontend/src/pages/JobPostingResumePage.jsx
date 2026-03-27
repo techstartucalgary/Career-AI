@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Pressable, ScrollView, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import './JobPages.css';
 import { tailorResume, downloadPDFFromBase64 } from '../services/aiService';
 import PDFViewer from '../components/PDFViewer';
 import { API_BASE_URL } from '../services/api';
+import { getGithubStatus, openGithubConnect, fetchGithubContext } from '../services/githubService';
 
 const ProgressRing = ({ progress = 0, size = 60, strokeWidth = 4, color = '#A78BFA' }) => {
   const radius = (size - strokeWidth) / 2;
@@ -174,6 +175,19 @@ const JobPostingResumePage = () => {
   const [atsError, setAtsError] = useState('');
   const [pdfGenerating, setPdfGenerating] = useState(false);
 
+  // GitHub integration state
+  const [githubConnected, setGithubConnected] = useState(false);
+  const [githubUsername, setGithubUsername] = useState(null);
+  const [useGithub, setUseGithub] = useState(true);
+  const [githubFetching, setGithubFetching] = useState(false);
+
+  useEffect(() => {
+    getGithubStatus().then(({ connected, username }) => {
+      setGithubConnected(connected);
+      setGithubUsername(username);
+    });
+  }, []);
+
   const removeTag = (tagToRemove) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
   };
@@ -269,11 +283,24 @@ const JobPostingResumePage = () => {
     setError(null);
     setProgress(0);
     setProgressStep('Starting...');
-    
+
     // Extract keywords from job description
     const extractedKeywords = extractKeywords(jobDescription);
     setKeywords(extractedKeywords);
-    
+
+    // Fetch GitHub context if connected and enabled
+    let githubContext = null;
+    if (githubConnected && useGithub) {
+      setGithubFetching(true);
+      setProgressStep('Importing GitHub projects...');
+      try {
+        githubContext = await fetchGithubContext();
+      } catch (e) {
+        console.warn('GitHub context fetch failed, continuing without it:', e);
+      }
+      setGithubFetching(false);
+    }
+
     try {
       setAtsLoading(true);
       setAtsError('');
@@ -282,7 +309,7 @@ const JobPostingResumePage = () => {
         tailorResume(selectedFile, jobDescription, {}, (data) => {
           setProgressStep(data.step);
           setProgress(data.progress);
-        }),
+        }, githubContext),
         calculateAtsScoreForFile(),
       ]);
 
@@ -420,6 +447,96 @@ const JobPostingResumePage = () => {
                   </Pressable>
                   {selectedFile && (
                     <Text style={styles.selectedFileText}>Selected: {selectedFile.name}</Text>
+                  )}
+                </View>
+
+                {/* GitHub Integration */}
+                <View style={{
+                  borderWidth: 1,
+                  borderColor: githubConnected ? 'rgba(167,139,250,0.35)' : 'rgba(255,255,255,0.08)',
+                  borderRadius: 12,
+                  padding: 14,
+                  marginBottom: 12,
+                  backgroundColor: githubConnected ? 'rgba(167,139,250,0.06)' : 'rgba(255,255,255,0.02)',
+                }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      {/* GitHub mark icon */}
+                      {Platform.OS === 'web' && (
+                        <svg width={18} height={18} viewBox="0 0 24 24" fill={githubConnected ? '#A78BFA' : '#9CA3AF'}>
+                          <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                      )}
+                      <Text style={{ color: githubConnected ? '#A78BFA' : '#9CA3AF', fontSize: 13, fontWeight: '600' }}>
+                        {githubConnected ? `@${githubUsername}` : 'GitHub Projects'}
+                      </Text>
+                      {githubConnected && (
+                        <View style={{ backgroundColor: 'rgba(52,211,153,0.15)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                          <Text style={{ color: '#34D399', fontSize: 10, fontWeight: '700' }}>CONNECTED</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {githubConnected ? (
+                      /* Toggle switch */
+                      <Pressable
+                        onPress={() => setUseGithub(!useGithub)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <Text style={{ color: '#9CA3AF', fontSize: 11 }}>
+                          {useGithub ? 'On' : 'Off'}
+                        </Text>
+                        <View style={{
+                          width: 36,
+                          height: 20,
+                          borderRadius: 10,
+                          backgroundColor: useGithub ? '#A78BFA' : 'rgba(255,255,255,0.15)',
+                          justifyContent: 'center',
+                          paddingHorizontal: 2,
+                        }}>
+                          <View style={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: 8,
+                            backgroundColor: '#fff',
+                            alignSelf: useGithub ? 'flex-end' : 'flex-start',
+                          }} />
+                        </View>
+                      </Pressable>
+                    ) : (
+                      <Pressable
+                        onPress={openGithubConnect}
+                        style={{
+                          backgroundColor: 'rgba(167,139,250,0.15)',
+                          borderWidth: 1,
+                          borderColor: 'rgba(167,139,250,0.4)',
+                          borderRadius: 8,
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                        }}
+                      >
+                        <Text style={{ color: '#A78BFA', fontSize: 12, fontWeight: '600' }}>Connect GitHub</Text>
+                      </Pressable>
+                    )}
+                  </View>
+
+                  <Text style={{ color: '#6B7280', fontSize: 11, marginTop: 8 }}>
+                    {githubConnected
+                      ? useGithub
+                        ? 'Your GitHub projects will be used to enrich the resume.'
+                        : 'GitHub data will not be included this time.'
+                      : 'Connect to let AI pull in your real projects & skills.'}
+                  </Text>
+
+                  {githubFetching && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                      <ActivityIndicator size="small" color="#A78BFA" />
+                      <Text style={{ color: '#A78BFA', fontSize: 11 }}>Importing GitHub projects...</Text>
+                    </View>
                   )}
                 </View>
 

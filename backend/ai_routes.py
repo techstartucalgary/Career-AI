@@ -211,7 +211,8 @@ async def generate_resume_from_template(
 async def tailor_resume(
     resume_file: UploadFile = File(...),
     job_description: str = Form(...),
-    user_answers: str = Form(default="{}")
+    user_answers: str = Form(default="{}"),
+    github_context: Optional[str] = Form(default=None),
 ):
     """
     Generate tailored resume from job description with streaming progress.
@@ -252,7 +253,8 @@ async def tailor_resume(
             yield f"data: {json.dumps({'step': 'Tailoring to job requirements...', 'progress': 45})}\n\n"
             await asyncio.sleep(0.3)
             tailored_resume = ai_service.tailor_resume(
-                resume, job_description, answers, questions=[], semantic_analysis=None
+                resume, job_description, answers, questions=[], semantic_analysis=None,
+                github_context=github_context or None,
             )
             yield f"data: {json.dumps({'step': 'Resume tailored', 'progress': 85})}\n\n"
 
@@ -301,6 +303,7 @@ async def generate_cover_letter(
     resume_file: UploadFile = File(...),
     job_description: str = Form(...),
     template_id: str = Form(default="classic"),
+    github_context: Optional[str] = Form(default=None),
 ):
     """Generate cover letter from resume and job description with streaming progress"""
     async def generate_with_progress():
@@ -363,7 +366,8 @@ JSON:"""
             await asyncio.sleep(1.5)
             
             cover_letter = ai_service.generate_cover_letter(
-                resume, job_description, company_name, position, with_research=True
+                resume, job_description, company_name, position, with_research=True,
+                github_context=github_context or None,
             )
             
             # Step 4: Generate PDF

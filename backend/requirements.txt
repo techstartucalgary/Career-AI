@@ -15,6 +15,8 @@ sentence-transformers
 pypdf
 reportlab
 python-dotenv
+httpx
+cryptography
 spacy
 python-docx
 google-generativeai

@@ -30,16 +30,19 @@ export const analyzeResume = async (resumeFile, jobDescription) => {
   return response.json();
 };
 
-export const tailorResume = async (resumeFile, jobDescription, userAnswers = {}, onProgress) => {
+export const tailorResume = async (resumeFile, jobDescription, userAnswers = {}, onProgress, githubContext = null) => {
   const formData = new FormData();
-  
+
   // Convert file to blob for web compatibility
   const fileBlob = await uriToBlob(resumeFile.uri);
   const fileType = resumeFile.name.endsWith('.pdf') ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-  
+
   formData.append('resume_file', fileBlob, resumeFile.name);
   formData.append('job_description', jobDescription);
   formData.append('user_answers', JSON.stringify(userAnswers));
+  if (githubContext) {
+    formData.append('github_context', githubContext);
+  }
 
   const response = await fetch(`${API_URL}/api/resume/tailor`, {
     method: 'POST',
