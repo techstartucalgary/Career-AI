@@ -98,19 +98,53 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  uploadCardHeader: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  uploadCardTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: COLORS.white,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  uploadCardSubtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
   uploadArea: {
     width: '100%',
+    minHeight: 180,
+    padding: 24,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: 'rgba(167, 139, 250, 0.28)',
+    borderStyle: 'dashed',
+    backgroundColor: 'rgba(167, 139, 250, 0.07)',
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
       web: {
         cursor: 'pointer',
-        transition: 'all 0.3s ease',
+        transition: 'all 0.25s ease',
+        boxShadow: '0 6px 24px rgba(0, 0, 0, 0.18)',
       },
     }),
   },
   uploadAreaDragging: {
-    opacity: 0.8,
+    opacity: 0.95,
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+    borderColor: 'rgba(167, 139, 250, 0.5)',
+  },
+  uploadHint: {
+    marginTop: 14,
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   uploadIcon: {
     width: 80,
@@ -119,6 +153,11 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  uploadIconFallback: {
+    color: COLORS.primary,
+    fontSize: 24,
+    fontWeight: '700',
   },
   cloudIcon: {
     width: 60,
