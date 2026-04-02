@@ -29,9 +29,9 @@ const CoverLetterTemplatePage = () => {
   const { mode } = useLocalSearchParams();
   const [selectedFile, setSelectedFile] = useState(null);
   const [templateResumeFile, setTemplateResumeFile] = useState(null);
-  const [profileResumeFile, setProfileResumeFile] = useState(null);
-  const [profileResumeLoading, setProfileResumeLoading] = useState(true);
-  const [resumeSource, setResumeSource] = useState('profile');
+  const [defaultResumeFile, setDefaultResumeFile] = useState(null);
+  const [defaultResumeLoading, setDefaultResumeLoading] = useState(true);
+  const [resumeSource, setResumeSource] = useState('default');
   const [templateMode, setTemplateMode] = useState(mode === 'optimize' ? 'optimize' : 'template'); // 'template' or 'optimize'
   const [templateJobDescription, setTemplateJobDescription] = useState('');
   const [optimizeJobDescription, setOptimizeJobDescription] = useState('');
@@ -43,9 +43,9 @@ const CoverLetterTemplatePage = () => {
   const [progressStep, setProgressStep] = useState('');
   const [progress, setProgress] = useState(0);
   const [keywords, setKeywords] = useState([]);
-  const [savingUploadProfileResume, setSavingUploadProfileResume] = useState(false);
-  const [saveUploadProfileResumeMessage, setSaveUploadProfileResumeMessage] = useState('');
-  const [saveUploadProfileResumeError, setSaveUploadProfileResumeError] = useState('');
+  const [savingUploadDefaultResume, setSavingUploadDefaultResume] = useState(false);
+  const [saveUploadDefaultResumeMessage, setSaveUploadDefaultResumeMessage] = useState('');
+  const [saveUploadDefaultResumeError, setSaveUploadDefaultResumeError] = useState('');
 
   // GitHub integration state
   const [githubConnected, setGithubConnected] = useState(false);
@@ -59,28 +59,28 @@ const CoverLetterTemplatePage = () => {
       setGithubUsername(username);
     });
 
-    const loadProfileResume = async () => {
+    const loadDefaultResume = async () => {
       try {
-        setProfileResumeLoading(true);
+        setDefaultResumeLoading(true);
         const response = await apiFetch('/profile');
         const resumeData = response?.data?.resume;
         if (resumeData?.file_data) {
-          setProfileResumeFile({
-            name: resumeData.file_name || 'profile_resume.pdf',
+          setDefaultResumeFile({
+            name: resumeData.file_name || 'default_resume.pdf',
             mimeType: 'application/pdf',
             fileDataBase64: resumeData.file_data,
             uri: `data:application/pdf;base64,${resumeData.file_data}`,
           });
-          setResumeSource('profile');
+          setResumeSource('default');
         }
       } catch (err) {
-        console.log('Profile resume unavailable:', err?.message || err);
+        console.log('Default resume unavailable:', err?.message || err);
       } finally {
-        setProfileResumeLoading(false);
+        setDefaultResumeLoading(false);
       }
     };
 
-    loadProfileResume();
+    loadDefaultResume();
   }, []);
 
   const pickDocument = async (forTemplateResume = false) => {
@@ -109,9 +109,9 @@ const CoverLetterTemplatePage = () => {
 
   const getActiveTemplateResume = () => {
     if (resumeSource === 'upload') {
-      return templateResumeFile || profileResumeFile;
+      return templateResumeFile || defaultResumeFile;
     }
-    return profileResumeFile || templateResumeFile;
+    return defaultResumeFile || templateResumeFile;
   };
 
   const clearUploadedResume = () => {
@@ -131,21 +131,21 @@ const CoverLetterTemplatePage = () => {
     await pickDocument(true);
   };
 
-  const handleSaveUploadedResumeAsProfile = async () => {
+  const handleSaveUploadedResumeAsDefault = async () => {
     if (!templateResumeFile) {
       return;
     }
 
     const token = getAuthToken();
     if (!token) {
-      setSaveUploadProfileResumeError('Please sign in to save your profile resume.');
+      setSaveUploadDefaultResumeError('Please sign in to save your default resume.');
       return;
     }
 
     try {
-      setSavingUploadProfileResume(true);
-      setSaveUploadProfileResumeError('');
-      setSaveUploadProfileResumeMessage('');
+      setSavingUploadDefaultResume(true);
+      setSaveUploadDefaultResumeError('');
+      setSaveUploadDefaultResumeMessage('');
 
       const name = templateResumeFile.name || 'profile_resume.pdf';
       const type = templateResumeFile.mimeType || 'application/pdf';
@@ -181,16 +181,16 @@ const CoverLetterTemplatePage = () => {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.message || data?.detail || 'Failed to save profile resume.');
+        throw new Error(data?.message || data?.detail || 'Failed to save default resume.');
       }
 
-      setProfileResumeFile({ ...templateResumeFile, name: data?.data?.file_name || name });
-      setResumeSource('profile');
-      setSaveUploadProfileResumeMessage('Saved to profile resume.');
+      setDefaultResumeFile({ ...templateResumeFile, name: data?.data?.file_name || name });
+      setResumeSource('default');
+      setSaveUploadDefaultResumeMessage('Saved to default resume.');
     } catch (error) {
-      setSaveUploadProfileResumeError(error?.message || 'Failed to save profile resume.');
+      setSaveUploadDefaultResumeError(error?.message || 'Failed to save default resume.');
     } finally {
-      setSavingUploadProfileResume(false);
+      setSavingUploadDefaultResume(false);
     }
   };
 
@@ -370,18 +370,18 @@ const CoverLetterTemplatePage = () => {
                       <Pressable
                         style={[
                           styles.resumeSourceCard,
-                          resumeSource === 'profile' && styles.resumeSourceCardActive,
+                          resumeSource === 'default' && styles.resumeSourceCardActive,
                         ]}
-                        onPress={() => setResumeSource('profile')}
+                        onPress={() => setResumeSource('default')}
                       >
                         <View style={styles.resumeSourceHeader}>
-                          <Text style={styles.resumeSourceTitle}>Profile Resume</Text>
-                          {resumeSource === 'profile' && <Text style={styles.resumeSourceBadge}>SELECTED</Text>}
+                          <Text style={styles.resumeSourceTitle}>Default Resume</Text>
+                          {resumeSource === 'default' && <Text style={styles.resumeSourceBadge}>SELECTED</Text>}
                         </View>
                         <Text style={styles.resumeSourceMeta}>
-                          {profileResumeLoading
-                            ? 'Checking profile...'
-                            : profileResumeFile?.name || 'No profile resume found'}
+                          {defaultResumeLoading
+                            ? 'Checking resume...'
+                            : defaultResumeFile?.name || 'No default resume found'}
                         </Text>
                       </Pressable>
 
@@ -422,29 +422,29 @@ const CoverLetterTemplatePage = () => {
                           <Text style={styles.selectedFileText}>
                             {resumeSource === 'upload'
                               ? `Selected source: File upload (${templateResumeFile.name})`
-                              : `Selected source: Profile resume (${profileResumeFile?.name || 'No profile resume found'})`}
+                              : `Selected source: Default resume (${defaultResumeFile?.name || 'No default resume found'})`}
                           </Text>
                           <View style={styles.selectedFileActions}>
                             <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
                               <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
                             </Pressable>
                             <Pressable
-                              style={[styles.saveUploadButton, savingUploadProfileResume && styles.saveUploadButtonDisabled]}
-                              onPress={handleSaveUploadedResumeAsProfile}
-                              disabled={savingUploadProfileResume}
+                              style={[styles.saveUploadButton, savingUploadDefaultResume && styles.saveUploadButtonDisabled]}
+                              onPress={handleSaveUploadedResumeAsDefault}
+                              disabled={savingUploadDefaultResume}
                             >
                               <Text style={styles.saveUploadButtonText}>
-                                {savingUploadProfileResume ? 'Saving...' : 'Make Profile Resume'}
+                                {savingUploadDefaultResume ? 'Saving...' : 'Make Default Resume'}
                               </Text>
                             </Pressable>
                           </View>
                         </View>
                       )}
-                      {!templateResumeFile && profileResumeFile && (
-                        <Text style={styles.resumeFallbackText}>No upload selected, using profile resume.</Text>
+                      {!templateResumeFile && defaultResumeFile && (
+                        <Text style={styles.resumeFallbackText}>No upload selected, using default resume.</Text>
                       )}
-                      {!!saveUploadProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveUploadProfileResumeMessage}</Text>}
-                      {!!saveUploadProfileResumeError && <Text style={styles.saveProfileError}>{saveUploadProfileResumeError}</Text>}
+                      {!!saveUploadDefaultResumeMessage && <Text style={styles.saveProfileSuccess}>{saveUploadDefaultResumeMessage}</Text>}
+                      {!!saveUploadDefaultResumeError && <Text style={styles.saveProfileError}>{saveUploadDefaultResumeError}</Text>}
                     </View>
 
                     {/* Template Selection */}

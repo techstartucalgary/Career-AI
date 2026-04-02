@@ -51,7 +51,7 @@ const resumeFileToBlob = async (resumeFile) => {
     };
   }
 
-  throw new Error('No resume source found. Upload a resume or use your profile resume.');
+  throw new Error('No resume source found. Upload a resume or use your default resume.');
 };
 
 export const analyzeResume = async (resumeFile, jobDescription) => {
