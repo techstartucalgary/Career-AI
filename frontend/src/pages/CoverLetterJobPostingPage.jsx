@@ -146,6 +146,9 @@ const CoverLetterJobPostingPage = () => {
   const [atsLoading, setAtsLoading] = useState(false);
   const [atsError, setAtsError] = useState('');
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [savingUploadProfileResume, setSavingUploadProfileResume] = useState(false);
+  const [saveUploadProfileResumeMessage, setSaveUploadProfileResumeMessage] = useState('');
+  const [saveUploadProfileResumeError, setSaveUploadProfileResumeError] = useState('');
   const [keywords, setKeywords] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState('classic');
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
@@ -201,6 +204,73 @@ const CoverLetterJobPostingPage = () => {
   const clearUploadedResume = () => {
     setSelectedFile(null);
     setResumeSource('profile');
+  };
+
+  const handleSaveUploadedResumeAsProfile = async () => {
+    if (!selectedFile) {
+      return;
+    }
+
+    const token = getAuthToken();
+    if (!token) {
+      setSaveUploadProfileResumeError('Please sign in to save your profile resume.');
+      return;
+    }
+
+    try {
+      setSavingUploadProfileResume(true);
+      setSaveUploadProfileResumeError('');
+      setSaveUploadProfileResumeMessage('');
+
+      const name = selectedFile.name || 'profile_resume.pdf';
+      const type = selectedFile.mimeType || 'application/pdf';
+      const formData = new FormData();
+
+      if (selectedFile.fileDataBase64) {
+        const byteCharacters = atob(selectedFile.fileDataBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i += 1) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type });
+        formData.append('resume_file', new File([blob], name, { type }));
+      } else if (Platform.OS === 'web') {
+        const response = await fetch(selectedFile.uri);
+        const blob = await response.blob();
+        formData.append('resume_file', new File([blob], name, { type }));
+      } else {
+        formData.append('resume_file', {
+          uri: selectedFile.uri,
+          name,
+          type,
+        });
+      }
+
+      const response = await fetch(`${API_BASE_URL}/resume/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || data?.detail || 'Failed to save profile resume.');
+      }
+
+      setProfileResumeFile({
+        ...selectedFile,
+        name: data?.data?.file_name || name,
+      });
+      setResumeSource('profile');
+      setSaveUploadProfileResumeMessage('Saved to profile resume.');
+    } catch (error) {
+      setSaveUploadProfileResumeError(error?.message || 'Failed to save profile resume.');
+    } finally {
+      setSavingUploadProfileResume(false);
+    }
   };
 
   const handleUploadSourcePress = async () => {
@@ -481,14 +551,27 @@ const CoverLetterJobPostingPage = () => {
                         ? `Selected source: File upload (${selectedFile.name})`
                         : `Selected source: Profile resume (${profileResumeFile?.name || 'No profile resume found'})`}
                     </Text>
-                    <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
-                      <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
-                    </Pressable>
+                    <View style={styles.selectedFileActions}>
+                      <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
+                        <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.saveUploadButton, savingUploadProfileResume && styles.saveUploadButtonDisabled]}
+                        onPress={handleSaveUploadedResumeAsProfile}
+                        disabled={savingUploadProfileResume}
+                      >
+                        <Text style={styles.saveUploadButtonText}>
+                          {savingUploadProfileResume ? 'Saving...' : 'Make Profile Resume'}
+                        </Text>
+                      </Pressable>
+                    </View>
                   </View>
                 )}
                 {!selectedFile && profileResumeFile && (
                   <Text style={styles.resumeFallbackText}>No upload selected, using profile resume.</Text>
                 )}
+                {!!saveUploadProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveUploadProfileResumeMessage}</Text>}
+                {!!saveUploadProfileResumeError && <Text style={styles.saveProfileError}>{saveUploadProfileResumeError}</Text>}
               </View>
 
               {/* Cover Letter Template Section */}

@@ -214,6 +214,9 @@ const JobPostingResumePage = () => {
   const [atsLoading, setAtsLoading] = useState(false);
   const [atsError, setAtsError] = useState('');
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [savingUploadProfileResume, setSavingUploadProfileResume] = useState(false);
+  const [saveUploadProfileResumeMessage, setSaveUploadProfileResumeMessage] = useState('');
+  const [saveUploadProfileResumeError, setSaveUploadProfileResumeError] = useState('');
   const [savingProfileResume, setSavingProfileResume] = useState(false);
   const [saveProfileResumeMessage, setSaveProfileResumeMessage] = useState('');
   const [saveProfileResumeError, setSaveProfileResumeError] = useState('');
@@ -280,6 +283,73 @@ const JobPostingResumePage = () => {
   const clearUploadedResume = () => {
     setSelectedFile(null);
     setResumeSource('profile');
+  };
+
+  const handleSaveUploadedResumeAsProfile = async () => {
+    if (!selectedFile) {
+      return;
+    }
+
+    const token = getAuthToken();
+    if (!token) {
+      setSaveUploadProfileResumeError('Please sign in to save your profile resume.');
+      return;
+    }
+
+    try {
+      setSavingUploadProfileResume(true);
+      setSaveUploadProfileResumeError('');
+      setSaveUploadProfileResumeMessage('');
+
+      const name = selectedFile.name || 'profile_resume.pdf';
+      const type = selectedFile.mimeType || 'application/pdf';
+      const formData = new FormData();
+
+      if (selectedFile.fileDataBase64) {
+        const byteCharacters = atob(selectedFile.fileDataBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i += 1) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type });
+        formData.append('resume_file', new File([blob], name, { type }));
+      } else if (Platform.OS === 'web') {
+        const response = await fetch(selectedFile.uri);
+        const blob = await response.blob();
+        formData.append('resume_file', new File([blob], name, { type }));
+      } else {
+        formData.append('resume_file', {
+          uri: selectedFile.uri,
+          name,
+          type,
+        });
+      }
+
+      const response = await fetch(`${API_BASE_URL}/resume/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || data?.detail || 'Failed to save profile resume.');
+      }
+
+      setProfileResumeFile({
+        ...selectedFile,
+        name: data?.data?.file_name || name,
+      });
+      setResumeSource('profile');
+      setSaveUploadProfileResumeMessage('Saved to profile resume.');
+    } catch (error) {
+      setSaveUploadProfileResumeError(error?.message || 'Failed to save profile resume.');
+    } finally {
+      setSavingUploadProfileResume(false);
+    }
   };
 
   const handleUploadSourcePress = async () => {
@@ -637,14 +707,27 @@ const JobPostingResumePage = () => {
                           ? `Selected source: File upload (${selectedFile.name})`
                           : `Selected source: Profile resume (${profileResumeFile?.name || 'No profile resume found'})`}
                       </Text>
-                      <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
-                        <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
-                      </Pressable>
+                      <View style={styles.selectedFileActions}>
+                        <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
+                          <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
+                        </Pressable>
+                        <Pressable
+                          style={[styles.saveUploadButton, savingUploadProfileResume && styles.saveUploadButtonDisabled]}
+                          onPress={handleSaveUploadedResumeAsProfile}
+                          disabled={savingUploadProfileResume}
+                        >
+                          <Text style={styles.saveUploadButtonText}>
+                            {savingUploadProfileResume ? 'Saving...' : 'Make Profile Resume'}
+                          </Text>
+                        </Pressable>
+                      </View>
                     </View>
                   )}
                   {!selectedFile && profileResumeFile && (
                     <Text style={styles.resumeFallbackText}>No upload selected, using profile resume.</Text>
                   )}
+                  {!!saveUploadProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveUploadProfileResumeMessage}</Text>}
+                  {!!saveUploadProfileResumeError && <Text style={styles.saveProfileError}>{saveUploadProfileResumeError}</Text>}
                 </View>
 
                 {/* GitHub Integration */}
@@ -765,6 +848,28 @@ const JobPostingResumePage = () => {
 
               {/* Right Panel - Resume Preview */}
               <View style={styles.rightPanel}>
+                {generatedResume?.pdf_base64 && (
+                  <View style={styles.previewTopActions}>
+                    <Pressable
+                      style={[
+                        styles.saveProfileButton,
+                        hoveredButton === 'save-profile' && styles.saveProfileButtonHover,
+                      ]}
+                      onPress={handleSaveAsProfileResume}
+                      onHoverIn={() => Platform.OS === 'web' && setHoveredButton('save-profile')}
+                      onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                      disabled={savingProfileResume}
+                    >
+                      {savingProfileResume ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <Text style={styles.saveProfileButtonText}>Save As Profile Resume</Text>
+                      )}
+                    </Pressable>
+                    {!!saveProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveProfileResumeMessage}</Text>}
+                    {!!saveProfileResumeError && <Text style={styles.saveProfileError}>{saveProfileResumeError}</Text>}
+                  </View>
+                )}
                 <View style={styles.previewArea}>
                   {isLoading ? (
                     <>
@@ -998,26 +1103,6 @@ const JobPostingResumePage = () => {
                     </View>
                   </View>
                 </View>
-
-                <Pressable
-                  style={[
-                    styles.saveProfileButton,
-                    !canDownload && styles.generateButtonDisabled,
-                    hoveredButton === 'save-profile' && canDownload && styles.saveProfileButtonHover,
-                  ]}
-                  onPress={handleSaveAsProfileResume}
-                  onHoverIn={() => Platform.OS === 'web' && setHoveredButton('save-profile')}
-                  onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
-                  disabled={!canDownload || savingProfileResume}
-                >
-                  {savingProfileResume ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.saveProfileButtonText}>Save As Profile Resume</Text>
-                  )}
-                </Pressable>
-                {!!saveProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveProfileResumeMessage}</Text>}
-                {!!saveProfileResumeError && <Text style={styles.saveProfileError}>{saveProfileResumeError}</Text>}
               </View>
             </View>
           </View>

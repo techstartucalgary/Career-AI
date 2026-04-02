@@ -589,7 +589,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   saveProfileButton: {
-    marginTop: 14,
     backgroundColor: 'rgba(167, 139, 250, 0.2)',
     borderWidth: 1,
     borderColor: 'rgba(167, 139, 250, 0.45)',
@@ -602,6 +601,11 @@ const styles = StyleSheet.create({
         transition: 'all 0.2s ease',
       },
     }),
+  },
+  previewTopActions: {
+    alignItems: 'flex-end',
+    marginBottom: 12,
+    gap: 8,
   },
   saveProfileButtonHover: {
     ...Platform.select({
@@ -665,6 +669,11 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 8,
   },
+  selectedFileActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   clearUploadButton: {
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.45)',
@@ -677,6 +686,28 @@ const styles = StyleSheet.create({
         cursor: 'pointer',
       },
     }),
+  },
+  saveUploadButton: {
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.45)',
+    backgroundColor: 'rgba(167, 139, 250, 0.16)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  saveUploadButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveUploadButtonText: {
+    color: COLORS.white,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   clearUploadButtonText: {
     color: '#FCA5A5',
