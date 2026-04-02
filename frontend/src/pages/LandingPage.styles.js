@@ -31,7 +31,7 @@ export default StyleSheet.create({
     width: '100%',
     maxWidth: 1200,
     marginHorizontal: 'auto',
-    paddingHorizontal: 24,
+    paddingHorizontal: isTablet ? 24 : 16,
   },
 
   // ==================== HERO SECTION ====================
@@ -127,21 +127,25 @@ export default StyleSheet.create({
     bottom: 0,
   },
   heroSectionNarrow: {
-    minHeight: 620,
-    paddingTop: 80,
-    paddingBottom: 48,
+    minHeight: 560,
+    paddingTop: 70,
+    paddingBottom: 36,
   },
   heroTitleNarrow: {
     fontSize: 28,
     lineHeight: 36,
     letterSpacing: -0.75,
-    marginBottom: 16,
+    marginBottom: 14,
+    textAlign: 'left',
+    alignSelf: 'stretch',
   },
   heroSubtitleNarrow: {
     fontSize: 15,
     lineHeight: 24,
-    marginBottom: 28,
+    marginBottom: 22,
     paddingHorizontal: 4,
+    textAlign: 'left',
+    alignSelf: 'stretch',
   },
   floatingCard1: {
     position: 'absolute',
@@ -351,9 +355,10 @@ export default StyleSheet.create({
 
   // Hero Content
   heroContent: {
-    alignItems: 'center',
+    alignItems: isDesktop || isTablet ? 'center' : 'flex-start',
     zIndex: 10,
     paddingHorizontal: 20,
+    width: '100%',
   },
   heroBadge: {
     flexDirection: 'row',
@@ -416,6 +421,9 @@ export default StyleSheet.create({
     flexDirection: isTablet ? 'row' : 'column',
     gap: 16,
     marginBottom: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   primaryButton: {
     backgroundColor: COLORS.primary,
@@ -433,6 +441,7 @@ export default StyleSheet.create({
         boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
       },
     }),
+    ...(isTablet ? {} : { alignSelf: 'center', maxWidth: '100%' }),
   },
   primaryButtonHover: {
     ...Platform.select({
@@ -482,6 +491,7 @@ export default StyleSheet.create({
         backdropFilter: 'blur(10px)',
       },
     }),
+    ...(isTablet ? {} : { alignSelf: 'center', maxWidth: '100%' }),
   },
   secondaryButtonHover: {
     ...Platform.select({
@@ -500,8 +510,8 @@ export default StyleSheet.create({
 
   // Social Proof
   socialProof: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: isTablet ? 'row' : 'column',
+    alignItems: isTablet ? 'center' : 'flex-start',
     gap: 12,
   },
   avatarStack: {
@@ -530,7 +540,7 @@ export default StyleSheet.create({
   // Scroll Indicator
   scrollIndicator: {
     position: 'absolute',
-    bottom: 40,
+    bottom: isTablet ? 40 : 26,
     alignItems: 'center',
   },
   scrollLine: {
