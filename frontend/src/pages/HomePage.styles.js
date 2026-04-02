@@ -118,13 +118,19 @@ const styles = StyleSheet.create({
       web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       default: 'sans-serif',
     }),
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    ...Platform.select({
+      web: {
+        textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+      },
+    }),
   },
   heroTitleAccent: {
     color: TEXT_LIGHT,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    ...Platform.select({
+      web: {
+        textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+      },
+    }),
   },
   heroDescription: {
     fontSize: isDesktop ? 22 : 20,
@@ -496,9 +502,11 @@ const styles = StyleSheet.create({
       web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       default: 'sans-serif',
     }),
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 12,
+    ...Platform.select({
+      web: {
+        textShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
+      },
+    }),
   },
   viewAllButton: {
     flexDirection: 'row',

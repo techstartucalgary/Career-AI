@@ -880,7 +880,8 @@ export default StyleSheet.create({
     position: 'relative',
     ...Platform.select({
       web: {
-        background: 'linear-gradient(135deg, rgba(18,18,26,0.6) 0%, rgba(12,12,18,0.8) 100%)',
+        backgroundColor: 'rgba(12,12,18,0.8)',
+        backgroundImage: 'linear-gradient(135deg, rgba(18,18,26,0.6) 0%, rgba(12,12,18,0.8) 100%)',
         backdropFilter: 'blur(40px)',
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
       },

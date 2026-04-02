@@ -90,14 +90,17 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: {
         backdropFilter: 'blur(20px)',
+        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.25)',
+      },
+      default: {
+        shadowColor: COLORS.lightPurple,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 10,
       },
     }),
     minHeight: isDesktop ? 600 : 400,
-    shadowColor: COLORS.lightPurple,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
   },
   rightPanel: {
     flex: 1,
@@ -110,13 +113,16 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: {
         backdropFilter: 'blur(20px)',
+        boxShadow: '0 6px 20px rgba(167, 139, 250, 0.25)',
+      },
+      default: {
+        shadowColor: COLORS.lightPurple,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 10,
       },
     }),
-    shadowColor: COLORS.lightPurple,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
     position: 'relative',
   },
   section: {
@@ -401,17 +407,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    shadowColor: COLORS.lightPurple,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
     zIndex: 10,
     ...Platform.select({
       web: {
         cursor: 'pointer',
         transition: 'all 0.3s ease',
         boxShadow: '0 2px 12px rgba(167, 139, 250, 0.3)',
+      },
+      default: {
+        shadowColor: COLORS.lightPurple,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
       },
     }),
   },

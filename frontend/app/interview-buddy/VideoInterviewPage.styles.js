@@ -376,9 +376,11 @@ const styles = StyleSheet.create({
       web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       default: 'sans-serif',
     }),
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 15,
+    ...Platform.select({
+      web: {
+        textShadow: '0 2px 15px rgba(0, 0, 0, 0.2)',
+      },
+    }),
   },
   loadingList: {
     gap: 24,
@@ -708,7 +710,14 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: {
         boxShadow: '0 6px 24px rgba(167, 139, 250, 0.3)',
-        animation: 'posturePulse 1.5s ease-in-out',
+        animationDuration: '1.5s',
+        animationTimingFunction: 'ease-in-out',
+        animationIterationCount: 'infinite',
+        animationKeyframes: {
+          '0%': { opacity: 0.85 },
+          '50%': { opacity: 1 },
+          '100%': { opacity: 0.85 },
+        },
       },
     }),
   },
@@ -832,7 +841,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#22C55E',
     ...Platform.select({
       web: {
-        animation: 'pulse 1.5s ease-in-out infinite',
+        animationDuration: '1.5s',
+        animationTimingFunction: 'ease-in-out',
+        animationIterationCount: 'infinite',
+        animationKeyframes: {
+          '0%': { opacity: 0.5 },
+          '50%': { opacity: 1 },
+          '100%': { opacity: 0.5 },
+        },
       },
     }),
   },
@@ -1058,7 +1074,14 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: {
         boxShadow: '0 0 30px rgba(167, 139, 250, 0.8)',
-        animation: 'pulse 2s infinite',
+        animationDuration: '2s',
+        animationTimingFunction: 'ease-in-out',
+        animationIterationCount: 'infinite',
+        animationKeyframes: {
+          '0%': { opacity: 0.85 },
+          '50%': { opacity: 1 },
+          '100%': { opacity: 0.85 },
+        },
       },
       default: {
         shadowColor: '#A78BFA',
