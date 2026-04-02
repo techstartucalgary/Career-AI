@@ -105,6 +105,21 @@ const buildAtsFormDataFromBase64 = async (base64, filename, jobDescription) => {
   return formData;
 };
 
+const extractKeywords = (description) => {
+  if (!description) return [];
+
+  const commonKeywords = [
+    'python', 'javascript', 'java', 'react', 'node', 'sql', 'database', 'api', 'rest',
+    'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'agile', 'scrum', 'ci/cd',
+    'testing', 'automation', 'design', 'architecture', 'system', 'data', 'analytics',
+    'machine', 'learning', 'ai', 'ml', 'web', 'mobile', 'backend', 'frontend',
+    'fullstack', 'devops', 'cloud', 'microservices'
+  ];
+
+  const lowerDesc = description.toLowerCase();
+  return commonKeywords.filter((keyword) => lowerDesc.includes(keyword));
+};
+
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
