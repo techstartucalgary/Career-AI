@@ -219,13 +219,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 10,
   },
   continueButtonText: {
-    color: COLORS.white,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  continueArrow: {
     color: COLORS.white,
     fontSize: 18,
     fontWeight: '600',

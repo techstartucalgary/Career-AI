@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, Platform, Animated } from 'react-nat
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
+import ForwardArrowIcon from '../components/ForwardArrowIcon';
 import styles from './PaymentSuccessPage.styles';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
@@ -159,7 +160,7 @@ const PaymentSuccessPage = () => {
                       style={styles.ctaButtonGradient}
                     >
                       <Text style={styles.ctaButtonText}>Start using Verexa</Text>
-                      <Text style={styles.ctaArrow}> →</Text>
+                      <ForwardArrowIcon color="#FFFFFF" size={16} />
                     </LinearGradient>
                   </Pressable>
 

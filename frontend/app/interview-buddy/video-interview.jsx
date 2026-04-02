@@ -1140,9 +1140,11 @@ const VideoInterviewPage = () => {
                 <View style={styles.questionIconLine1} />
                 <View style={styles.questionIconLine2} />
               </View>
-              <Text style={styles.questionText}>
-                {interviewerText || interviewQuestions[currentQuestion]}
-              </Text>
+              <View style={styles.questionTextWrapper}>
+                <Text style={styles.questionText}>
+                  {interviewerText || interviewQuestions[currentQuestion]}
+                </Text>
+              </View>
             </View>
 
             <View style={[styles.postureCard, postureAnimating && styles.postureCardActive]}>

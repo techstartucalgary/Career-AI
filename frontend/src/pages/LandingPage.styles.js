@@ -474,39 +474,6 @@ export default StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  arrowText: {
-    color: COLORS.white,
-    fontSize: 14,
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 12,
-    paddingVertical: 15,
-    paddingHorizontal: 28,
-    ...Platform.select({
-      web: {
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        backdropFilter: 'blur(10px)',
-      },
-    }),
-    ...(isTablet ? {} : { alignSelf: 'center', maxWidth: '100%' }),
-  },
-  secondaryButtonHover: {
-    ...Platform.select({
-      web: {
-        borderColor: 'rgba(255,255,255,0.3)',
-        backgroundColor: 'rgba(255,255,255,0.05)',
-      },
-    }),
-  },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: COLORS.textPrimary,
-    textAlign: 'center',
-  },
 
   // Social Proof
   socialProof: {
@@ -1129,10 +1096,8 @@ export default StyleSheet.create({
   },
   resumeArrow: {
     paddingHorizontal: 8,
-  },
-  resumeArrowText: {
-    fontSize: 18,
-    color: COLORS.textMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   keywordBadges: {
     flexDirection: 'row',
@@ -1423,10 +1388,6 @@ export default StyleSheet.create({
   ctaButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.white,
-  },
-  ctaButtonArrow: {
-    fontSize: 18,
     color: COLORS.white,
   },
   ctaNote: {

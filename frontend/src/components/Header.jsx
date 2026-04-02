@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, Image } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, Pressable, Image, Platform } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { apiFetch, getAuthToken, clearAuthToken } from '../services/api';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 import styles from './Header.styles';
 import verexaLogo from '../assets/verexalogo.png';
+import ForwardArrowIcon from './ForwardArrowIcon';
 
 const Header = () => {
   const router = useRouter();
@@ -12,6 +13,8 @@ const Header = () => {
   const currentRoute = segments.length > 0 ? '/' + segments.join('/') : '/';
   const { isWideLayout } = useBreakpoints();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef(null);
 
   const isLoggedIn = !!getAuthToken();
 
@@ -24,7 +27,20 @@ const Header = () => {
 
   useEffect(() => {
     setMenuOpen(false);
+    setAccountMenuOpen(false);
   }, [currentRoute]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !accountMenuOpen) return undefined;
+    const onMouseDown = (e) => {
+      const el = accountMenuRef.current;
+      if (el && typeof el.contains === 'function' && !el.contains(e.target)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, [accountMenuOpen]);
 
   const handleLogout = async () => {
     try {
@@ -34,6 +50,7 @@ const Header = () => {
     }
     clearAuthToken();
     setMenuOpen(false);
+    setAccountMenuOpen(false);
     router.replace('/authentication');
   };
 
@@ -43,6 +60,7 @@ const Header = () => {
 
   const goNav = (route) => {
     setMenuOpen(false);
+    setAccountMenuOpen(false);
     router.push(route);
   };
 
@@ -52,13 +70,15 @@ const Header = () => {
     <View style={styles.header}>
       <View style={styles.container}>
         <View style={styles.nav}>
-          <Pressable onPress={() => router.push(isLoggedIn ? '/jobs' : '/authentication')} style={styles.logoContainer}>
-            <Image
-              source={verexaLogo}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-          </Pressable>
+          <View style={styles.navLeft}>
+            <Pressable onPress={() => router.push(isLoggedIn ? '/jobs' : '/authentication')} style={styles.logoContainer}>
+              <Image
+                source={verexaLogo}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </Pressable>
+          </View>
 
           {isLoggedIn && isWideLayout ? (
             <View style={styles.navLinksWrap}>
@@ -85,17 +105,39 @@ const Header = () => {
 
           <View style={styles.navRight}>
             {isLoggedIn && isWideLayout && (
-              <View style={styles.buttonGroup}>
-                <Pressable onPress={() => router.push('/pricing')} style={styles.upgradeButton}>
-                  <Text style={styles.upgradeButtonText}>✦ Upgrade</Text>
+              <View ref={accountMenuRef} style={styles.accountMenuWrap} collapsable={false}>
+                <Pressable
+                  onPress={() => setAccountMenuOpen((o) => !o)}
+                  style={[
+                    styles.menuIconButton,
+                    accountMenuOpen && styles.accountMenuTriggerActive,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={accountMenuOpen ? 'Close account menu' : 'Open account menu'}
+                  accessibilityState={{ expanded: accountMenuOpen }}
+                >
+                  <Text style={styles.menuIcon}>{accountMenuOpen ? '✕' : '☰'}</Text>
                 </Pressable>
-                <Pressable style={styles.logoutButton} onPress={handleLogout}>
-                  <Text style={styles.logoutButtonText}>Log Out</Text>
-                  <View style={styles.arrowIcon}>
-                    <View style={styles.arrowLine} />
-                    <View style={styles.arrowHead} />
+                {accountMenuOpen && (
+                  <View style={styles.accountDropdown}>
+                    <Pressable
+                      style={styles.accountDropdownItem}
+                      onPress={() => goNav('/profile')}
+                    >
+                      <Text style={styles.accountDropdownItemText}>Profile</Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.accountDropdownItem}
+                      onPress={() => goNav('/pricing')}
+                    >
+                      <Text style={styles.accountDropdownItemText}>Upgrade</Text>
+                    </Pressable>
+                    <View style={styles.accountDropdownDivider} />
+                    <Pressable style={styles.accountDropdownItem} onPress={handleLogout}>
+                      <Text style={styles.accountDropdownItemText}>Log out</Text>
+                    </Pressable>
                   </View>
-                </Pressable>
+                )}
               </View>
             )}
             {showMobileMenu && (
@@ -111,10 +153,7 @@ const Header = () => {
             {!isLoggedIn && (
               <Pressable style={styles.logoutButton} onPress={handleLogin}>
                 <Text style={styles.logoutButtonText}>Log In</Text>
-                <View style={styles.arrowIcon}>
-                  <View style={styles.arrowLine} />
-                  <View style={styles.arrowHead} />
-                </View>
+                <ForwardArrowIcon />
               </Pressable>
             )}
           </View>
@@ -138,6 +177,9 @@ const Header = () => {
             );
           })}
           <View style={styles.mobileMenuDivider} />
+          <Pressable onPress={() => goNav('/profile')} style={styles.mobileMenuItem}>
+            <Text style={styles.mobileMenuText}>Profile</Text>
+          </Pressable>
           <Pressable
             onPress={() => {
               setMenuOpen(false);
@@ -145,10 +187,10 @@ const Header = () => {
             }}
             style={styles.mobileMenuItem}
           >
-            <Text style={styles.mobileMenuText}>✦ Upgrade</Text>
+            <Text style={styles.mobileMenuText}>Upgrade</Text>
           </Pressable>
           <Pressable onPress={handleLogout} style={styles.mobileMenuItem}>
-            <Text style={styles.mobileMenuText}>Log Out</Text>
+            <Text style={styles.mobileMenuText}>Log out</Text>
           </Pressable>
         </View>
       )}

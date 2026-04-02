@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
+import ForwardArrowIcon from '../components/ForwardArrowIcon';
 import styles from './PricingPage.styles';
 import { PLAN_CONFIG } from '../config/planConfig';
 import { useBreakpoints } from '../hooks/useBreakpoints';
@@ -218,7 +219,7 @@ const PricingPage = () => {
                   style={styles.continueButtonGradient}
                 >
                   <Text style={styles.continueButtonText}>Continue</Text>
-                  <Text style={styles.continueArrow}> →</Text>
+                  <ForwardArrowIcon color="#FFFFFF" size={16} />
                 </LinearGradient>
               </Pressable>
             </View>
