@@ -47,6 +47,12 @@ export const sendInterviewResponse = async (sessionId, candidateText, endIntervi
   });
 };
 
+export const endInterviewSession = async (sessionId) => {
+  return jsonFetch('/interview/end', {
+    session_id: sessionId,
+  });
+};
+
 export const analyzePostureFrame = async (sessionId, imageBase64) => {
   return jsonFetch('/mock-interview/analyze', {
     session_id: sessionId,

@@ -5,7 +5,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import Header from '../../src/components/Header';
 import { THEME } from '../../src/styles/theme';
 import styles from './VideoInterviewPage.styles';
-import { startInterview, startInterviewWithJobAndResume, sendInterviewResponse, analyzePostureFrame, getLiveFeedback } from '../../src/services/interviewService';
+import { startInterview, startInterviewWithJobAndResume, sendInterviewResponse, endInterviewSession, analyzePostureFrame, getLiveFeedback } from '../../src/services/interviewService';
 import withAuth from '../../src/components/withAuth';
 
 // Web video component
@@ -154,7 +154,9 @@ const VideoInterviewPage = () => {
   const [liveFeedback, setLiveFeedback] = useState(null);
   const [postureAnimating, setPostureAnimating] = useState(false);
   const feedbackTimeoutRef = useRef(null);
+  const postureIntervalRef = useRef(null);
   const lastPostureTipRef = useRef('');
+  const sessionEndRequestedRef = useRef(false);
   const endingSessionRef = useRef(false);
   const sessionIdRef = useRef(null);
   const interviewStatusRef = useRef('not_started');
@@ -286,6 +288,16 @@ const VideoInterviewPage = () => {
   }, [screen, selectedCamera, selectedMicrophone]);
 
   const stopInterviewResources = useCallback((endSession = false) => {
+    const shouldNotifyBackend =
+      endSession &&
+      sessionIdRef.current &&
+      interviewStatusRef.current !== 'not_started' &&
+      !sessionEndRequestedRef.current;
+
+    if (endSession) {
+      sessionEndRequestedRef.current = true;
+    }
+
     // Stop any playing interviewer audio immediately
     if (audioRef.current) {
       try {
@@ -332,19 +344,19 @@ const VideoInterviewPage = () => {
       feedbackTimeoutRef.current = null;
     }
 
+    if (postureIntervalRef.current) {
+      clearInterval(postureIntervalRef.current);
+      postureIntervalRef.current = null;
+    }
+
     setIsRecording(false);
     setIsListening(false);
     setIsSpeaking(false);
 
     // Best effort: notify backend to end in-progress interview when leaving mid-session
-    if (
-      endSession &&
-      sessionIdRef.current &&
-      interviewStatusRef.current === 'in_progress' &&
-      !endingSessionRef.current
-    ) {
+    if (shouldNotifyBackend) {
       endingSessionRef.current = true;
-      sendInterviewResponse(sessionIdRef.current, '', true)
+      endInterviewSession(sessionIdRef.current)
         .catch(() => {})
         .finally(() => {
           endingSessionRef.current = false;
@@ -434,6 +446,7 @@ const VideoInterviewPage = () => {
 
     const intervalId = setInterval(async () => {
       if (!postureAvailable) return;
+      if (endingSessionRef.current) return;
       if (!videoRef.current) return;
       const video = videoRef.current;
       if (!video.videoWidth || !video.videoHeight) return;
@@ -474,9 +487,14 @@ const VideoInterviewPage = () => {
       }
     }, 2500);
 
+    postureIntervalRef.current = intervalId;
+
     return () => {
       active = false;
       clearInterval(intervalId);
+      if (postureIntervalRef.current === intervalId) {
+        postureIntervalRef.current = null;
+      }
     };
   }, [screen, cameraReady, sessionId, postureAvailable]);
 
@@ -757,6 +775,8 @@ const VideoInterviewPage = () => {
     }
     
     // NOW show loading screen and start interview
+    sessionEndRequestedRef.current = false;
+    endingSessionRef.current = false;
     setScreen('loading');
     setLoadingTasks({ questions: false, company: false, profile: false });
     
@@ -867,6 +887,11 @@ const VideoInterviewPage = () => {
     } else {
       handleNextQuestion();
     }
+  };
+
+  const handleExitInterview = () => {
+    stopInterviewResources(true);
+    router.replace('/interview-buddy');
   };
 
   // Preview Screen
@@ -1088,10 +1113,20 @@ const VideoInterviewPage = () => {
                   </View>
                 </View>
               </View>
-              <View style={styles.questionBadge}>
-                <Text style={styles.questionBadgeText}>
-                  Question {Math.min(currentQuestion + 1, totalQuestions)} of {totalQuestions}
-                </Text>
+              <View style={styles.questionHeaderActions}>
+                <Pressable
+                  style={[styles.exitButton, hoveredButton === 'exit' && styles.exitButtonHover]}
+                  onPress={handleExitInterview}
+                  onHoverIn={() => Platform.OS === 'web' && setHoveredButton('exit')}
+                  onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                >
+                  <Text style={styles.exitButtonText}>Exit Interview</Text>
+                </Pressable>
+                <View style={styles.questionBadge}>
+                  <Text style={styles.questionBadgeText}>
+                    Question {Math.min(currentQuestion + 1, totalQuestions)} of {totalQuestions}
+                  </Text>
+                </View>
               </View>
             </View>
 

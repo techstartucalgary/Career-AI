@@ -149,8 +149,12 @@ class InterviewResponse(BaseModel):
 
 class RespondInterviewRequest(BaseModel):
     session_id: str
-    candidate_text: str
+    candidate_text: Optional[str] = None
     end_interview: Optional[bool] = False
+
+
+class EndInterviewRequest(BaseModel):
+    session_id: str
 
 
 @router.post("/start", response_model=InterviewResponse)
@@ -223,10 +227,11 @@ def respond_interview(payload: RespondInterviewRequest):
     conversation: InterviewConversation = entry["conversation"]
 
     candidate_text = (payload.candidate_text or "").strip()
-    if not candidate_text:
+    if not candidate_text and not payload.end_interview:
         raise HTTPException(status_code=400, detail="candidate_text is required")
 
-    session.add_message(MessageRole.CANDIDATE, candidate_text)
+    if candidate_text:
+        session.add_message(MessageRole.CANDIDATE, candidate_text)
 
     if payload.end_interview or _should_exit(candidate_text):
         response_text = conversation.wrap_up()
@@ -244,6 +249,9 @@ def respond_interview(payload: RespondInterviewRequest):
 
     audio_base64 = _tts_audio_base64(response_text)
 
+    if payload.end_interview or _should_exit(candidate_text):
+        _sessions.pop(payload.session_id, None)
+
     return InterviewResponse(
         session_id=payload.session_id,
         interviewer_text=response_text,
@@ -256,9 +264,9 @@ def respond_interview(payload: RespondInterviewRequest):
 
 
 @router.post("/end")
-def end_interview(session_id: str):
-    if session_id in _sessions:
-        _sessions.pop(session_id, None)
+def end_interview(payload: EndInterviewRequest):
+    if payload.session_id in _sessions:
+        _sessions.pop(payload.session_id, None)
     return {"success": True}
 
 @router.post("/parse-resume")

@@ -515,6 +515,13 @@ const styles = StyleSheet.create({
     gap: 16,
     flexWrap: 'wrap',
   },
+  questionHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+  },
   orbPanel: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -601,6 +608,31 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 14,
     fontWeight: '600',
+  },
+  exitButton: {
+    backgroundColor: 'rgba(220, 38, 38, 0.14)',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(220, 38, 38, 0.3)',
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      },
+    }),
+  },
+  exitButtonHover: {
+    backgroundColor: 'rgba(220, 38, 38, 0.22)',
+    borderColor: 'rgba(248, 113, 113, 0.65)',
+    transform: [{ translateY: -1 }],
+  },
+  exitButtonText: {
+    color: '#FCA5A5',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   questionCard: {
     backgroundColor: 'rgba(255,255,255,0.045)',
