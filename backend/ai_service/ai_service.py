@@ -434,7 +434,8 @@ Generate 5-8 targeted questions. JSON:"""
             job_description: str,
             user_answers: Dict[int, str],
             questions: List[Dict],
-            semantic_analysis: Optional[SemanticAnalysisResult] = None
+            semantic_analysis: Optional[SemanticAnalysisResult] = None,
+            github_context: Optional[str] = None,
     ) -> ResumeData:
         """
         Enhance resume bullets using job description, user answers, and semantic analysis.
@@ -474,9 +475,29 @@ Generate 5-8 targeted questions. JSON:"""
         # a 1M-token context window so this is safe in practice.
         full_resume_json = json.dumps(original_data, indent=2)
 
-        prompt = f"""You are an expert resume writer. Your ONLY job is to make existing bullet points clearer and more impactful.
+        # Pre-compute optional GitHub context block to avoid nested f-string issues
+        if github_context:
+            github_section = (
+                "\n=== THIRD SOURCE: CANDIDATE'S GITHUB PROFILE ===\n"
+                "This data is extracted from the candidate's actual GitHub account.\n"
+                "Use it to supplement the resume - NOT to fabricate experience.\n\n"
+                "Rules for GitHub data:\n"
+                "OK ADD a skill/language to Skills section if GitHub shows consistent, meaningful usage across multiple repos\n"
+                "OK ADD a GitHub project to the Projects section if it is clearly relevant to the job AND not already on resume\n"
+                "OK ENRICH bullets of existing projects if GitHub reveals more technical detail about the same project\n"
+                "OK Mention open-source adoption (stars, forks) as evidence of impact\n"
+                "NO Do NOT add a project that has zero relevance to the job\n"
+                "NO Do NOT copy AI-generated bullets verbatim - rewrite to fit the resume's voice and style\n"
+                "NO Do NOT add skills from only one tiny repo - consistent multi-repo evidence required\n\n"
+                + github_context
+                + "\n\n=== END GITHUB PROFILE ===\n"
+            )
+        else:
+            github_section = ""
 
-TASK: ONLY improve the WORDING of existing bullet points. DO NOT add ANY new skills, technologies, or tools.
+        prompt = f"""You are an expert resume writer. Your job is to make this resume as strong as possible using BOTH the existing resume AND the candidate's GitHub profile as sources of truth.
+
+TASK: Improve bullet points AND add any skills/projects that are evidenced in the GitHub Profile section below.
 
 === JOB DESCRIPTION (READ ONLY - DO NOT COPY ANYTHING FROM HERE) ===
 The job description below is ONLY for understanding what the employer values.
@@ -488,16 +509,16 @@ DO NOT add any technologies, skills, or tools mentioned here to the resume.
 
 === CANDIDATE'S ADDITIONAL INFO ===
 {qa_context}
-
+{github_section}
 === ENHANCEMENT PROCESS ===
 
 🚨 ABSOLUTE RULES - VIOLATION MEANS FAILURE 🚨
 
-1. NEVER ADD NEW TECHNOLOGIES/SKILLS
-   - If job mentions "Ruby on Rails" but resume doesn't → DO NOT ADD IT
-   - If job mentions "AWS" but resume doesn't → DO NOT ADD IT
-   - If job mentions "Docker" but resume doesn't → DO NOT ADD IT
-   - ONLY enhance what's ALREADY in the resume
+1. NEVER ADD NEW TECHNOLOGIES/SKILLS FROM THE JOB DESCRIPTION
+   - If job mentions "Ruby on Rails" but resume AND GitHub don't → DO NOT ADD IT
+   - If job mentions "AWS" but resume AND GitHub don't → DO NOT ADD IT
+   - EXCEPTION: If the GITHUB PROFILE section above shows consistent usage of a skill, you MAY add it to the Skills section
+   - ONLY enhance what's in the resume OR is evidenced by GitHub data
 
 2. NEVER FABRICATE EXPERIENCE
    - DO NOT invent projects, roles, or responsibilities
@@ -612,23 +633,23 @@ JSON:"""
                         merged_experience.append(orig_exp)
                 data['experience'] = merged_experience
 
-            if len(data['projects']) != len(original_data['projects']):
+            original_project_count = len(original_data['projects'])
+            new_project_count = len(data['projects'])
+            # When GitHub context is provided the LLM is allowed to ADD new projects.
+            # We only intervene if projects were DROPPED (count went below original).
+            if new_project_count < original_project_count:
                 print(
-                    f"  ❌ ERROR: LLM changed project count from {len(original_data['projects'])} to {len(data['projects'])}")
-                print(f"  ⚠ Merging: keeping enhanced bullets where available, patching missing projects from original")
-                merged_projects = []
+                    f"  ❌ ERROR: LLM dropped projects from {original_project_count} to {new_project_count}")
+                print(f"  ⚠ Merging: patching missing projects from original")
+                merged_projects = list(data['projects'])  # start with what LLM returned
+                existing_names = {p.get('name') for p in merged_projects}
                 for orig_proj in original_data['projects']:
-                    matched = None
-                    for new_proj in data['projects']:
-                        if new_proj.get('name') == orig_proj['name']:
-                            matched = new_proj
-                            break
-                    if matched:
-                        merged_projects.append(matched)
-                    else:
+                    if orig_proj['name'] not in existing_names:
                         print(f"    → Patching missing project: {orig_proj['name']}")
                         merged_projects.append(orig_proj)
                 data['projects'] = merged_projects
+            elif new_project_count > original_project_count and github_context:
+                print(f"  ✅ LLM added {new_project_count - original_project_count} GitHub project(s) — keeping them")
 
             # Validate that titles/companies haven't changed
             for i, (orig, new) in enumerate(zip(original_data['experience'], data['experience'])):
@@ -653,16 +674,20 @@ JSON:"""
                     print(f"    ⚠ Project {i+1} had {len(proj['bullets'])} bullets, trimming to 4")
                     data['projects'][i]['bullets'] = proj['bullets'][:4]
 
-            # CRITICAL: FORCE skills section to remain EXACTLY as original
-            # The LLM keeps fabricating skills - we CANNOT trust it
-            print("  🔒 FORCING original skills section (no modifications allowed)...")
-            data['skills'] = original_data['skills']
+            # Skills: when GitHub context is present, allow additions evidenced by GitHub.
+            # When there is no GitHub context, force revert to prevent hallucination.
+            if github_context:
+                print("  ✅ GitHub context present — allowing skill additions from GitHub data")
+            else:
+                print("  🔒 No GitHub context — forcing original skills section")
+                data['skills'] = original_data['skills']
 
             # CRITICAL: Validate bullets don't contain fabricated technologies
             print("  🔍 Scanning bullets for fabricated technologies...")
 
-            # Build whitelist of technologies from original resume
+            # Build whitelist: original resume + anything mentioned in GitHub context
             original_full_text = json.dumps(original_data).lower()
+            github_full_text = github_context.lower() if github_context else ""
 
             # Common tech terms that should ONLY appear if in original
             tech_terms = {
@@ -677,9 +702,9 @@ JSON:"""
                 'agile', 'scrum', 'jira', 'confluence', 'figma', 'sketch', 'adobe'
             }
 
-            # Find which tech terms are in the ORIGINAL resume
-            original_tech = {term for term in tech_terms if term in original_full_text}
-            print(f"    Original tech found: {original_tech if original_tech else 'None'}")
+            # Whitelist = terms found in original resume OR in GitHub context
+            original_tech = {term for term in tech_terms if term in original_full_text or term in github_full_text}
+            print(f"    Whitelisted tech (resume + github): {original_tech if original_tech else 'None'}")
 
             # Check each experience bullet for fabricated tech.
             # IMPORTANT: when a fabricated bullet is replaced we MUST always provide a
@@ -785,7 +810,8 @@ JSON:"""
             tone: Optional[CoverLetterTone] = None,
             company_research: Optional[CompanyResearch] = None,
             hiring_manager: Optional[str] = None,
-            version: str = "A"
+            version: str = "A",
+            github_context: Optional[str] = None,
     ) -> CoverLetter:
         """
         Generate personalized cover letter with tone customization and company research.
@@ -830,6 +856,19 @@ JSON:"""
         # Build company context
         company_context = self._build_company_context(company_research)
 
+        # Pre-compute GitHub section to avoid nested f-string issues
+        if github_context:
+            cl_github_section = (
+                "\n=== CANDIDATE'S GITHUB PROJECTS (supplementary context) ===\n"
+                "Use these real projects as concrete evidence of technical skills.\n"
+                "Reference standout GitHub projects to make the letter more specific and credible.\n"
+                "Do NOT list projects verbatim - weave them naturally into the narrative.\n\n"
+                + github_context
+                + "\n\n=== END GITHUB CONTEXT ===\n"
+            )
+        else:
+            cl_github_section = ""
+
         prompt = f"""You are an expert cover letter writer creating a compelling, personalized letter.
 
 TASK: Generate a cover letter that tells a story connecting the candidate to this specific role.
@@ -852,7 +891,7 @@ Hiring Manager: {hiring_manager}
 
 === CANDIDATE RESUME ===
 {resume_text[:CONTEXT_COVER_LETTER_RESUME]}
-
+{cl_github_section}
 === HIGH-QUALITY EXAMPLES ===
 Study these examples for inspiration on structure and quality:
 

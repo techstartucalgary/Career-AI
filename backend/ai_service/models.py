@@ -189,6 +189,45 @@ class ResumeData(BaseModel):
         return "\n".join(sections)
 
 
+class GitHubRepo(BaseModel):
+    """Single analyzed GitHub repository"""
+    name: str
+    url: str = ""
+    description: Optional[str] = None
+    primary_language: Optional[str] = None
+    all_languages: dict = {}
+    topics: List[str] = []
+    stars: int = 0
+    forks: int = 0
+    user_commits: int = 0
+    created_at: Optional[str] = None
+    last_pushed: Optional[str] = None
+    is_fork: bool = False
+    ai_bullets: List[str] = []
+    ai_technologies: List[str] = []
+    ai_summary: Optional[str] = None
+    ai_tags: List[str] = []
+    include_in_resume: bool = True
+
+
+class GitHubProfile(BaseModel):
+    """Complete GitHub profile for a user, with AI-analyzed repos"""
+    username: str
+    bio: Optional[str] = None
+    total_public_repos: int = 0
+    repos: List[GitHubRepo] = []
+    dominant_languages: List[str] = []
+    all_skills_detected: List[str] = []
+    activity_level: str = "unknown"
+    open_source_stars: int = 0
+    fetched_at: Optional[str] = None
+
+    def to_context_string(self) -> str:
+        """Format the profile as a plain-text block for LLM prompt injection."""
+        from github_service.profile_builder import profile_to_context_string
+        return profile_to_context_string(self.dict())
+
+
 class SemanticAnalysisResult(BaseModel):
     """Result from semantic matching analysis"""
     overall_match: float

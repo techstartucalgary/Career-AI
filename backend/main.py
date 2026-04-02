@@ -22,6 +22,8 @@ from resume import router as resume_router
 from interview_routes import router as interview_router
 from mock_interview_routes import router as mock_interview_router
 from speech_routes import router as speech_router
+from github_routes import router as github_router
+from linkedin.linkedin_routes import router as linkedin_router
 
 # Create a FastAPI instance
 app = FastAPI()
@@ -43,6 +45,8 @@ app.include_router(resume_router)
 app.include_router(interview_router)
 app.include_router(mock_interview_router)
 app.include_router(speech_router)
+app.include_router(github_router)
+app.include_router(linkedin_router)
 
 def build_terms(keywords: List[str]) -> str:
     cleaned = [k.strip() for k in keywords if k.strip()]
