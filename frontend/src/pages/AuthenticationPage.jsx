@@ -239,6 +239,8 @@ export default function AuthenticationPage() {
                       placeholderTextColor="#8B7AB8"
                       value={name}
                       onChangeText={setName}
+                      onSubmitEditing={handleSubmit}
+                      returnKeyType="done"
                       onFocus={() => setFocusedInput('name')}
                       onBlur={() => setFocusedInput(null)}
                     />
@@ -260,6 +262,8 @@ export default function AuthenticationPage() {
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    onSubmitEditing={handleSubmit}
+                    returnKeyType="done"
                     onFocus={() => setFocusedInput('email')}
                     onBlur={() => setFocusedInput(null)}
                   />
@@ -279,6 +283,8 @@ export default function AuthenticationPage() {
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
+                    onSubmitEditing={handleSubmit}
+                    returnKeyType="done"
                     onFocus={() => setFocusedInput('password')}
                     onBlur={() => setFocusedInput(null)}
                   />
@@ -299,6 +305,8 @@ export default function AuthenticationPage() {
                       value={confirmPassword}
                       onChangeText={setConfirmPassword}
                       secureTextEntry
+                      onSubmitEditing={handleSubmit}
+                      returnKeyType="done"
                       onFocus={() => setFocusedInput('confirmPassword')}
                       onBlur={() => setFocusedInput(null)}
                     />
