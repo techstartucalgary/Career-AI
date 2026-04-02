@@ -76,12 +76,12 @@ export default function AuthenticationPage() {
 
       // Navigate to onboarding for new sign-ups, home for existing users
       if (isSignUp) {
-        router.push({
+        router.replace({
           pathname: '/onboarding',
           params: { email: email }
         });
       } else {
-        router.push('/jobs');
+        router.replace('/jobs');
       }
     } catch (error) {
       setLoading(false);

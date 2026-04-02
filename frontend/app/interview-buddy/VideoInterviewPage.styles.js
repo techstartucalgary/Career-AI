@@ -32,19 +32,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: isDesktop ? 40 : isTablet ? 32 : 24,
-    paddingTop: 120,
+    paddingTop: 112,
+    paddingBottom: 56,
   },
   setupCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 24,
+    backgroundColor: 'rgba(18, 18, 26, 0.88)',
+    borderRadius: 26,
     padding: isDesktop ? 48 : isTablet ? 40 : 32,
     width: '100%',
-    maxWidth: 650,
+    maxWidth: 760,
     borderWidth: 2,
     borderColor: COLORS.border,
     ...Platform.select({
       web: {
-        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
+        boxShadow: '0 20px 56px rgba(0, 0, 0, 0.45)',
+        backdropFilter: 'blur(20px)',
       },
       default: {
         shadowColor: '#000',
@@ -56,26 +58,26 @@ const styles = StyleSheet.create({
     }),
   },
   setupTitle: {
-    fontSize: 28,
+    fontSize: isDesktop ? 34 : 28,
     fontWeight: 'bold',
     color: COLORS.white,
     marginBottom: 8,
     textAlign: 'center',
   },
   setupSubtitle: {
-    fontSize: 16,
+    fontSize: 17,
     color: COLORS.textSecondary,
     marginBottom: 32,
     textAlign: 'center',
   },
   startInterviewButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 18,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    marginTop: 32,
+    marginTop: 18,
     ...Platform.select({
       web: {
         cursor: 'pointer',
@@ -221,14 +223,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   jobInputText: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.045)',
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
     color: COLORS.textPrimary,
     fontSize: 14,
-    minHeight: 120,
+    minHeight: 132,
     textAlignVertical: 'top',
   },
   jobInputButton: {
@@ -343,8 +345,8 @@ const styles = StyleSheet.create({
     paddingTop: 100,
   },
   loadingCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 24,
+    backgroundColor: 'rgba(18, 18, 26, 0.9)',
+    borderRadius: 26,
     padding: isDesktop ? 56 : isTablet ? 48 : 40,
     width: '100%',
     maxWidth: 700,
@@ -352,7 +354,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     ...Platform.select({
       web: {
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 16px 46px rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(20px)',
       },
       default: {
         shadowColor: '#000',
@@ -384,6 +387,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 20,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   loadingCheckmark: {
     width: 40,
@@ -446,7 +455,7 @@ const styles = StyleSheet.create({
     flexDirection: isDesktop ? 'row' : 'column',
     padding: isDesktop ? 32 : isTablet ? 24 : 16,
     paddingTop: 100,
-    gap: 24,
+    gap: 20,
   },
   videoFeedContainer: {
     flex: isDesktop ? 1 : undefined,
@@ -457,13 +466,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: isDesktop ? '100%' : undefined,
     backgroundColor: '#4A4A4A',
-    borderRadius: 20,
+    borderRadius: 22,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(139, 122, 184, 0.3)',
+    borderColor: 'rgba(139, 122, 184, 0.42)',
     ...Platform.select({
       web: {
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)',
+        boxShadow: '0 16px 44px rgba(0, 0, 0, 0.42)',
       },
       default: {
         shadowColor: '#000',
@@ -477,14 +486,15 @@ const styles = StyleSheet.create({
   questionsContainer: {
     flex: isDesktop ? 1 : undefined,
     width: isDesktop ? undefined : '100%',
-    backgroundColor: COLORS.surface,
-    borderRadius: 20,
+    backgroundColor: 'rgba(18, 18, 26, 0.9)',
+    borderRadius: 22,
     padding: isDesktop ? 32 : isTablet ? 28 : 24,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     ...Platform.select({
       web: {
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 16px 46px rgba(0, 0, 0, 0.36)',
+        backdropFilter: 'blur(18px)',
       },
       default: {
         shadowColor: '#000',
@@ -591,7 +601,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   questionCard: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.045)',
     borderRadius: 16,
     padding: 24,
     marginBottom: 24,
@@ -672,7 +682,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   postureCard: {
-    backgroundColor: 'rgba(167, 139, 250, 0.08)',
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
     borderRadius: 14,
     padding: 18,
     marginBottom: 24,
@@ -716,7 +726,7 @@ const styles = StyleSheet.create({
   },
   answerSection: {
     marginBottom: 24,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.055)',
     borderRadius: 16,
     padding: 20,
     borderWidth: 2,
@@ -796,7 +806,7 @@ const styles = StyleSheet.create({
   // Live transcription styles
   liveTranscriptionBox: {
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: 'rgba(34, 197, 94, 0.1)',
     borderWidth: 2,
     borderColor: 'rgba(34, 197, 94, 0.5)',
@@ -868,7 +878,7 @@ const styles = StyleSheet.create({
   liveFeedbackBox: {
     marginTop: 16,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.3)',
@@ -922,11 +932,12 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 16,
     justifyContent: 'flex-end',
+    flexWrap: 'wrap',
   },
   answerButton: {
-    paddingVertical: 12,
+    paddingVertical: 13,
     paddingHorizontal: 24,
-    borderRadius: 10,
+    borderRadius: 12,
     ...Platform.select({
       web: {
         cursor: 'pointer',
@@ -1124,7 +1135,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 2,
-    borderColor: 'dashed',
+    borderStyle: 'dashed',
     borderColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',

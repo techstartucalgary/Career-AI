@@ -1265,6 +1265,73 @@ Format: "- [Issue]: [Specific suggestion]"
 
         return sorted_keywords[:20]
 
+    def extract_keywords_for_highlighting(
+        self,
+        job_description: str = "",
+        resume_text: str = "",
+        limit: int = 7
+    ) -> List[str]:
+        """
+        Ask the LLM to choose the most relevant highlight keywords.
+
+        Returns short, concrete keywords/phrases suitable for UI highlighting.
+        """
+        max_keywords = max(1, min(int(limit or 7), 15))
+
+        prompt = f"""Extract the most important keywords to highlight for resume-job alignment.
+
+Use these sources (either or both may be present):
+
+=== JOB DESCRIPTION ===
+{(job_description or '')[:2500]}
+
+=== RESUME TEXT ===
+{(resume_text or '')[:2500]}
+
+Rules:
+1. Return at most {max_keywords} keywords.
+2. Prefer concrete terms (skills, tools, certifications, role-specific concepts, domain terms).
+3. Include non-tech terms if relevant (e.g., sales, nursing, finance, operations, customer service, education).
+4. Keep each keyword short (1-3 words), no full sentences.
+5. Avoid generic filler (team player, hardworking, communication, responsible, etc.).
+6. Return unique terms only.
+7. Output ONLY valid JSON.
+
+JSON format:
+{{
+  "keywords": ["keyword1", "keyword2"]
+}}
+"""
+
+        try:
+            response = self.llm.invoke([HumanMessage(content=prompt)])
+            json_text = self._extract_json(response.content)
+            data = json.loads(json_text)
+            keywords = data.get('keywords', []) if isinstance(data, dict) else []
+
+            cleaned = []
+            seen = set()
+            for keyword in keywords:
+                if not isinstance(keyword, str):
+                    continue
+                item = keyword.strip()
+                if not item:
+                    continue
+                lowered = item.lower()
+                if lowered in seen:
+                    continue
+                seen.add(lowered)
+                cleaned.append(item)
+
+            if cleaned:
+                return cleaned[:max_keywords]
+        except Exception as e:
+            print(f"  ⚠ AI keyword extraction failed, using fallback: {e}")
+
+        fallback_source = job_description or ""
+        fallback = self._extract_priority_keywords(fallback_source)
+        return fallback[:max_keywords]
+
     def review_and_refine(
         self,
         tailored_resume: ResumeData,

@@ -89,6 +89,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.45)',
+  },
+  upgradeButtonText: {
+    color: '#A78BFA',
+    fontSize: 15,
+    fontWeight: '600',
+  },
   messagesButton: {
     flexDirection: 'row',
     alignItems: 'center',

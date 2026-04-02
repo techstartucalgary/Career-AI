@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, Pressable, Platform, ActivityIndicator, TextInput, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import Header from '../../src/components/Header';
 import { THEME } from '../../src/styles/theme';
 import styles from './VideoInterviewPage.styles';
@@ -155,6 +155,14 @@ const VideoInterviewPage = () => {
   const [postureAnimating, setPostureAnimating] = useState(false);
   const feedbackTimeoutRef = useRef(null);
   const lastPostureTipRef = useRef('');
+  const endingSessionRef = useRef(false);
+  const sessionIdRef = useRef(null);
+  const interviewStatusRef = useRef('not_started');
+
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+    interviewStatusRef.current = interviewStatus;
+  }, [sessionId, interviewStatus]);
 
   // Helper function to add punctuation to transcript
   const addPunctuation = (text) => {
@@ -276,6 +284,93 @@ const VideoInterviewPage = () => {
       }
     };
   }, [screen, selectedCamera, selectedMicrophone]);
+
+  const stopInterviewResources = useCallback((endSession = false) => {
+    // Stop any playing interviewer audio immediately
+    if (audioRef.current) {
+      try {
+        audioRef.current.pause();
+      } catch (e) {}
+      audioRef.current.src = '';
+      audioRef.current = null;
+    }
+
+    // Stop media recorder if active
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {}
+    }
+    mediaRecorderRef.current = null;
+
+    // Stop speech recognition without state updates during teardown
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.onend = null;
+        speechRecognitionRef.current.onerror = null;
+        speechRecognitionRef.current.onresult = null;
+        speechRecognitionRef.current.stop();
+      } catch (e) {}
+      speechRecognitionRef.current = null;
+    }
+
+    // Stop local media stream tracks
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
+    // Stop global stream tracks used by recorder helper
+    if (Platform.OS === 'web' && window._currentStream) {
+      window._currentStream.getTracks().forEach((track) => track.stop());
+      window._currentStream = null;
+    }
+
+    // Clear any pending feedback request timer
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+      feedbackTimeoutRef.current = null;
+    }
+
+    setIsRecording(false);
+    setIsListening(false);
+    setIsSpeaking(false);
+
+    // Best effort: notify backend to end in-progress interview when leaving mid-session
+    if (
+      endSession &&
+      sessionIdRef.current &&
+      interviewStatusRef.current === 'in_progress' &&
+      !endingSessionRef.current
+    ) {
+      endingSessionRef.current = true;
+      sendInterviewResponse(sessionIdRef.current, '', true)
+        .catch(() => {})
+        .finally(() => {
+          endingSessionRef.current = false;
+        });
+    }
+  }, []);
+
+  // Cleanup when route loses focus (stack keeps screens mounted), and on unmount
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        stopInterviewResources(true);
+      };
+    }, [stopInterviewResources])
+  );
+
+  // Ensure cleanup when browser tab is closed/refreshed
+  useEffect(() => {
+    if (Platform.OS !== 'web') return undefined;
+    const handlePageHide = () => stopInterviewResources(true);
+    window.addEventListener('pagehide', handlePageHide);
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      stopInterviewResources(true);
+    };
+  }, [stopInterviewResources]);
 
   // Inject CSS keyframes for feedback pulse animation
   useEffect(() => {

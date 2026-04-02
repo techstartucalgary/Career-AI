@@ -68,6 +68,11 @@ const Header = () => {
           
           <View style={styles.buttonGroup}>
             {isLoggedIn && (
+              <Pressable onPress={() => router.push('/pricing')} style={styles.upgradeButton}>
+                <Text style={styles.upgradeButtonText}>✦ Upgrade</Text>
+              </Pressable>
+            )}
+            {isLoggedIn && (
               <Pressable onPress={openMessages} style={styles.messagesButton}>
                 <Text style={styles.messagesButtonText}>Messages</Text>
               </Pressable>
