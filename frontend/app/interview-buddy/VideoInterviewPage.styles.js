@@ -455,13 +455,21 @@ const styles = StyleSheet.create({
   interviewContainer: {
     flex: 1,
     flexDirection: isDesktop ? 'row' : 'column',
+    alignItems: 'stretch',
     padding: isDesktop ? 32 : isTablet ? 24 : 16,
     paddingTop: 100,
     gap: 20,
+    ...Platform.select({
+      web: {
+        minHeight: 0,
+        minWidth: 0,
+      },
+    }),
   },
   videoFeedContainer: {
     flex: isDesktop ? 1 : undefined,
     width: isDesktop ? undefined : '100%',
+    minWidth: isDesktop ? 0 : undefined,
     aspectRatio: isDesktop ? undefined : 16 / 9,
   },
   videoFeed: {
@@ -486,8 +494,9 @@ const styles = StyleSheet.create({
     }),
   },
   questionsContainer: {
-    flex: isDesktop ? 1 : undefined,
-    width: isDesktop ? undefined : '100%',
+    flexGrow: isDesktop ? 1 : undefined,
+    width: '100%',
+    minWidth: 0,
     backgroundColor: 'rgba(18, 18, 26, 0.9)',
     borderRadius: 22,
     padding: isDesktop ? 32 : isTablet ? 28 : 24,
@@ -508,6 +517,8 @@ const styles = StyleSheet.create({
     }),
   },
   questionHeader: {
+    width: '100%',
+    minWidth: 0,
     marginBottom: 24,
     flexDirection: 'row',
     alignItems: 'center',
@@ -610,9 +621,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
     flexDirection: 'row',
+    alignItems: 'flex-start',
     gap: 16,
     position: 'relative',
     overflow: 'hidden',
+    width: '100%',
+    minWidth: 0,
+  },
+  questionTextWrapper: {
+    flex: 1,
+    minWidth: 0,
+    flexShrink: 1,
   },
   questionBorder: {
     position: 'absolute',
@@ -677,13 +696,21 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-45deg' }],
   },
   questionText: {
-    flex: 1,
     fontSize: isDesktop ? 20 : 18,
     color: COLORS.textPrimary,
     lineHeight: 28,
     fontWeight: '500',
+    flexShrink: 1,
+    ...Platform.select({
+      web: {
+        wordBreak: 'break-word',
+        overflowWrap: 'break-word',
+      },
+    }),
   },
   postureCard: {
+    width: '100%',
+    minWidth: 0,
     backgroundColor: 'rgba(167, 139, 250, 0.12)',
     borderRadius: 14,
     padding: 18,
@@ -732,8 +759,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
     fontWeight: '400',
+    ...Platform.select({
+      web: {
+        wordBreak: 'break-word',
+        overflowWrap: 'break-word',
+      },
+    }),
   },
   answerSection: {
+    width: '100%',
+    minWidth: 0,
     marginBottom: 24,
     backgroundColor: 'rgba(255,255,255,0.055)',
     borderRadius: 16,
@@ -743,7 +778,7 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: {
         boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
-        overflow: 'visible',
+        overflow: 'hidden',
       },
       default: {
         shadowColor: '#000',
@@ -814,6 +849,8 @@ const styles = StyleSheet.create({
   },
   // Live transcription styles
   liveTranscriptionBox: {
+    width: '100%',
+    minWidth: 0,
     padding: 16,
     borderRadius: 14,
     backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -881,6 +918,13 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     lineHeight: 24,
     minHeight: 48,
+    width: '100%',
+    ...Platform.select({
+      web: {
+        wordBreak: 'break-word',
+        overflowWrap: 'break-word',
+      },
+    }),
   },
   interimText: {
     color: 'rgba(255, 255, 255, 0.5)',
@@ -892,6 +936,8 @@ const styles = StyleSheet.create({
   },
   // Live Feedback Box - Clean styling
   liveFeedbackBox: {
+    width: '100%',
+    minWidth: 0,
     marginTop: 16,
     padding: 16,
     borderRadius: 14,
@@ -941,6 +987,12 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 6,
     fontWeight: '400',
+    ...Platform.select({
+      web: {
+        wordBreak: 'break-word',
+        overflowWrap: 'break-word',
+      },
+    }),
   },
   // Answer Controls (buttons inside answer section)
   answerControls: {
@@ -1046,9 +1098,12 @@ const styles = StyleSheet.create({
   // New styles for recording, scrolling, and file upload
   questionsScroll: {
     flex: isDesktop ? 1 : undefined,
+    minWidth: 0,
+    minHeight: 0,
+    alignSelf: 'stretch',
     ...Platform.select({
       web: {
-        overflow: 'visible',
+        overflow: 'auto',
       },
     }),
   },

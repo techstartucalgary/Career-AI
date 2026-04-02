@@ -290,7 +290,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 12,
     marginBottom: 24,
+    width: '100%',
+    minWidth: 0,
   },
   interviewTitle: {
     fontSize: 20,
@@ -307,6 +311,8 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   questionCard: {
+    width: '100%',
+    minWidth: 0,
     backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 32,
@@ -349,6 +355,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   questionText: {
+    width: '100%',
     fontSize: 20,
     fontWeight: '600',
     color: COLORS.textPrimary,
@@ -356,6 +363,12 @@ const styles = StyleSheet.create({
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
       default: 'sans-serif',
+    }),
+    ...Platform.select({
+      web: {
+        wordBreak: 'break-word',
+        overflowWrap: 'break-word',
+      },
     }),
   },
   answerSection: {
@@ -368,6 +381,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   answerInput: {
+    width: '100%',
+    minWidth: 0,
+    alignSelf: 'stretch',
     backgroundColor: COLORS.bgAlt,
     borderRadius: 12,
     padding: 16,
@@ -381,6 +397,7 @@ const styles = StyleSheet.create({
       web: {
         outlineStyle: 'none',
         transition: 'all 0.3s ease',
+        boxSizing: 'border-box',
       },
     }),
   },

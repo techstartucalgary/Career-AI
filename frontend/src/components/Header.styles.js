@@ -37,6 +37,78 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     position: 'relative',
   },
+  navLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 12,
+    flexShrink: 0,
+    minWidth: 0,
+  },
+  accountMenuWrap: {
+    position: 'relative',
+    zIndex: 1002,
+    flexShrink: 0,
+    ...Platform.select({
+      web: {
+        marginRight: -20,
+      },
+      default: {
+        marginRight: -12,
+      },
+    }),
+  },
+  accountMenuTriggerActive: {
+    borderColor: 'rgba(167, 139, 250, 0.55)',
+    backgroundColor: 'rgba(167, 139, 250, 0.08)',
+  },
+  accountDropdown: {
+    position: 'absolute',
+    right: 0,
+    left: 'auto',
+    top: '100%',
+    marginTop: 8,
+    minWidth: 200,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    backgroundColor: COLORS.bg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 12px 24px rgba(0,0,0,0.35)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.35,
+        shadowRadius: 16,
+        elevation: 12,
+      },
+    }),
+  },
+  accountDropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  accountDropdownItemText: {
+    color: COLORS.textPrimary,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  accountDropdownDivider: {
+    height: 1,
+    backgroundColor: COLORS.borderLight,
+    marginVertical: 4,
+    marginHorizontal: 8,
+  },
   navSpacer: {
     flex: 1,
     minWidth: 0,
@@ -165,26 +237,6 @@ const styles = StyleSheet.create({
   navLinkActive: {
     textDecorationLine: 'underline',
   },
-  buttonGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  upgradeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.45)',
-  },
-  upgradeButtonText: {
-    color: '#A78BFA',
-    fontSize: 15,
-    fontWeight: '600',
-  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -200,32 +252,6 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontSize: 16,
     fontWeight: '500',
-  },
-  arrowIcon: {
-    width: 16,
-    height: 16,
-    position: 'relative',
-  },
-  arrowLine: {
-    position: 'absolute',
-    left: 0,
-    top: 7,
-    width: 12,
-    height: 2,
-    backgroundColor: COLORS.textPrimary,
-  },
-  arrowHead: {
-    position: 'absolute',
-    right: 0,
-    top: 4,
-    width: 0,
-    height: 0,
-    borderTopWidth: 4,
-    borderBottomWidth: 4,
-    borderLeftWidth: 6,
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
-    borderLeftColor: COLORS.textPrimary,
   },
 });
 

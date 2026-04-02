@@ -171,13 +171,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 10,
   },
   ctaButtonText: {
-    color: COLORS.white,
-    fontSize: 17,
-    fontWeight: '600',
-  },
-  ctaArrow: {
     color: COLORS.white,
     fontSize: 17,
     fontWeight: '600',

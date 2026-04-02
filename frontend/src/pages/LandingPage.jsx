@@ -3,9 +3,13 @@ import { View, Text, Pressable, ScrollView, Platform, Animated } from 'react-nat
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
+import ForwardArrowIcon from '../components/ForwardArrowIcon';
 import styles from './LandingPage.styles';
 import './LandingPage.css';
 import { useBreakpoints } from '../hooks/useBreakpoints';
+import { THEME } from '../styles/theme';
+
+const { colors: LANDING_COLORS } = THEME;
 
 // Floating UI Card Component
 const FloatingCard = ({ children, style, delay = 0, duration = 3000 }) => {
@@ -315,16 +319,8 @@ const LandingPage = () => {
               <View style={styles.buttonShine} />
               <Text style={styles.primaryButtonText}>Start applying</Text>
               <View style={styles.buttonArrow}>
-                <Text style={styles.arrowText}>→</Text>
+                <ForwardArrowIcon color="#FFFFFF" size={14} />
               </View>
-            </Pressable>
-
-            <Pressable
-              style={[styles.secondaryButton, hoveredButton === 'secondary' && styles.secondaryButtonHover]}
-              onHoverIn={() => Platform.OS === 'web' && setHoveredButton('secondary')}
-              onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
-            >
-              <Text style={styles.secondaryButtonText}>See how it works</Text>
             </Pressable>
           </View>
 
@@ -582,7 +578,7 @@ const LandingPage = () => {
                     </View>
                   </View>
                   <View style={styles.resumeArrow}>
-                    <Text style={styles.resumeArrowText}>→</Text>
+                    <ForwardArrowIcon color={LANDING_COLORS.textMuted} size={14} />
                   </View>
                   <View style={styles.resumeTailored}>
                     <Text style={styles.resumeCompareLabel}>Tailored</Text>
@@ -731,7 +727,7 @@ const LandingPage = () => {
                 style={styles.ctaButtonGradient}
               >
                 <Text style={styles.ctaButtonText}>Get started</Text>
-                <Text style={styles.ctaButtonArrow}>→</Text>
+                <ForwardArrowIcon color="#FFFFFF" size={18} />
               </LinearGradient>
             </Pressable>
 
