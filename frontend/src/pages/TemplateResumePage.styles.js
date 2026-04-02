@@ -212,13 +212,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   uploadButton: {
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(255, 255, 255, 0.16)',
     ...Platform.select({
       web: {
         cursor: 'pointer',
@@ -226,14 +227,167 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  uploadButtonHover: {
+  uploadButtonActive: {
     borderColor: COLORS.primary,
-    backgroundColor: COLORS.surface,
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+  },
+  uploadButtonHover: {
+    borderColor: 'rgba(255, 255, 255, 0.26)',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  uploadIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(167, 139, 250, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.4)',
+    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadIconFallback: {
+    color: COLORS.primary,
+    fontSize: 20,
+    fontWeight: '700',
   },
   uploadButtonText: {
     color: COLORS.textPrimary,
     fontSize: 15,
     fontWeight: '600',
+  },
+  resumeSourceCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  resumeSourceCardActive: {
+    borderColor: 'rgba(167, 139, 250, 0.6)',
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+  },
+  resumeSourceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  resumeSourceTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  resumeSourceBadge: {
+    color: '#A78BFA',
+    fontSize: 10,
+    fontWeight: '700',
+    backgroundColor: 'rgba(167, 139, 250, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.35)',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  resumeSourceMeta: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    marginTop: 8,
+  },
+  resumeSourceDividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  resumeSourceDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  resumeSourceDividerText: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    letterSpacing: 0.7,
+  },
+  selectedFileRow: {
+    flexDirection: isTablet ? 'row' : 'column',
+    alignItems: isTablet ? 'center' : 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginTop: 8,
+  },
+  selectedFileText: {
+    color: COLORS.primary,
+    fontSize: 14,
+  },
+  selectedFileActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  clearUploadButton: {
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.45)',
+    backgroundColor: 'rgba(239, 68, 68, 0.16)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  clearUploadButtonText: {
+    color: '#FCA5A5',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  saveUploadButton: {
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.45)',
+    backgroundColor: 'rgba(167, 139, 250, 0.16)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  saveUploadButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveUploadButtonText: {
+    color: COLORS.white,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  resumeFallbackText: {
+    color: '#C4B5FD',
+    fontSize: 12,
+    marginTop: 8,
+  },
+  saveProfileSuccess: {
+    marginTop: 8,
+    color: '#86EFAC',
+    fontSize: 12,
+  },
+  saveProfileError: {
+    marginTop: 8,
+    color: '#FCA5A5',
+    fontSize: 12,
   },
   fileName: {
     fontSize: 13,

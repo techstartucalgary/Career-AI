@@ -9,6 +9,7 @@ import './JobPages.css';
 import { tailorResume, generateFromTemplate, downloadPDFFromBase64 } from '../services/aiService';
 import PDFViewer from '../components/PDFViewer';
 import { getGithubStatus, openGithubConnect, fetchGithubContext } from '../services/githubService';
+import { API_BASE_URL, apiFetch, getAuthToken } from '../services/api';
 
 const DEFAULT_OPTIMIZATION_JOB_DESCRIPTION =
   'General ATS-ready resume evaluation for software roles. Focus on relevant technical skills, measurable impact, and role-aligned experience. Include programming languages, frameworks, databases, cloud, CI/CD, and project outcomes.';
@@ -78,6 +79,9 @@ const highlightKeywords = (text, keywords, styles) => {
 const TemplateResumePage = () => {
   const { mode } = useLocalSearchParams();
   const [selectedFile, setSelectedFile] = useState(null);
+  const [profileResumeFile, setProfileResumeFile] = useState(null);
+  const [profileResumeLoading, setProfileResumeLoading] = useState(true);
+  const [resumeSource, setResumeSource] = useState('profile');
   const [templateFile, setTemplateFile] = useState(null); // optional file for template mode
   const [templateMode, setTemplateMode] = useState(mode === 'optimize' ? 'optimize' : 'template'); // 'template' or 'optimize'
   const [selectedTemplate, setSelectedTemplate] = useState('classic');
@@ -95,12 +99,38 @@ const TemplateResumePage = () => {
   const [githubUsername, setGithubUsername] = useState(null);
   const [useGithub, setUseGithub] = useState(true);
   const [githubFetching, setGithubFetching] = useState(false);
+  const [savingUploadProfileResume, setSavingUploadProfileResume] = useState(false);
+  const [saveUploadProfileResumeMessage, setSaveUploadProfileResumeMessage] = useState('');
+  const [saveUploadProfileResumeError, setSaveUploadProfileResumeError] = useState('');
 
   useEffect(() => {
     getGithubStatus().then(({ connected, username }) => {
       setGithubConnected(connected);
       setGithubUsername(username);
     });
+
+    const loadProfileResume = async () => {
+      try {
+        setProfileResumeLoading(true);
+        const response = await apiFetch('/profile');
+        const resumeData = response?.data?.resume;
+        if (resumeData?.file_data) {
+          setProfileResumeFile({
+            name: resumeData.file_name || 'profile_resume.pdf',
+            mimeType: 'application/pdf',
+            fileDataBase64: resumeData.file_data,
+            uri: `data:application/pdf;base64,${resumeData.file_data}`,
+          });
+          setResumeSource('profile');
+        }
+      } catch (err) {
+        console.log('Profile resume unavailable:', err?.message || err);
+      } finally {
+        setProfileResumeLoading(false);
+      }
+    };
+
+    loadProfileResume();
   }, []);
 
   const pickDocument = async (forTemplateMode = false) => {
@@ -124,9 +154,11 @@ const TemplateResumePage = () => {
             const file = { uri, name: pickedFile.name, mimeType: pickedFile.type };
             if (forTemplateMode) {
               setTemplateFile(file);
+              setResumeSource('upload');
             } else {
               setSelectedFile(file);
               setTemplateMode('optimize');
+              setResumeSource('upload');
             }
           }
           cleanup();
@@ -155,13 +187,108 @@ const TemplateResumePage = () => {
         const file = { uri: asset.uri, name: asset.name, mimeType: asset.mimeType };
         if (forTemplateMode) {
           setTemplateFile(file);
+          setResumeSource('upload');
         } else {
           setSelectedFile(file);
           setTemplateMode('optimize');
+          setResumeSource('upload');
         }
       }
     } catch (error) {
       console.error('Error picking document:', error);
+    }
+  };
+
+  const getActiveResumeUpload = () => {
+    const uploadFile = templateMode === 'template' ? templateFile : selectedFile;
+    if (resumeSource === 'upload') {
+      return uploadFile || profileResumeFile;
+    }
+    return profileResumeFile || uploadFile;
+  };
+
+  const clearUploadedResume = () => {
+    if (templateMode === 'template') {
+      setTemplateFile(null);
+    } else {
+      setSelectedFile(null);
+    }
+    setResumeSource('profile');
+  };
+
+  const handleUploadSourcePress = async () => {
+    const uploadFile = templateMode === 'template' ? templateFile : selectedFile;
+    if (uploadFile) {
+      if (resumeSource !== 'upload') {
+        setResumeSource('upload');
+        return;
+      }
+      await pickDocument(templateMode === 'template');
+      return;
+    }
+    await pickDocument(templateMode === 'template');
+  };
+
+  const handleSaveUploadedResumeAsProfile = async () => {
+    const uploadFile = templateMode === 'template' ? templateFile : selectedFile;
+    if (!uploadFile) {
+      return;
+    }
+    const token = getAuthToken();
+    if (!token) {
+      setSaveUploadProfileResumeError('Please sign in to save your profile resume.');
+      return;
+    }
+
+    try {
+      setSavingUploadProfileResume(true);
+      setSaveUploadProfileResumeError('');
+      setSaveUploadProfileResumeMessage('');
+
+      const name = uploadFile.name || 'profile_resume.pdf';
+      const type = uploadFile.mimeType || 'application/pdf';
+      const formData = new FormData();
+
+      if (uploadFile.fileDataBase64) {
+        const byteCharacters = atob(uploadFile.fileDataBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i += 1) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type });
+        formData.append('resume_file', new File([blob], name, { type }));
+      } else if (Platform.OS === 'web') {
+        const response = await fetch(uploadFile.uri);
+        const blob = await response.blob();
+        formData.append('resume_file', new File([blob], name, { type }));
+      } else {
+        formData.append('resume_file', {
+          uri: uploadFile.uri,
+          name,
+          type,
+        });
+      }
+
+      const response = await fetch(`${API_BASE_URL}/resume/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || data?.detail || 'Failed to save profile resume.');
+      }
+
+      setProfileResumeFile({ ...uploadFile, name: data?.data?.file_name || name });
+      setResumeSource('profile');
+      setSaveUploadProfileResumeMessage('Saved to profile resume.');
+    } catch (error) {
+      setSaveUploadProfileResumeError(error?.message || 'Failed to save profile resume.');
+    } finally {
+      setSavingUploadProfileResume(false);
     }
   };
 
@@ -173,10 +300,12 @@ const TemplateResumePage = () => {
       setProgress(5);
       setProgressStep('Initializing...');
       try {
+        const activeResume = getActiveResumeUpload();
+        const useUploadedFile = resumeSource === 'upload' && !!activeResume;
         const result = await generateFromTemplate(selectedTemplate, (update) => {
           if (typeof update?.progress === 'number') setProgress(update.progress);
           if (update?.step) setProgressStep(update.step);
-        }, templateFile);
+        }, useUploadedFile ? activeResume : null);
         setGeneratedResume(result);
         setKeywords(Array.isArray(result?.keywords) ? result.keywords.slice(0, 7) : []);
       } catch (err) {
@@ -188,8 +317,9 @@ const TemplateResumePage = () => {
     }
 
     // Optimize mode
-    if (!selectedFile?.uri) {
-      setError('Upload your resume to optimize.');
+    const activeResume = getActiveResumeUpload();
+    if (!activeResume?.uri && !activeResume?.fileDataBase64) {
+      setError('Add a resume source to optimize.');
       return;
     }
     setIsLoading(true);
@@ -215,7 +345,7 @@ const TemplateResumePage = () => {
 
     try {
       const result = await tailorResume(
-        selectedFile,
+        activeResume,
         DEFAULT_OPTIMIZATION_JOB_DESCRIPTION,
         {},
         (update) => {
@@ -309,35 +439,96 @@ const TemplateResumePage = () => {
 
                 {templateMode === 'template' ? (
                   <>
-                    {/* Template Selection */}
+                    {/* Resume Source */}
                     <View style={styles.section}>
-                      <Text style={styles.sectionTitle}>Choose a Template</Text>
-                      <Text style={[styles.fileName, { marginBottom: 12, marginTop: 0 }]}>
-                        Uses your saved account resume, or upload one below.
-                      </Text>
+                      <Text style={styles.sectionTitle}>Resume Upload</Text>
+                      <Pressable
+                        style={[
+                          styles.resumeSourceCard,
+                          resumeSource === 'profile' && styles.resumeSourceCardActive,
+                        ]}
+                        onPress={() => setResumeSource('profile')}
+                      >
+                        <View style={styles.resumeSourceHeader}>
+                          <Text style={styles.resumeSourceTitle}>Profile Resume</Text>
+                          {resumeSource === 'profile' && <Text style={styles.resumeSourceBadge}>SELECTED</Text>}
+                        </View>
+                        <Text style={styles.resumeSourceMeta}>
+                          {profileResumeLoading
+                            ? 'Checking profile...'
+                            : profileResumeFile?.name || 'No profile resume found'}
+                        </Text>
+                      </Pressable>
+
+                      <View style={styles.resumeSourceDividerRow}>
+                        <View style={styles.resumeSourceDividerLine} />
+                        <Text style={styles.resumeSourceDividerText}>OR</Text>
+                        <View style={styles.resumeSourceDividerLine} />
+                      </View>
+
                       <Pressable
                         style={[
                           styles.uploadButton,
-                          { marginBottom: 8 },
+                          resumeSource === 'upload' && styles.uploadButtonActive,
                           hoveredButton === 'templateUpload' && styles.uploadButtonHover
                         ]}
-                        onPress={() => pickDocument(true)}
+                        onPress={handleUploadSourcePress}
                         onHoverIn={() => Platform.OS === 'web' && setHoveredButton('templateUpload')}
                         onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
                       >
+                        <View style={styles.uploadIcon}>
+                          {Platform.OS === 'web' ? (
+                            <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} style={{ color: '#A78BFA' }}>
+                              <path d="M12 16V4" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M7 9L12 4L17 9" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M20 16.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          ) : (
+                            <Text style={styles.uploadIconFallback}>↑</Text>
+                          )}
+                        </View>
                         <Text style={styles.uploadButtonText}>
-                          {templateFile ? 'Change File' : 'Upload Resume (optional)'}
+                          {templateFile ? templateFile.name : 'Upload Resume (Optional)'}
                         </Text>
                       </Pressable>
+
                       {templateFile && (
-                        <Text style={[styles.fileName, { marginBottom: 12 }]}>
-                          {templateFile.name}
-                        </Text>
+                        <View style={styles.selectedFileRow}>
+                          <Text style={styles.selectedFileText}>
+                            {resumeSource === 'upload'
+                              ? `Selected source: File upload (${templateFile.name})`
+                              : `Selected source: Profile resume (${profileResumeFile?.name || 'No profile resume found'})`}
+                          </Text>
+                          <View style={styles.selectedFileActions}>
+                            <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
+                              <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
+                            </Pressable>
+                            <Pressable
+                              style={[styles.saveUploadButton, savingUploadProfileResume && styles.saveUploadButtonDisabled]}
+                              onPress={handleSaveUploadedResumeAsProfile}
+                              disabled={savingUploadProfileResume}
+                            >
+                              <Text style={styles.saveUploadButtonText}>
+                                {savingUploadProfileResume ? 'Saving...' : 'Make Profile Resume'}
+                              </Text>
+                            </Pressable>
+                          </View>
+                        </View>
                       )}
+                      {!templateFile && profileResumeFile && (
+                        <Text style={styles.resumeFallbackText}>No upload selected, using profile resume.</Text>
+                      )}
+                      {!!saveUploadProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveUploadProfileResumeMessage}</Text>}
+                      {!!saveUploadProfileResumeError && <Text style={styles.saveProfileError}>{saveUploadProfileResumeError}</Text>}
+                    </View>
+
+                    {/* Template Selection */}
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>Choose a Template</Text>
                       <View style={styles.templatesGrid}>
                         {[
                           { id: 'classic', label: 'Classic', desc: 'Clean Helvetica, ATS-optimised' },
-                          { id: 'modern',  label: 'Modern',  desc: 'Serif font, left-aligned header' },
+                          { id: 'modern', label: 'Modern', desc: 'Serif font, left-aligned header' },
                           { id: 'compact', label: 'Compact', desc: 'Smaller type, fits more content' },
                         ].map((tmpl) => (
                           <Pressable
@@ -351,28 +542,34 @@ const TemplateResumePage = () => {
                             onHoverIn={() => Platform.OS === 'web' && setHoveredTemplate(tmpl.id)}
                             onHoverOut={() => Platform.OS === 'web' && setHoveredTemplate(null)}
                           >
-                            <View style={[
-                              styles.templatePreview,
-                              selectedTemplate === tmpl.id && { backgroundColor: 'rgba(167,139,250,0.08)' }
-                            ]}>
-                              {/* Mini resume preview */}
+                            <View
+                              style={[
+                                styles.templatePreview,
+                                selectedTemplate === tmpl.id && { backgroundColor: 'rgba(167,139,250,0.08)' },
+                              ]}
+                            >
                               <View style={{ width: '80%', gap: 4 }}>
-                                <View style={{
-                                  height: tmpl.id === 'modern' ? 8 : 7,
-                                  width: tmpl.id === 'modern' ? '60%' : '75%',
-                                  alignSelf: tmpl.id === 'modern' ? 'flex-start' : 'center',
-                                  backgroundColor: selectedTemplate === tmpl.id ? '#A78BFA' : 'rgba(255,255,255,0.3)',
-                                  borderRadius: 2,
-                                }} />
+                                <View
+                                  style={{
+                                    height: tmpl.id === 'modern' ? 8 : 7,
+                                    width: tmpl.id === 'modern' ? '60%' : '75%',
+                                    alignSelf: tmpl.id === 'modern' ? 'flex-start' : 'center',
+                                    backgroundColor: selectedTemplate === tmpl.id ? '#A78BFA' : 'rgba(255,255,255,0.3)',
+                                    borderRadius: 2,
+                                  }}
+                                />
                                 <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.15)', marginVertical: 4 }} />
                                 {[80, 65, 90, 70].map((w, i) => (
-                                  <View key={i} style={{
-                                    height: tmpl.id === 'compact' ? 4 : 5,
-                                    width: `${w}%`,
-                                    backgroundColor: 'rgba(255,255,255,0.15)',
-                                    borderRadius: 2,
-                                    marginBottom: tmpl.id === 'compact' ? 2 : 3,
-                                  }} />
+                                  <View
+                                    key={i}
+                                    style={{
+                                      height: tmpl.id === 'compact' ? 4 : 5,
+                                      width: `${w}%`,
+                                      backgroundColor: 'rgba(255,255,255,0.15)',
+                                      borderRadius: 2,
+                                      marginBottom: tmpl.id === 'compact' ? 2 : 3,
+                                    }}
+                                  />
                                 ))}
                               </View>
                             </View>
@@ -389,27 +586,87 @@ const TemplateResumePage = () => {
                   </>
                 ) : (
                   <>
-                    {/* Upload Resume Section */}
+                    {/* Resume Source */}
                     <View style={styles.section}>
-                      <Text style={styles.sectionTitle}>Upload Your Resume</Text>
+                      <Text style={styles.sectionTitle}>Resume Upload</Text>
+                      <Pressable
+                        style={[
+                          styles.resumeSourceCard,
+                          resumeSource === 'profile' && styles.resumeSourceCardActive,
+                        ]}
+                        onPress={() => setResumeSource('profile')}
+                      >
+                        <View style={styles.resumeSourceHeader}>
+                          <Text style={styles.resumeSourceTitle}>Profile Resume</Text>
+                          {resumeSource === 'profile' && <Text style={styles.resumeSourceBadge}>SELECTED</Text>}
+                        </View>
+                        <Text style={styles.resumeSourceMeta}>
+                          {profileResumeLoading
+                            ? 'Checking profile...'
+                            : profileResumeFile?.name || 'No profile resume found'}
+                        </Text>
+                      </Pressable>
+
+                      <View style={styles.resumeSourceDividerRow}>
+                        <View style={styles.resumeSourceDividerLine} />
+                        <Text style={styles.resumeSourceDividerText}>OR</Text>
+                        <View style={styles.resumeSourceDividerLine} />
+                      </View>
+
                       <Pressable
                         style={[
                           styles.uploadButton,
+                          resumeSource === 'upload' && styles.uploadButtonActive,
                           hoveredButton === 'upload' && styles.uploadButtonHover
                         ]}
-                        onPress={() => pickDocument(false)}
+                        onPress={handleUploadSourcePress}
                         onHoverIn={() => Platform.OS === 'web' && setHoveredButton('upload')}
                         onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
                       >
+                        <View style={styles.uploadIcon}>
+                          {Platform.OS === 'web' ? (
+                            <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} style={{ color: '#A78BFA' }}>
+                              <path d="M12 16V4" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M7 9L12 4L17 9" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M20 16.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          ) : (
+                            <Text style={styles.uploadIconFallback}>↑</Text>
+                          )}
+                        </View>
                         <Text style={styles.uploadButtonText}>
-                          {selectedFile ? 'Change File' : 'Upload Resume'}
+                          {selectedFile ? selectedFile.name : 'Upload Resume (Optional)'}
                         </Text>
                       </Pressable>
+
                       {selectedFile && (
-                        <Text style={styles.fileName}>
-                          Selected: {selectedFile.name || selectedFile.uri}
-                        </Text>
+                        <View style={styles.selectedFileRow}>
+                          <Text style={styles.selectedFileText}>
+                            {resumeSource === 'upload'
+                              ? `Selected source: File upload (${selectedFile.name})`
+                              : `Selected source: Profile resume (${profileResumeFile?.name || 'No profile resume found'})`}
+                          </Text>
+                          <View style={styles.selectedFileActions}>
+                            <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
+                              <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
+                            </Pressable>
+                            <Pressable
+                              style={[styles.saveUploadButton, savingUploadProfileResume && styles.saveUploadButtonDisabled]}
+                              onPress={handleSaveUploadedResumeAsProfile}
+                              disabled={savingUploadProfileResume}
+                            >
+                              <Text style={styles.saveUploadButtonText}>
+                                {savingUploadProfileResume ? 'Saving...' : 'Make Profile Resume'}
+                              </Text>
+                            </Pressable>
+                          </View>
+                        </View>
                       )}
+                      {!selectedFile && profileResumeFile && (
+                        <Text style={styles.resumeFallbackText}>No upload selected, using profile resume.</Text>
+                      )}
+                      {!!saveUploadProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveUploadProfileResumeMessage}</Text>}
+                      {!!saveUploadProfileResumeError && <Text style={styles.saveProfileError}>{saveUploadProfileResumeError}</Text>}
                     </View>
                   </>
                 )}
