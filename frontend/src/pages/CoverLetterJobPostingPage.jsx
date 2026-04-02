@@ -8,7 +8,7 @@ import styles from './CoverLetterJobPostingPage.styles';
 import './JobPages.css';
 import { generateCoverLetter, downloadPDFFromBase64 } from '../services/aiService';
 import PDFViewer from '../components/PDFViewer';
-import { API_BASE_URL } from '../services/api';
+import { API_BASE_URL, apiFetch } from '../services/api';
 
 const ProgressRing = ({ progress = 0, size = 60, strokeWidth = 4, color = '#A78BFA' }) => {
   const radius = (size - strokeWidth) / 2;
@@ -62,7 +62,16 @@ const buildAtsFormData = async (file, jobDescription) => {
   const name = file?.name || 'document.pdf';
   const type = file?.mimeType || 'application/pdf';
 
-  if (Platform.OS === 'web') {
+  if (file?.fileDataBase64) {
+    const byteCharacters = atob(file.fileDataBase64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i += 1) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type });
+    formData.append('document_file', new File([blob], name, { type }));
+  } else if (Platform.OS === 'web') {
     const response = await fetch(file.uri);
     const blob = await response.blob();
     formData.append('document_file', new File([blob], name, { type }));
@@ -120,6 +129,9 @@ const CoverLetterJobPostingPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [profileResumeFile, setProfileResumeFile] = useState(null);
+  const [profileResumeLoading, setProfileResumeLoading] = useState(true);
+  const [resumeSource, setResumeSource] = useState('profile');
   const [selectedTags, setSelectedTags] = useState(['Student', 'AI', 'Software Development', 'Calgary']);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredAts, setHoveredAts] = useState(false);
@@ -138,6 +150,31 @@ const CoverLetterJobPostingPage = () => {
   const [selectedTemplate, setSelectedTemplate] = useState('classic');
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
 
+  React.useEffect(() => {
+    const loadProfileResume = async () => {
+      try {
+        setProfileResumeLoading(true);
+        const response = await apiFetch('/profile');
+        const resumeData = response?.data?.resume;
+        if (resumeData?.file_data) {
+          setProfileResumeFile({
+            name: resumeData.file_name || 'profile_resume.pdf',
+            mimeType: 'application/pdf',
+            fileDataBase64: resumeData.file_data,
+            uri: `data:application/pdf;base64,${resumeData.file_data}`,
+          });
+          setResumeSource('profile');
+        }
+      } catch (err) {
+        console.log('Profile resume unavailable:', err?.message || err);
+      } finally {
+        setProfileResumeLoading(false);
+      }
+    };
+
+    loadProfileResume();
+  }, []);
+
   const removeTag = (tagToRemove) => {
     setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
   };
@@ -154,15 +191,34 @@ const CoverLetterJobPostingPage = () => {
         const name = result.name ?? result.assets?.[0]?.name;
         const mimeType = result.mimeType ?? result.assets?.[0]?.mimeType;
         setSelectedFile({ uri, name, mimeType });
+        setResumeSource('upload');
       }
     } catch (error) {
       setError('Error picking document: ' + error.message);
     }
   };
 
-  const calculateAtsScoreForFile = async () => {
-    if (!selectedFile?.uri) {
-      setAtsError('Upload your resume to calculate ATS score.');
+  const clearUploadedResume = () => {
+    setSelectedFile(null);
+    setResumeSource('profile');
+  };
+
+  const handleUploadSourcePress = async () => {
+    if (selectedFile) {
+      if (resumeSource !== 'upload') {
+        setResumeSource('upload');
+        return;
+      }
+      await pickDocument();
+      return;
+    }
+
+    await pickDocument();
+  };
+
+  const calculateAtsScoreForFile = async (resumeFile) => {
+    if (!resumeFile?.uri && !resumeFile?.fileDataBase64) {
+      setAtsError('Add a resume source to calculate ATS score.');
       return null;
     }
     if (!jobDescription.trim()) {
@@ -171,7 +227,7 @@ const CoverLetterJobPostingPage = () => {
     }
 
     try {
-      const formData = await buildAtsFormData(selectedFile, jobDescription);
+      const formData = await buildAtsFormData(resumeFile, jobDescription);
 
       const response = await fetch(`${API_BASE_URL}/api/ats-score`, {
         method: 'POST',
@@ -220,12 +276,16 @@ const CoverLetterJobPostingPage = () => {
   };
 
   const handleGenerateCoverLetter = async () => {
+    const activeResumeFile = resumeSource === 'upload'
+      ? (selectedFile || profileResumeFile)
+      : (profileResumeFile || selectedFile);
+
     if (!jobDescription.trim()) {
       setError('Please enter a job description');
       return;
     }
-    if (!selectedFile) {
-      setError('Please upload your resume');
+    if (!activeResumeFile) {
+      setError('Upload a resume or use your profile resume to continue.');
       return;
     }
 
@@ -243,11 +303,11 @@ const CoverLetterJobPostingPage = () => {
       setAtsError('');
 
       const [result, originalScore] = await Promise.all([
-        generateCoverLetter(selectedFile, jobDescription, (data) => {
+        generateCoverLetter(activeResumeFile, jobDescription, (data) => {
           setProgressStep(data.step);
           setProgress(data.progress);
         }, selectedTemplate),
-        calculateAtsScoreForFile(),
+        calculateAtsScoreForFile(activeResumeFile),
       ]);
 
       setGeneratedCoverLetter(result);
@@ -362,27 +422,72 @@ const CoverLetterJobPostingPage = () => {
                   />
                 </View>
 
-              {/* Your Resume Section */}
+              {/* Resume Upload Section */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Your Resume</Text>
+                <Text style={styles.sectionTitle}>Resume Upload</Text>
+                <Pressable
+                  style={[
+                    styles.resumeSourceCard,
+                    resumeSource === 'profile' && styles.resumeSourceCardActive,
+                  ]}
+                  onPress={() => setResumeSource('profile')}
+                >
+                  <View style={styles.resumeSourceHeader}>
+                    <Text style={styles.resumeSourceTitle}>Profile Resume</Text>
+                    {resumeSource === 'profile' && <Text style={styles.resumeSourceBadge}>SELECTED</Text>}
+                  </View>
+                  <Text style={styles.resumeSourceMeta}>
+                    {profileResumeLoading
+                      ? 'Checking profile...'
+                      : profileResumeFile?.name || 'No profile resume found'}
+                  </Text>
+                </Pressable>
+
+                <View style={styles.resumeSourceDividerRow}>
+                  <View style={styles.resumeSourceDividerLine} />
+                  <Text style={styles.resumeSourceDividerText}>OR</Text>
+                  <View style={styles.resumeSourceDividerLine} />
+                </View>
+
                 <Pressable
                   style={[
                     styles.uploadButton,
+                    resumeSource === 'upload' && styles.uploadButtonActive,
                     hoveredButton === 'upload' && styles.uploadButtonHover
                   ]}
-                  onPress={pickDocument}
+                  onPress={handleUploadSourcePress}
                   onHoverIn={() => Platform.OS === 'web' && setHoveredButton('upload')}
                   onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
                 >
                   <View style={styles.uploadIcon}>
-                    <View style={styles.uploadIconArrow} />
+                    {Platform.OS === 'web' ? (
+                      <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} style={{ color: '#A78BFA' }}>
+                        <path d="M12 16V4" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M7 9L12 4L17 9" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M20 16.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    ) : (
+                      <Text style={styles.uploadIconFallback}>↑</Text>
+                    )}
                   </View>
                   <Text style={styles.uploadButtonText}>
-                    {selectedFile ? selectedFile.name : 'Upload Resume (PDF, DOC, DOCX)'}
+                    {selectedFile ? selectedFile.name : 'Upload Resume (Optional)'}
                   </Text>
                 </Pressable>
                 {selectedFile && (
-                  <Text style={styles.selectedFileText}>Selected: {selectedFile.name}</Text>
+                  <View style={styles.selectedFileRow}>
+                    <Text style={styles.selectedFileText}>
+                      {resumeSource === 'upload'
+                        ? `Selected source: File upload (${selectedFile.name})`
+                        : `Selected source: Profile resume (${profileResumeFile?.name || 'No profile resume found'})`}
+                    </Text>
+                    <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
+                      <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
+                    </Pressable>
+                  </View>
+                )}
+                {!selectedFile && profileResumeFile && (
+                  <Text style={styles.resumeFallbackText}>No upload selected, using profile resume.</Text>
                 )}
               </View>
 

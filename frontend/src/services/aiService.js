@@ -8,14 +8,57 @@ const uriToBlob = async (uri) => {
   return await response.blob();
 };
 
+const decodeBase64ToBlob = (base64Data, mimeType = 'application/pdf') => {
+  const binary = atob(base64Data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mimeType });
+};
+
+const resolveFileType = (resumeFile) => {
+  if (resumeFile?.mimeType) {
+    return resumeFile.mimeType;
+  }
+  const fileName = (resumeFile?.name || '').toLowerCase();
+  if (fileName.endsWith('.docx')) {
+    return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  }
+  if (fileName.endsWith('.doc')) {
+    return 'application/msword';
+  }
+  return 'application/pdf';
+};
+
+const resumeFileToBlob = async (resumeFile) => {
+  const fileType = resolveFileType(resumeFile);
+  const fileName = resumeFile?.name || 'resume.pdf';
+
+  if (resumeFile?.fileDataBase64) {
+    return {
+      fileBlob: decodeBase64ToBlob(resumeFile.fileDataBase64, fileType),
+      fileType,
+      fileName,
+    };
+  }
+
+  if (resumeFile?.uri) {
+    return {
+      fileBlob: await uriToBlob(resumeFile.uri),
+      fileType,
+      fileName,
+    };
+  }
+
+  throw new Error('No resume source found. Upload a resume or use your profile resume.');
+};
+
 export const analyzeResume = async (resumeFile, jobDescription) => {
   const formData = new FormData();
-  
-  // Convert file to blob for web compatibility
-  const fileBlob = await uriToBlob(resumeFile.uri);
-  const fileType = resumeFile.name.endsWith('.pdf') ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-  
-  formData.append('resume_file', fileBlob, resumeFile.name);
+
+  const { fileBlob, fileName } = await resumeFileToBlob(resumeFile);
+  formData.append('resume_file', fileBlob, fileName);
   formData.append('job_description', jobDescription);
 
   const response = await fetch(`${API_URL}/api/resume/analyze`, {
@@ -33,11 +76,8 @@ export const analyzeResume = async (resumeFile, jobDescription) => {
 export const tailorResume = async (resumeFile, jobDescription, userAnswers = {}, onProgress, githubContext = null) => {
   const formData = new FormData();
 
-  // Convert file to blob for web compatibility
-  const fileBlob = await uriToBlob(resumeFile.uri);
-  const fileType = resumeFile.name.endsWith('.pdf') ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-
-  formData.append('resume_file', fileBlob, resumeFile.name);
+  const { fileBlob, fileName } = await resumeFileToBlob(resumeFile);
+  formData.append('resume_file', fileBlob, fileName);
   formData.append('job_description', jobDescription);
   formData.append('user_answers', JSON.stringify(userAnswers));
   if (githubContext) {
@@ -92,8 +132,8 @@ export const tailorResume = async (resumeFile, jobDescription, userAnswers = {},
 export const generateCoverLetter = async (resumeFile, jobDescription, onProgress, templateId = 'classic') => {
   const formData = new FormData();
 
-  const fileBlob = await uriToBlob(resumeFile.uri);
-  formData.append('resume_file', fileBlob, resumeFile.name);
+  const { fileBlob, fileName } = await resumeFileToBlob(resumeFile);
+  formData.append('resume_file', fileBlob, fileName);
   formData.append('job_description', jobDescription);
   formData.append('template_id', templateId);
 
@@ -149,8 +189,8 @@ export const generateFromTemplate = async (templateId = 'classic', onProgress, r
   formData.append('template_id', templateId);
 
   if (resumeFile) {
-    const fileBlob = await uriToBlob(resumeFile.uri);
-    formData.append('resume_file', fileBlob, resumeFile.name);
+    const { fileBlob, fileName } = await resumeFileToBlob(resumeFile);
+    formData.append('resume_file', fileBlob, fileName);
   }
 
   if (onProgress) onProgress({ progress: 15, step: 'Loading resume...' });

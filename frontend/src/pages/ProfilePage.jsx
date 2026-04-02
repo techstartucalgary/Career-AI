@@ -4,7 +4,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import styles from './ProfilePage.styles';
-import { apiFetch, clearAuthToken, getAuthToken } from '../services/api';
+import { API_BASE_URL, apiFetch, clearAuthToken, getAuthToken } from '../services/api';
 import { Redirect } from 'expo-router';
 
 export default function ProfilePage() {
@@ -34,7 +34,9 @@ export default function ProfilePage() {
   const [profileError, setProfileError] = useState('');
   const [saving, setSaving] = useState(false);
   const [resumeFileName, setResumeFileName] = useState('');
+  const [resumeFileData, setResumeFileData] = useState('');
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [removingResume, setRemovingResume] = useState(false);
   const [resumeError, setResumeError] = useState('');
   const [shouldRedirect, setShouldRedirect] = useState(false);
 
@@ -95,6 +97,9 @@ export default function ProfilePage() {
         const resume = data.resume || {};
         if (resume.file_name) {
           setResumeFileName(resume.file_name);
+        }
+        if (resume.file_data) {
+          setResumeFileData(resume.file_data);
         }
       } catch (error) {
         if (!isActive) return;
@@ -202,11 +207,11 @@ export default function ProfilePage() {
         formDataObj.append('resume_file', resumePart, resumeName);
         
         // Parse and upload resume
-        const response = await fetch('http://localhost:8000/resume/upload', {
+        const response = await fetch(`${API_BASE_URL}/resume/upload`, {
           method: 'POST',
           body: formDataObj,
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('career_ai_token')}`,
+            Authorization: `Bearer ${getAuthToken()}`,
           },
         });
         
@@ -218,6 +223,7 @@ export default function ProfilePage() {
         }
         
         setResumeFileName(data.data?.file_name || file.name);
+        setResumeFileData('');
         setSaveSuccess('Resume uploaded successfully.');
         
         // Reload profile to show updated data
@@ -229,6 +235,55 @@ export default function ProfilePage() {
       setResumeError(error.message || 'Error uploading resume');
     } finally {
       setUploadingResume(false);
+    }
+  };
+
+  const handleResumeDownload = () => {
+    if (!resumeFileData) {
+      setResumeError('No resume file is available to download.');
+      return;
+    }
+
+    try {
+      const binary = atob(resumeFileData);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = resumeFileName || 'profile_resume.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setResumeError('');
+    } catch (error) {
+      setResumeError('Unable to download resume.');
+    }
+  };
+
+  const handleRemoveResume = async () => {
+    if (!resumeFileName || removingResume) {
+      return;
+    }
+
+    try {
+      setRemovingResume(true);
+      setResumeError('');
+      await apiFetch('/resume/upload', {
+        method: 'DELETE',
+      });
+
+      setResumeFileName('');
+      setResumeFileData('');
+      setSaveSuccess('Resume removed successfully.');
+    } catch (error) {
+      setResumeError(error.message || 'Unable to remove resume.');
+    } finally {
+      setRemovingResume(false);
     }
   };
 
@@ -624,6 +679,23 @@ export default function ProfilePage() {
                     {uploadingResume ? 'Uploading...' : 'Upload or Replace Resume'}
                   </Text>
                 </Pressable>
+
+                {resumeFileName && (
+                  <View style={styles.resumeActionRow}>
+                    <Pressable style={styles.resumeActionButton} onPress={handleResumeDownload}>
+                      <Text style={styles.resumeActionButtonText}>Download Resume</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.resumeActionButton, styles.resumeRemoveButton, removingResume && styles.uploadButtonDisabled]}
+                      onPress={handleRemoveResume}
+                      disabled={removingResume}
+                    >
+                      <Text style={styles.resumeActionButtonText}>
+                        {removingResume ? 'Removing...' : 'Remove Resume'}
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
                 
                 {!!resumeError && <Text style={styles.errorText}>{resumeError}</Text>}
               </View>

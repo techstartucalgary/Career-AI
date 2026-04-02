@@ -465,6 +465,34 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: BRIGHT_PURPLE,
   },
+  resumeActionRow: {
+    flexDirection: isTablet ? 'row' : 'column',
+    gap: 10,
+    marginTop: 10,
+  },
+  resumeActionButton: {
+    flex: 1,
+    backgroundColor: 'rgba(167, 139, 250, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.4)',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  resumeRemoveButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.16)',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+  },
+  resumeActionButtonText: {
+    color: WHITE,
+    fontSize: 13,
+    fontWeight: '700',
+  },
   saveButtonGradient: {
     paddingVertical: 18,
     paddingHorizontal: 32,

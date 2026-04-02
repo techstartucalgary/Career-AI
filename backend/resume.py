@@ -228,3 +228,43 @@ async def upload_resume_file(
                 "message": f"Resume upload failed: {str(e)}"
             }
         )
+
+
+@router.delete("/resume/upload")
+def delete_resume_file(authorization: str = Header(None)):
+    """Remove stored profile resume"""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        col.update_one(
+            {"_id": user_id},
+            {
+                "$unset": {
+                    "resume.file_name": "",
+                    "resume.file_data": "",
+                    "resume.uploaded_at": "",
+                }
+            },
+        )
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "Resume removed successfully",
+            },
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": f"Resume removal failed: {str(e)}",
+            },
+        )

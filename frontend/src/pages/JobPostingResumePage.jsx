@@ -8,7 +8,7 @@ import styles from './JobPostingResumePage.styles';
 import './JobPages.css';
 import { tailorResume, downloadPDFFromBase64 } from '../services/aiService';
 import PDFViewer from '../components/PDFViewer';
-import { API_BASE_URL } from '../services/api';
+import { API_BASE_URL, apiFetch, getAuthToken } from '../services/api';
 import { getGithubStatus, openGithubConnect, fetchGithubContext } from '../services/githubService';
 
 const ProgressRing = ({ progress = 0, size = 60, strokeWidth = 4, color = '#A78BFA' }) => {
@@ -63,7 +63,16 @@ const buildAtsFormData = async (file, jobDescription) => {
   const name = file?.name || 'document.pdf';
   const type = file?.mimeType || 'application/pdf';
 
-  if (Platform.OS === 'web') {
+  if (file?.fileDataBase64) {
+    const byteCharacters = atob(file.fileDataBase64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i += 1) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type });
+    formData.append('document_file', new File([blob], name, { type }));
+  } else if (Platform.OS === 'web') {
     const response = await fetch(file.uri);
     const blob = await response.blob();
     formData.append('document_file', new File([blob], name, { type }));
@@ -188,6 +197,9 @@ const JobPostingResumePage = () => {
   const [jobDescription, setJobDescription] = useState('');
   const [keywords, setKeywords] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [profileResumeFile, setProfileResumeFile] = useState(null);
+  const [profileResumeLoading, setProfileResumeLoading] = useState(true);
+  const [resumeSource, setResumeSource] = useState('profile');
   const [selectedTags, setSelectedTags] = useState(['Student', 'AI', 'Software Development', 'Calgary']);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredAts, setHoveredAts] = useState(false);
@@ -202,6 +214,9 @@ const JobPostingResumePage = () => {
   const [atsLoading, setAtsLoading] = useState(false);
   const [atsError, setAtsError] = useState('');
   const [pdfGenerating, setPdfGenerating] = useState(false);
+  const [savingProfileResume, setSavingProfileResume] = useState(false);
+  const [saveProfileResumeMessage, setSaveProfileResumeMessage] = useState('');
+  const [saveProfileResumeError, setSaveProfileResumeError] = useState('');
 
   // GitHub integration state
   const [githubConnected, setGithubConnected] = useState(false);
@@ -214,6 +229,29 @@ const JobPostingResumePage = () => {
       setGithubConnected(connected);
       setGithubUsername(username);
     });
+
+    const loadProfileResume = async () => {
+      try {
+        setProfileResumeLoading(true);
+        const response = await apiFetch('/profile');
+        const resumeData = response?.data?.resume;
+        if (resumeData?.file_data) {
+          setProfileResumeFile({
+            name: resumeData.file_name || 'profile_resume.pdf',
+            mimeType: 'application/pdf',
+            fileDataBase64: resumeData.file_data,
+            uri: `data:application/pdf;base64,${resumeData.file_data}`,
+          });
+          setResumeSource('profile');
+        }
+      } catch (err) {
+        console.log('Profile resume unavailable:', err?.message || err);
+      } finally {
+        setProfileResumeLoading(false);
+      }
+    };
+
+    loadProfileResume();
   }, []);
 
   const removeTag = (tagToRemove) => {
@@ -232,15 +270,34 @@ const JobPostingResumePage = () => {
         const name = result.name ?? result.assets?.[0]?.name;
         const mimeType = result.mimeType ?? result.assets?.[0]?.mimeType;
         setSelectedFile({ uri, name, mimeType });
+        setResumeSource('upload');
       }
     } catch (error) {
       setError('Error picking document: ' + error.message);
     }
   };
 
-  const calculateAtsScoreForFile = async () => {
-    if (!selectedFile?.uri) {
-      setAtsError('Upload your resume to calculate ATS score.');
+  const clearUploadedResume = () => {
+    setSelectedFile(null);
+    setResumeSource('profile');
+  };
+
+  const handleUploadSourcePress = async () => {
+    if (selectedFile) {
+      if (resumeSource !== 'upload') {
+        setResumeSource('upload');
+        return;
+      }
+      await pickDocument();
+      return;
+    }
+
+    await pickDocument();
+  };
+
+  const calculateAtsScoreForFile = async (resumeFile) => {
+    if (!resumeFile?.uri && !resumeFile?.fileDataBase64) {
+      setAtsError('Add a resume source to calculate ATS score.');
       return null;
     }
     if (!jobDescription.trim()) {
@@ -249,7 +306,7 @@ const JobPostingResumePage = () => {
     }
 
     try {
-      const formData = await buildAtsFormData(selectedFile, jobDescription);
+      const formData = await buildAtsFormData(resumeFile, jobDescription);
 
       const response = await fetch(`${API_BASE_URL}/api/ats-score`, {
         method: 'POST',
@@ -298,12 +355,16 @@ const JobPostingResumePage = () => {
   };
 
   const handleGenerateResume = async () => {
+    const activeResumeFile = resumeSource === 'upload'
+      ? (selectedFile || profileResumeFile)
+      : (profileResumeFile || selectedFile);
+
     if (!jobDescription.trim()) {
       setError('Please enter a job description');
       return;
     }
-    if (!selectedFile) {
-      setError('Please upload your resume');
+    if (!activeResumeFile) {
+      setError('Upload a resume or use your profile resume to continue.');
       return;
     }
 
@@ -334,11 +395,11 @@ const JobPostingResumePage = () => {
       setAtsError('');
 
       const [result, originalScore] = await Promise.all([
-        tailorResume(selectedFile, jobDescription, {}, (data) => {
+        tailorResume(activeResumeFile, jobDescription, {}, (data) => {
           setProgressStep(data.step);
           setProgress(data.progress);
         }, githubContext),
-        calculateAtsScoreForFile(),
+        calculateAtsScoreForFile(activeResumeFile),
       ]);
 
       setGeneratedResume(result);
@@ -371,6 +432,68 @@ const JobPostingResumePage = () => {
   const handleDownloadPDF = () => {
     if (generatedResume?.pdf_base64) {
       downloadPDFFromBase64(generatedResume.pdf_base64, 'tailored_resume.pdf');
+    }
+  };
+
+  const handleSaveAsProfileResume = async () => {
+    if (!generatedResume?.pdf_base64) {
+      return;
+    }
+
+    const token = getAuthToken();
+    if (!token) {
+      setSaveProfileResumeError('Please sign in to save your profile resume.');
+      return;
+    }
+
+    try {
+      setSavingProfileResume(true);
+      setSaveProfileResumeError('');
+      setSaveProfileResumeMessage('');
+
+      const binary = atob(generatedResume.pdf_base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+
+      const formData = new FormData();
+      if (Platform.OS === 'web') {
+        formData.append('resume_file', new File([blob], 'profile_resume.pdf', { type: 'application/pdf' }));
+      } else {
+        formData.append('resume_file', {
+          uri: `data:application/pdf;base64,${generatedResume.pdf_base64}`,
+          name: 'profile_resume.pdf',
+          type: 'application/pdf',
+        });
+      }
+
+      const response = await fetch(`${API_BASE_URL}/resume/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || data?.detail || 'Failed to save profile resume.');
+      }
+
+      setProfileResumeFile({
+        name: data?.data?.file_name || 'profile_resume.pdf',
+        mimeType: 'application/pdf',
+        fileDataBase64: generatedResume.pdf_base64,
+        uri: `data:application/pdf;base64,${generatedResume.pdf_base64}`,
+      });
+      setResumeSource('profile');
+      setSaveProfileResumeMessage('Saved as your new profile resume.');
+    } catch (err) {
+      setSaveProfileResumeError(err?.message || 'Failed to save profile resume.');
+    } finally {
+      setSavingProfileResume(false);
     }
   };
 
@@ -455,27 +578,72 @@ const JobPostingResumePage = () => {
                   />
                 </View>
 
-                {/* Your Current Resume Section */}
+                {/* Resume Upload Section */}
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Your Current Resume</Text>
+                  <Text style={styles.sectionTitle}>Resume Upload</Text>
+                  <Pressable
+                    style={[
+                      styles.resumeSourceCard,
+                      resumeSource === 'profile' && styles.resumeSourceCardActive,
+                    ]}
+                    onPress={() => setResumeSource('profile')}
+                  >
+                    <View style={styles.resumeSourceHeader}>
+                      <Text style={styles.resumeSourceTitle}>Profile Resume</Text>
+                      {resumeSource === 'profile' && <Text style={styles.resumeSourceBadge}>SELECTED</Text>}
+                    </View>
+                    <Text style={styles.resumeSourceMeta}>
+                      {profileResumeLoading
+                        ? 'Checking profile...'
+                        : profileResumeFile?.name || 'No profile resume found'}
+                    </Text>
+                  </Pressable>
+
+                  <View style={styles.resumeSourceDividerRow}>
+                    <View style={styles.resumeSourceDividerLine} />
+                    <Text style={styles.resumeSourceDividerText}>OR</Text>
+                    <View style={styles.resumeSourceDividerLine} />
+                  </View>
+
                   <Pressable
                     style={[
                       styles.uploadButton,
+                      resumeSource === 'upload' && styles.uploadButtonActive,
                       hoveredButton === 'upload' && styles.uploadButtonHover
                     ]}
-                    onPress={pickDocument}
+                    onPress={handleUploadSourcePress}
                     onHoverIn={() => Platform.OS === 'web' && setHoveredButton('upload')}
                     onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
                   >
                     <View style={styles.uploadIcon}>
-                      <View style={styles.uploadIconArrow} />
+                      {Platform.OS === 'web' ? (
+                        <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} style={{ color: '#A78BFA' }}>
+                          <path d="M12 16V4" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M7 9L12 4L17 9" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M20 16.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      ) : (
+                        <Text style={styles.uploadIconFallback}>↑</Text>
+                      )}
                     </View>
                     <Text style={styles.uploadButtonText}>
-                      {selectedFile ? selectedFile.name : 'Upload Resume (PDF, DOC, DOCX)'}
+                      {selectedFile ? selectedFile.name : 'Upload Resume (Optional)'}
                     </Text>
                   </Pressable>
                   {selectedFile && (
-                    <Text style={styles.selectedFileText}>Selected: {selectedFile.name}</Text>
+                    <View style={styles.selectedFileRow}>
+                      <Text style={styles.selectedFileText}>
+                        {resumeSource === 'upload'
+                          ? `Selected source: File upload (${selectedFile.name})`
+                          : `Selected source: Profile resume (${profileResumeFile?.name || 'No profile resume found'})`}
+                      </Text>
+                      <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
+                        <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
+                      </Pressable>
+                    </View>
+                  )}
+                  {!selectedFile && profileResumeFile && (
+                    <Text style={styles.resumeFallbackText}>No upload selected, using profile resume.</Text>
                   )}
                 </View>
 
@@ -830,6 +998,26 @@ const JobPostingResumePage = () => {
                     </View>
                   </View>
                 </View>
+
+                <Pressable
+                  style={[
+                    styles.saveProfileButton,
+                    !canDownload && styles.generateButtonDisabled,
+                    hoveredButton === 'save-profile' && canDownload && styles.saveProfileButtonHover,
+                  ]}
+                  onPress={handleSaveAsProfileResume}
+                  onHoverIn={() => Platform.OS === 'web' && setHoveredButton('save-profile')}
+                  onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
+                  disabled={!canDownload || savingProfileResume}
+                >
+                  {savingProfileResume ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.saveProfileButtonText}>Save As Profile Resume</Text>
+                  )}
+                </Pressable>
+                {!!saveProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveProfileResumeMessage}</Text>}
+                {!!saveProfileResumeError && <Text style={styles.saveProfileError}>{saveProfileResumeError}</Text>}
               </View>
             </View>
           </View>
