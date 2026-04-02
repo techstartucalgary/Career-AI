@@ -7,6 +7,42 @@ import { THEME } from '../../src/styles/theme';
 import styles from './InterviewBuddyPage.styles';
 import withAuth from '../../src/components/withAuth';
 
+const QuestionsIcon = () => (
+  <>
+    {Platform.OS === 'web' ? (
+      <svg width={52} height={52} viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="9" y="10" width="26" height="32" rx="6" stroke="#A78BFA" strokeWidth="2.5" />
+        <path d="M16 20h12" stroke="#A78BFA" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M16 26h8" stroke="#A78BFA" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M33 20c3 0 5 2 5 4.5 0 3.5-3.5 4-4.6 6.2-.3.7-.4 1.2-.4 1.8" stroke="#A78BFA" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="33" cy="36.5" r="1.5" fill="#A78BFA" />
+      </svg>
+    ) : (
+      <>
+        <View style={styles.iconDocument} />
+        <View style={styles.iconQuestionMark} />
+      </>
+    )}
+  </>
+);
+
+const VideoIcon = () => (
+  <>
+    {Platform.OS === 'web' ? (
+      <svg width={52} height={52} viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8.5" y="15" width="24" height="18" rx="5" stroke="#A78BFA" strokeWidth="2.5" />
+        <path d="M33 21.5L42 17.5V30.5L33 26.5" stroke="#A78BFA" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M20.5 21.5V26.5L25.5 24L20.5 21.5Z" fill="#A78BFA" />
+      </svg>
+    ) : (
+      <>
+        <View style={styles.iconVideo} />
+        <View style={styles.iconPlayButton} />
+      </>
+    )}
+  </>
+);
+
 const InterviewBuddyPage = () => {
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -70,18 +106,8 @@ const InterviewBuddyPage = () => {
                   onHoverOut={() => Platform.OS === 'web' && setHoveredCard(null)}
                 >
                   <View style={styles.optionIconContainer}>
-                    {option.icon === 'questions' && (
-                      <>
-                        <View style={styles.iconDocument} />
-                        <View style={styles.iconQuestionMark} />
-                      </>
-                    )}
-                    {option.icon === 'video' && (
-                      <>
-                        <View style={styles.iconVideo} />
-                        <View style={styles.iconPlayButton} />
-                      </>
-                    )}
+                    {option.icon === 'questions' && <QuestionsIcon />}
+                    {option.icon === 'video' && <VideoIcon />}
                   </View>
                   <Text style={styles.optionTitle}>{option.title}</Text>
                   <Text style={styles.optionDescription}>{option.description}</Text>

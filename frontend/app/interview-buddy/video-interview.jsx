@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, Pressable, Platform, ActivityIndicator, TextInput, ScrollView } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Header from '../../src/components/Header';
 import { THEME } from '../../src/styles/theme';
 import styles from './VideoInterviewPage.styles';
+import templateStyles from '../../src/pages/CoverLetterTemplatePage.styles';
 import { startInterview, startInterviewWithJobAndResume, sendInterviewResponse, endInterviewSession, analyzePostureFrame, getLiveFeedback } from '../../src/services/interviewService';
+import { API_BASE_URL, apiFetch, getAuthToken } from '../../src/services/api';
 import withAuth from '../../src/components/withAuth';
 
 // Web video component
@@ -118,6 +121,7 @@ const VideoInterviewPage = () => {
   const [selectedMicrophone, setSelectedMicrophone] = useState(null);
   const [selectedCamera, setSelectedCamera] = useState(null);
   const [loadingTasks, setLoadingTasks] = useState({
+    resume: false,
     questions: false,
     company: false,
     profile: false,
@@ -137,7 +141,16 @@ const VideoInterviewPage = () => {
   const [hoveredButton, setHoveredButton] = useState(null);
   const [jobDescription, setJobDescription] = useState('');
   const [resume, setResume] = useState('');
-  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeSource, setResumeSource] = useState('default');
+  const [defaultResumeFile, setDefaultResumeFile] = useState(null);
+  const [templateResumeFile, setTemplateResumeFile] = useState(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const [removingResume, setRemovingResume] = useState(false);
+  const [savingUploadDefaultResume, setSavingUploadDefaultResume] = useState(false);
+  const [saveUploadDefaultResumeMessage, setSaveUploadDefaultResumeMessage] = useState('');
+  const [saveUploadDefaultResumeError, setSaveUploadDefaultResumeError] = useState('');
+  const [resumeError, setResumeError] = useState('');
+  const [hoveredProfileButton, setHoveredProfileButton] = useState(null);
   const [showJobInput, setShowJobInput] = useState(true);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -165,6 +178,166 @@ const VideoInterviewPage = () => {
     sessionIdRef.current = sessionId;
     interviewStatusRef.current = interviewStatus;
   }, [sessionId, interviewStatus]);
+
+  const base64ToFile = (base64, fileName = 'resume.pdf', mimeType = 'application/pdf') => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined' || typeof atob === 'undefined') {
+      return null;
+    }
+
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    const blob = new Blob([bytes], { type: mimeType });
+    return new File([blob], fileName, { type: mimeType });
+  };
+
+  const loadProfileResume = useCallback(async () => {
+    try {
+      const response = await apiFetch('/profile');
+      const data = response && response.data ? response.data : {};
+      const resume = data.resume || {};
+
+      if (resume.file_name) {
+        setDefaultResumeFile({ name: resume.file_name, file_data: resume.file_data || '' });
+      } else {
+        setDefaultResumeFile(null);
+      }
+    } catch (error) {
+      console.warn('Unable to load profile resume:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProfileResume();
+  }, [loadProfileResume]);
+
+  const parseResumeFile = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/interview/parse-resume`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Failed to parse resume');
+    }
+
+    const data = await response.json();
+    return data.resume_text || '';
+  };
+
+  const handleResumeUpload = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setUploadingResume(true);
+        setResumeError('');
+        setSaveUploadDefaultResumeMessage('');
+        setSaveUploadDefaultResumeError('');
+
+        const file = result.assets[0];
+        setResume('');
+        setTemplateResumeFile(file);
+        setResumeSource('upload');
+      }
+    } catch (error) {
+      setResumeError(error.message || 'Error uploading resume');
+    } finally {
+      setUploadingResume(false);
+    }
+  };
+
+  const handleResumeDownload = () => {
+    const fileData = defaultResumeFile?.file_data || '';
+    if (!fileData) {
+      setResumeError('No resume file is available to download.');
+      return;
+    }
+
+    try {
+      const binary = atob(fileData);
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index += 1) {
+        bytes[index] = binary.charCodeAt(index);
+      }
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = defaultResumeFile?.name || 'profile_resume.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setResumeError('');
+    } catch (error) {
+      setResumeError('Unable to download resume.');
+    }
+  };
+
+  const clearUploadedResume = () => {
+    setTemplateResumeFile(null);
+    setResumeSource('default');
+    setSaveUploadDefaultResumeMessage('');
+    setSaveUploadDefaultResumeError('');
+    loadProfileResume();
+  };
+
+  const handleSaveUploadedResumeAsDefault = async () => {
+    if (!templateResumeFile || savingUploadDefaultResume) {
+      return;
+    }
+
+    try {
+      setSavingUploadDefaultResume(true);
+      setSaveUploadDefaultResumeError('');
+      setSaveUploadDefaultResumeMessage('');
+
+      const formDataObj = new FormData();
+      const resumePart = templateResumeFile.file
+        ? templateResumeFile.file
+        : {
+            uri: templateResumeFile.uri,
+            name: templateResumeFile.name || 'resume.pdf',
+            type: templateResumeFile.mimeType || 'application/pdf',
+          };
+      const resumeName = resumePart?.name || templateResumeFile.name || 'resume.pdf';
+      formDataObj.append('resume_file', resumePart, resumeName);
+
+      const response = await fetch(`${API_BASE_URL}/resume/upload`, {
+        method: 'POST',
+        body: formDataObj,
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const message = data?.message || data?.detail || 'Failed to upload resume';
+        throw new Error(message);
+      }
+
+      setResumeSource('default');
+      await loadProfileResume();
+      setTemplateResumeFile(null);
+      setSaveUploadDefaultResumeMessage('Saved to default resume.');
+    } catch (error) {
+      setSaveUploadDefaultResumeError(error?.message || 'Failed to save default resume.');
+    } finally {
+      setSavingUploadDefaultResume(false);
+    }
+  };
 
   // Helper function to add punctuation to transcript
   const addPunctuation = (text) => {
@@ -417,28 +590,24 @@ const VideoInterviewPage = () => {
 
   // Handle loading screen animation
   useEffect(() => {
-    if (screen === 'loading') {
+    if (screen === 'loading' && loadingTasks.resume) {
       const timers = [];
       
       timers.push(setTimeout(() => {
         setLoadingTasks(prev => ({ ...prev, questions: true }));
-      }, 1000));
+      }, 1300));
 
       timers.push(setTimeout(() => {
         setLoadingTasks(prev => ({ ...prev, company: true }));
-      }, 2000));
+      }, 2200));
 
       timers.push(setTimeout(() => {
         setLoadingTasks(prev => ({ ...prev, profile: true }));
-      }, 3000));
-
-      timers.push(setTimeout(() => {
-        setScreen('interview');
-      }, 4000));
+      }, 3200));
 
       return () => timers.forEach(timer => clearTimeout(timer));
     }
-  }, [screen]);
+  }, [screen, loadingTasks.resume]);
 
   useEffect(() => {
     if (screen !== 'interview' || Platform.OS !== 'web' || !cameraReady) return;
@@ -735,50 +904,67 @@ const VideoInterviewPage = () => {
       alert('Please enter a job description');
       return;
     }
-    if (!resumeFile && !resume.trim()) {
+    if (!defaultResumeFile?.name && !templateResumeFile && !resume.trim()) {
       alert('Please upload your resume');
       return;
     }
+
+    sessionEndRequestedRef.current = false;
+    endingSessionRef.current = false;
+    setLoadingTasks({ resume: false, questions: false, company: false, profile: false });
+    setScreen('loading');
     
-    // Parse resume FIRST before showing loading screen
-    let resumeText = resume;
-    if (resumeFile && !resume.trim()) {
+    let resumeText = resume.trim();
+    try {
       setIsParsingResume(true);
-      try {
-        const formData = new FormData();
-        formData.append('file', resumeFile);
-        const response = await fetch('http://localhost:8000/api/interview/parse-resume', {
-          method: 'POST',
-          body: formData,
-        });
-        if (response.ok) {
-          const data = await response.json();
-          resumeText = data.resume_text || '';
-          setResume(resumeText);
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.detail || 'Failed to parse resume');
+
+      if (resumeSource === 'default') {
+        if (!defaultResumeFile?.file_data) {
+          throw new Error('No default resume found');
         }
-      } catch (err) {
-        console.error('Resume parsing error:', err);
-        alert('Error parsing resume: ' + err.message);
-        setIsParsingResume(false);
-        return;
+        if (Platform.OS !== 'web') {
+          throw new Error('Default resume parsing is only available on web');
+        }
+
+        const profileFile = base64ToFile(
+          defaultResumeFile.file_data,
+          defaultResumeFile.name || 'resume.pdf',
+          'application/pdf'
+        );
+
+        if (!profileFile) {
+          throw new Error('Unable to read default resume file');
+        }
+
+        resumeText = await parseResumeFile(profileFile);
+      } else if (resumeSource === 'upload' && templateResumeFile) {
+        const resumePart = templateResumeFile.file
+          ? templateResumeFile.file
+          : {
+              uri: templateResumeFile.uri,
+              name: templateResumeFile.name || 'resume.pdf',
+              type: templateResumeFile.mimeType || 'application/pdf',
+            };
+
+        resumeText = await parseResumeFile(templateResumeFile.file || resumePart);
       }
+
+      setResume(resumeText);
+      setLoadingTasks(prev => ({ ...prev, resume: true }));
+    } catch (err) {
+      alert('Error parsing resume: ' + (err.message || 'Unable to parse resume'));
+      setScreen('preview');
       setIsParsingResume(false);
+      return;
     }
+    setIsParsingResume(false);
     
     // Verify we have resume text before proceeding
     if (!resumeText.trim()) {
       alert('Could not parse resume. Please try again or paste your resume as text.');
+      setScreen('preview');
       return;
     }
-    
-    // NOW show loading screen and start interview
-    sessionEndRequestedRef.current = false;
-    endingSessionRef.current = false;
-    setScreen('loading');
-    setLoadingTasks({ questions: false, company: false, profile: false });
     
     try {
       const data = await startInterviewWithJobAndResume(jobDescription, resumeText);
@@ -787,7 +973,7 @@ const VideoInterviewPage = () => {
       setInterviewStatus(data.status || 'in_progress');
       setCurrentQuestion(Math.max(0, data.question_count || 0));
       setMaxQuestions(data.max_questions || null);
-      setLoadingTasks({ questions: true, company: true, profile: true });
+      setLoadingTasks({ resume: true, questions: true, company: true, profile: true });
       setScreen('interview');
       playTtsAudio(data.audio_base64);
       setShowJobInput(false);
@@ -921,56 +1107,99 @@ const VideoInterviewPage = () => {
               </View>
 
               <View style={styles.jobInputGroup}>
-                <Text style={styles.jobInputLabel}>Your Resume</Text>
-                {Platform.OS === 'web' ? (
-                  <label style={styles.fileUploadLabel}>
-                    <input
-                      type="file"
-                      accept=".pdf,.docx,.doc,.txt"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setResumeFile(file);
-                          setResume(''); // Clear any previously parsed text
-                        }
-                      }}
-                      style={{ display: 'none' }}
-                    />
-                    <View style={styles.fileUploadButton}>
-                      <Text style={styles.fileUploadButtonText}>
-                        {resumeFile ? `✓ ${resumeFile.name}` : '📄 Upload Resume (PDF/DOCX)'}
-                      </Text>
+                {/* <Text style={styles.jobInputLabel}>Your Resume</Text> */}
+                <View style={templateStyles.section}>
+                  <Text style={templateStyles.sectionTitle}>Resume Upload</Text>
+                  <Pressable
+                    style={[
+                      templateStyles.resumeSourceCard,
+                      resumeSource === 'default' && templateStyles.resumeSourceCardActive,
+                    ]}
+                    onPress={() => setResumeSource('default')}
+                  >
+                    <View style={templateStyles.resumeSourceHeader}>
+                      <Text style={templateStyles.resumeSourceTitle}>Default Resume</Text>
+                      {resumeSource === 'default' && <Text style={templateStyles.resumeSourceBadge}>SELECTED</Text>}
                     </View>
-                  </label>
-                ) : (
-                  <TextInput
-                    style={styles.jobInputText}
-                    placeholder="Paste your resume here..."
-                    placeholderTextColor="#8B7AB8"
-                    value={resume}
-                    onChangeText={setResume}
-                    multiline
-                  />
-                )}
+                    <Text style={templateStyles.resumeSourceMeta}>
+                      {defaultResumeFile?.name || 'No default resume found'}
+                    </Text>
+                  </Pressable>
+
+                  <View style={templateStyles.resumeSourceDividerRow}>
+                    <View style={templateStyles.resumeSourceDividerLine} />
+                    <Text style={templateStyles.resumeSourceDividerText}>OR</Text>
+                    <View style={templateStyles.resumeSourceDividerLine} />
+                  </View>
+
+                  <Pressable
+                    style={[
+                      templateStyles.uploadButton,
+                      resumeSource === 'upload' && templateStyles.uploadButtonActive,
+                      hoveredProfileButton === 'templateResumeUpload' && templateStyles.uploadButtonHover
+                    ]}
+                    onPress={handleResumeUpload}
+                    onHoverIn={() => Platform.OS === 'web' && setHoveredProfileButton('templateResumeUpload')}
+                    onHoverOut={() => Platform.OS === 'web' && setHoveredProfileButton(null)}
+                  >
+                    <View style={templateStyles.uploadIcon}>
+                      {Platform.OS === 'web' ? (
+                        <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} style={{ color: '#A78BFA' }}>
+                          <path d="M12 16V4" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M7 9L12 4L17 9" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M20 16.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      ) : (
+                        <Text style={templateStyles.uploadIconFallback}>↑</Text>
+                      )}
+                    </View>
+                    <Text style={templateStyles.uploadButtonText}>
+                      {templateResumeFile ? templateResumeFile.name : 'Upload Resume (Optional)'}
+                    </Text>
+                  </Pressable>
+
+                  {templateResumeFile && (
+                    <View style={templateStyles.selectedFileRow}>
+                      <Text style={templateStyles.selectedFileText}>
+                        {resumeSource === 'upload'
+                          ? `Selected source: File upload (${templateResumeFile.name})`
+                          : `Selected source: Default resume (${defaultResumeFile?.name || 'No default resume found'})`}
+                      </Text>
+                      <View style={templateStyles.selectedFileActions}>
+                        <Pressable style={templateStyles.clearUploadButton} onPress={clearUploadedResume}>
+                          <Text style={templateStyles.clearUploadButtonText}>Remove Upload</Text>
+                        </Pressable>
+                        <Pressable
+                          style={[templateStyles.saveUploadButton, savingUploadDefaultResume && templateStyles.saveUploadButtonDisabled]}
+                          onPress={handleSaveUploadedResumeAsDefault}
+                          disabled={savingUploadDefaultResume}
+                        >
+                          <Text style={templateStyles.saveUploadButtonText}>
+                            {savingUploadDefaultResume ? 'Saving...' : 'Make Default Resume'}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  )}
+                  {!templateResumeFile && defaultResumeFile && (
+                    <Text style={templateStyles.resumeFallbackText}>No upload selected, using default resume.</Text>
+                  )}
+                  {!!saveUploadDefaultResumeMessage && <Text style={templateStyles.saveProfileSuccess}>{saveUploadDefaultResumeMessage}</Text>}
+                  {!!saveUploadDefaultResumeError && <Text style={templateStyles.saveProfileError}>{saveUploadDefaultResumeError}</Text>}
+                  {!!resumeError && <Text style={templateStyles.saveProfileError}>{resumeError}</Text>}
+                </View>
               </View>
 
               <Pressable
                 style={[
                   styles.startInterviewButton,
-                  (!jobDescription.trim() || (!resumeFile && !resume.trim())) && styles.startInterviewButtonDisabled,
-                  isParsingResume && styles.startInterviewButtonDisabled
+                  (!jobDescription.trim() || (!defaultResumeFile?.name && !templateResumeFile && !resume.trim())) && styles.startInterviewButtonDisabled,
+                  (isParsingResume || screen === 'loading') && styles.startInterviewButtonDisabled
                 ]}
                 onPress={handleStart}
-                disabled={!jobDescription.trim() || (!resumeFile && !resume.trim()) || isParsingResume}
+                disabled={!jobDescription.trim() || (!defaultResumeFile?.name && !templateResumeFile && !resume.trim()) || isParsingResume || screen === 'loading'}
               >
-                {isParsingResume ? (
-                  <>
-                    <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
-                    <Text style={styles.startInterviewButtonText}>Parsing Resume...</Text>
-                  </>
-                ) : (
-                  <Text style={styles.startInterviewButtonText}>Start Interview</Text>
-                )}
+                <Text style={styles.startInterviewButtonText}>Start Interview</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -993,6 +1222,25 @@ const VideoInterviewPage = () => {
               <Text style={styles.loadingTitle}>Let's Get Started</Text>
               
               <View style={styles.loadingList}>
+                <View style={styles.loadingItem}>
+                  <View style={[
+                    styles.loadingCheckmark,
+                    loadingTasks.resume && styles.loadingCheckmarkActive
+                  ]}>
+                    {loadingTasks.resume ? (
+                      <View style={styles.checkmarkIcon}>
+                        <View style={styles.checkmarkLine1} />
+                        <View style={styles.checkmarkLine2} />
+                      </View>
+                    ) : (
+                      <ActivityIndicator size="small" color="#A78BFA" />
+                    )}
+                  </View>
+                  <Text style={styles.loadingItemText}>
+                    Parsing resume
+                  </Text>
+                </View>
+
                 <View style={styles.loadingItem}>
                   <View style={[
                     styles.loadingCheckmark,
@@ -1050,6 +1298,10 @@ const VideoInterviewPage = () => {
                   </Text>
                 </View>
               </View>
+
+              <Text style={styles.loadingHint}>
+                We are preparing your interview now.
+              </Text>
             </View>
           </View>
         </LinearGradient>
