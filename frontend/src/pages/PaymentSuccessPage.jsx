@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import styles from './PaymentSuccessPage.styles';
+import { useBreakpoints } from '../hooks/useBreakpoints';
 
 const PLAN_INFO = {
   free: {
@@ -56,6 +57,7 @@ const CheckmarkCircle = ({ scale, opacity }) => (
 const PaymentSuccessPage = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { isWideLayout } = useBreakpoints();
   const planId = params?.plan || 'premium';
   const plan = PLAN_INFO[planId] || PLAN_INFO.premium;
 
@@ -110,7 +112,7 @@ const PaymentSuccessPage = () => {
             <View style={styles.successCard}>
               <LinearGradient
                 colors={['#261A52', '#1C1340']}
-                style={styles.successCardGradient}
+                style={[styles.successCardGradient, !isWideLayout && { paddingVertical: 36, paddingHorizontal: 24 }]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
@@ -128,7 +130,9 @@ const PaymentSuccessPage = () => {
                     </View>
                   )}
 
-                  <Text style={styles.tagline}>{plan.tagline}</Text>
+                  <Text style={[styles.tagline, !isWideLayout && { fontSize: 24, lineHeight: 30 }]}>
+                    {plan.tagline}
+                  </Text>
                   <Text style={styles.subtitle}>{plan.subtitle}</Text>
 
                   <View style={styles.perksList}>

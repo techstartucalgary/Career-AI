@@ -10,6 +10,7 @@ import { tailorResume, downloadPDFFromBase64 } from '../services/aiService';
 import PDFViewer from '../components/PDFViewer';
 import { API_BASE_URL, apiFetch, getAuthToken } from '../services/api';
 import { getGithubStatus, openGithubConnect, fetchGithubContext } from '../services/githubService';
+import { useBreakpoints } from '../hooks/useBreakpoints';
 
 const ProgressRing = ({ progress = 0, size = 60, strokeWidth = 4, color = '#A78BFA' }) => {
   const radius = (size - strokeWidth) / 2;
@@ -193,6 +194,7 @@ const highlightKeywords = (text, keywords, styles) => {
 
 const JobPostingResumePage = () => {
   const router = useRouter();
+  const { isDesktop } = useBreakpoints();
   const [searchQuery, setSearchQuery] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [keywords, setKeywords] = useState([]);
@@ -217,6 +219,7 @@ const JobPostingResumePage = () => {
   const [savingUploadDefaultResume, setSavingUploadDefaultResume] = useState(false);
   const [saveUploadDefaultResumeMessage, setSaveUploadDefaultResumeMessage] = useState('');
   const [saveUploadDefaultResumeError, setSaveUploadDefaultResumeError] = useState('');
+  const [profileResumeFile, setProfileResumeFile] = useState(null);
   const [savingProfileResume, setSavingProfileResume] = useState(false);
   const [saveProfileResumeMessage, setSaveProfileResumeMessage] = useState('');
   const [saveProfileResumeError, setSaveProfileResumeError] = useState('');
@@ -239,12 +242,14 @@ const JobPostingResumePage = () => {
         const response = await apiFetch('/profile');
         const resumeData = response?.data?.resume;
         if (resumeData?.file_data) {
-          setDefaultResumeFile({
+          const file = {
             name: resumeData.file_name || 'default_resume.pdf',
             mimeType: 'application/pdf',
             fileDataBase64: resumeData.file_data,
             uri: `data:application/pdf;base64,${resumeData.file_data}`,
-          });
+          };
+          setDefaultResumeFile(file);
+          setProfileResumeFile(file);
           setResumeSource('default');
         }
       } catch (err) {
@@ -339,10 +344,12 @@ const JobPostingResumePage = () => {
         throw new Error(data?.message || data?.detail || 'Failed to save default resume.');
       }
 
-      setDefaultResumeFile({
+      const saved = {
         ...selectedFile,
         name: data?.data?.file_name || name,
-      });
+      };
+      setDefaultResumeFile(saved);
+      setProfileResumeFile(saved);
       setResumeSource('default');
       setSaveUploadDefaultResumeMessage('Saved to default resume.');
     } catch (error) {
@@ -426,8 +433,8 @@ const JobPostingResumePage = () => {
 
   const handleGenerateResume = async () => {
     const activeResumeFile = resumeSource === 'upload'
-      ? (selectedFile || profileResumeFile)
-      : (profileResumeFile || selectedFile);
+      ? selectedFile
+      : (defaultResumeFile || profileResumeFile);
 
     if (!jobDescription.trim()) {
       setError('Please enter a job description');
@@ -552,13 +559,15 @@ const JobPostingResumePage = () => {
         throw new Error(data?.message || data?.detail || 'Failed to save profile resume.');
       }
 
-      setProfileResumeFile({
+      const saved = {
         name: data?.data?.file_name || 'profile_resume.pdf',
         mimeType: 'application/pdf',
         fileDataBase64: generatedResume.pdf_base64,
         uri: `data:application/pdf;base64,${generatedResume.pdf_base64}`,
-      });
-      setResumeSource('profile');
+      };
+      setProfileResumeFile(saved);
+      setDefaultResumeFile(saved);
+      setResumeSource('default');
       setSaveProfileResumeMessage('Saved as your new profile resume.');
     } catch (err) {
       setSaveProfileResumeError(err?.message || 'Failed to save profile resume.');
@@ -593,9 +602,9 @@ const JobPostingResumePage = () => {
               </Text>
             </View>
 
-            <View style={styles.panelsContainer}>
+            <View style={[styles.panelsContainer, { flexDirection: isDesktop ? 'row' : 'column' }]}>
               {/* Left Panel - Input Section */}
-              <View style={styles.leftPanel}>
+              <View style={[styles.leftPanel, { minHeight: isDesktop ? 600 : 400 }]}>
                 {/* Job Posting Section */}
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Job Posting</Text>
@@ -1064,7 +1073,7 @@ const JobPostingResumePage = () => {
                   )}
                 </View>
 
-                <View style={styles.actionRow}>
+                <View style={[styles.actionRow, { flexDirection: isDesktop ? 'row' : 'column' }]}>
                   <View 
                     style={[
                       styles.atsScorePanel,

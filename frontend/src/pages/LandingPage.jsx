@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import styles from './LandingPage.styles';
 import './LandingPage.css';
+import { useBreakpoints } from '../hooks/useBreakpoints';
 
 // Floating UI Card Component
 const FloatingCard = ({ children, style, delay = 0, duration = 3000 }) => {
@@ -206,6 +207,7 @@ const FeatureShowcaseCard = ({ children, label, title, description, isHovered, o
 
 const LandingPage = () => {
   const router = useRouter();
+  const { isDesktop, isWideLayout } = useBreakpoints();
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredFeature, setHoveredFeature] = useState(null);
@@ -241,7 +243,7 @@ const LandingPage = () => {
     <ScrollView style={styles.homepage} showsVerticalScrollIndicator={false}>
       <Header />
       {/* Hero Section */}
-      <View style={styles.heroSection}>
+      <View style={[styles.heroSection, !isWideLayout && styles.heroSectionNarrow]}>
         {/* Animated Background */}
         <View style={styles.heroBackground}>
           <LinearGradient
@@ -256,33 +258,35 @@ const LandingPage = () => {
           <View style={styles.glowOrb3} />
         </View>
 
-        {/* Floating UI Elements */}
-        <View style={styles.floatingElements}>
-          <FloatingCard style={styles.floatingCard1} delay={200} duration={3500}>
-            <MiniResumeCard />
-          </FloatingCard>
+        {/* Floating UI Elements — desktop / wide viewports only (live breakpoint) */}
+        {isDesktop && (
+          <View style={styles.floatingElements}>
+            <FloatingCard style={styles.floatingCard1} delay={200} duration={3500}>
+              <MiniResumeCard />
+            </FloatingCard>
 
-          <FloatingCard style={styles.floatingCard2} delay={400} duration={4000}>
-            <MiniJobCard highlighted />
-          </FloatingCard>
+            <FloatingCard style={styles.floatingCard2} delay={400} duration={4000}>
+              <MiniJobCard highlighted />
+            </FloatingCard>
 
-          <FloatingCard style={styles.floatingCard3} delay={600} duration={3200}>
-            <View style={styles.miniStatsCard}>
-              <ProgressRing progress={92} size={50} />
-              <Text style={styles.miniStatsLabel}>Match Score</Text>
-            </View>
-          </FloatingCard>
-
-          <FloatingCard style={styles.floatingCard4} delay={800} duration={3800}>
-            <View style={styles.miniNotification}>
-              <View style={styles.notificationIcon} />
-              <View style={styles.notificationContent}>
-                <View style={[styles.miniLine, { width: 70, height: 6 }]} />
-                <View style={[styles.miniLine, { width: 50, height: 5, opacity: 0.5 }]} />
+            <FloatingCard style={styles.floatingCard3} delay={600} duration={3200}>
+              <View style={styles.miniStatsCard}>
+                <ProgressRing progress={92} size={50} />
+                <Text style={styles.miniStatsLabel}>Match Score</Text>
               </View>
-            </View>
-          </FloatingCard>
-        </View>
+            </FloatingCard>
+
+            <FloatingCard style={styles.floatingCard4} delay={800} duration={3800}>
+              <View style={styles.miniNotification}>
+                <View style={styles.notificationIcon} />
+                <View style={styles.notificationContent}>
+                  <View style={[styles.miniLine, { width: 70, height: 6 }]} />
+                  <View style={[styles.miniLine, { width: 50, height: 5, opacity: 0.5 }]} />
+                </View>
+              </View>
+            </FloatingCard>
+          </View>
+        )}
 
         {/* Hero Content */}
         <View style={styles.heroContent}>
@@ -291,12 +295,12 @@ const LandingPage = () => {
             <Text style={styles.badgeText}>Beta · Free while we grow</Text>
           </View>
 
-          <Text style={styles.heroTitle} className="hero-title-animate">
+          <Text style={[styles.heroTitle, !isWideLayout && styles.heroTitleNarrow]} className="hero-title-animate">
             Apply to jobs{'\n'}
             <Text style={styles.heroTitleGradient}>without the busywork</Text>
           </Text>
 
-          <Text style={styles.heroSubtitle} className="hero-subtitle-animate">
+          <Text style={[styles.heroSubtitle, !isWideLayout && styles.heroSubtitleNarrow]} className="hero-subtitle-animate">
             Upload your resume once. Get tailored applications, cover letters,{'\n'}
             and interview prep for every job you actually want.
           </Text>

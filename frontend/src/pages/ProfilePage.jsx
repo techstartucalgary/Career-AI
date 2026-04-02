@@ -6,8 +6,10 @@ import Header from '../components/Header';
 import styles from './ProfilePage.styles';
 import { API_BASE_URL, apiFetch, clearAuthToken, getAuthToken } from '../services/api';
 import { Redirect } from 'expo-router';
+import { useBreakpoints } from '../hooks/useBreakpoints';
 
 export default function ProfilePage() {
+  const { isWideLayout } = useBreakpoints();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -338,7 +340,7 @@ export default function ProfilePage() {
         style={styles.gradient}
       >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <View style={styles.content}>
+          <View style={[styles.content, !isWideLayout && { paddingHorizontal: 16, paddingTop: 24 }]}>
             {/* Header Section */}
             <View style={styles.headerSection}>
               <View style={styles.titleContainer}>

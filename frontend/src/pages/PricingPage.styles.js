@@ -3,8 +3,6 @@ import { THEME } from '../styles/theme';
 
 const { colors: COLORS } = THEME;
 
-const isWeb = Platform.OS === 'web';
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -14,7 +12,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageBackground: {
-    ...(isWeb ? { minHeight: '100vh' } : {}),
+    ...(Platform.OS === 'web' ? { minHeight: '100vh' } : {}),
     paddingBottom: 80,
   },
   pageContent: {
@@ -47,38 +45,54 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     color: COLORS.white,
-    fontSize: isWeb ? 38 : 28,
+    fontSize: 28,
     fontWeight: '600',
     letterSpacing: -0.5,
+  },
+  pageTitleLarge: {
+    fontSize: 38,
   },
   headerSpacer: {
     width: 44,
   },
   cardsWrapper: {
-    flexDirection: isWeb ? 'row' : 'column',
-    gap: isWeb ? 20 : 20,
-    // flex-end = bottom-aligned; taller cards rise higher → natural staircase
-    alignItems: isWeb ? 'flex-end' : 'stretch',
+    gap: 20,
     justifyContent: 'center',
     marginBottom: 52,
   },
+  cardsWrapperWide: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  cardsWrapperNarrow: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+  },
   planCard: {
-    // All cards same base width; heights differ via minHeight on the gradient
-    ...(isWeb ? { width: 300 } : {}),
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    // borderColor is set inline per-plan from the component
     borderColor: 'rgba(120, 120, 160, 0.35)',
-    ...(isWeb ? {
-      cursor: 'pointer',
-      transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-    } : {}),
+    width: '100%',
+    alignSelf: 'stretch',
+    ...(Platform.OS === 'web'
+      ? {
+          cursor: 'pointer',
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+        }
+      : {}),
+  },
+  planCardWide: {
+    width: 300,
+    maxWidth: '100%',
+    alignSelf: 'flex-end',
   },
   planCardHovered: {
-    ...(isWeb ? {
-      transform: [{ translateY: -6 }],
-    } : {}),
+    ...(Platform.OS === 'web'
+      ? {
+          transform: [{ translateY: -6 }],
+        }
+      : {}),
   },
   planCardGradient: {
     padding: 28,
@@ -94,6 +108,21 @@ const styles = StyleSheet.create({
   planNameFeatured: {
     fontSize: 28,
     marginBottom: 14,
+  },
+  currentPlanLabel: {
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 10,
+    marginTop: -4,
+  },
+  planCardStatic: {
+    ...(Platform.OS === 'web'
+      ? {
+          cursor: 'default',
+        }
+      : {}),
   },
   priceRow: {
     flexDirection: 'row',
@@ -182,9 +211,7 @@ const styles = StyleSheet.create({
   continueButton: {
     borderRadius: 50,
     overflow: 'hidden',
-    ...(isWeb ? {
-      cursor: 'pointer',
-    } : {}),
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
   },
   continueButtonGradient: {
     paddingVertical: 16,

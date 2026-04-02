@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import styles from './PaymentPage.styles';
 import { PLAN_CONFIG } from '../config/planConfig';
+import { useBreakpoints } from '../hooks/useBreakpoints';
 
 const InputField = ({ label, placeholder, value, onChangeText, keyboardType, maxLength, hint }) => (
   <View style={styles.inputGroup}>
@@ -36,8 +37,11 @@ const formatExpiry = (text) => {
 const PaymentPage = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const planId = params?.plan || 'premium';
+  const { isWideLayout } = useBreakpoints();
+  const rawPlan = params?.plan;
+  const planId = (Array.isArray(rawPlan) ? rawPlan[0] : rawPlan) || 'premium';
   const plan = PLAN_CONFIG[planId] || PLAN_CONFIG.premium;
+  const isFreePlan = planId === 'free';
 
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -57,6 +61,66 @@ const PaymentPage = () => {
 
   const isFormValid = cardName.trim() && cardNumber.replace(/\s/g, '').length === 16 && expiry.length === 5 && cvv.length >= 3;
 
+  if (isFreePlan) {
+    return (
+      <View style={styles.container}>
+        <Header />
+        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <LinearGradient
+            colors={['#0D0A1F', '#1A1035', '#130E28']}
+            style={styles.pageBackground}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+          >
+            <View style={styles.pageContent}>
+              <View style={styles.pageHeader}>
+                <Pressable onPress={() => router.back()} style={styles.backButton}>
+                  <Text style={styles.backArrow}>←</Text>
+                </Pressable>
+                <Text style={[styles.pageTitle, isWideLayout && styles.pageTitleLarge]}>
+                  Your plan
+                </Text>
+                <View style={styles.headerSpacer} />
+              </View>
+
+              <View
+                style={[
+                  styles.planSummaryCard,
+                  { borderColor: plan.borderColor },
+                  Platform.OS === 'web' && {
+                    boxShadow: `0 8px 32px ${plan.glowColor}`,
+                  },
+                ]}
+              >
+                <LinearGradient
+                  colors={plan.gradientColors}
+                  style={styles.planSummaryGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.planSummaryHeader}>
+                    <Text style={styles.planSummaryLabel}>You are on</Text>
+                    <Text style={styles.planSummaryName}>{plan.name}</Text>
+                    <Text style={styles.freePlanCurrentLabel}>(Current plan)</Text>
+                  </View>
+                  <Text style={styles.freePlanBody}>
+                    There is no paid checkout for the free tier. Upgrade from the pricing page when you are ready for Premium or Pro.
+                  </Text>
+                  <Pressable
+                    onPress={() => router.push('/pricing')}
+                    style={styles.freePlanCta}
+                  >
+                    <Text style={styles.freePlanCtaText}>View paid plans</Text>
+                  </Pressable>
+                </LinearGradient>
+              </View>
+            </View>
+          </LinearGradient>
+        </ScrollView>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Header />
@@ -72,14 +136,17 @@ const PaymentPage = () => {
               <Pressable onPress={() => router.back()} style={styles.backButton}>
                 <Text style={styles.backArrow}>←</Text>
               </Pressable>
-              <Text style={styles.pageTitle}>Complete Your Purchase</Text>
+              <Text style={[styles.pageTitle, isWideLayout && styles.pageTitleLarge]}>
+                Complete Your Purchase
+              </Text>
               <View style={styles.headerSpacer} />
             </View>
 
-            <View style={styles.mainLayout}>
+            <View style={[styles.mainLayout, isWideLayout ? styles.mainLayoutWide : styles.mainLayoutNarrow]}>
               {/* Plan Summary — colours sourced from shared planConfig */}
               <View style={[
                 styles.planSummaryCard,
+                isWideLayout && styles.planSummaryCardWide,
                 { borderColor: plan.borderColor },
                 Platform.OS === 'web' && {
                   boxShadow: `0 8px 32px ${plan.glowColor}`,

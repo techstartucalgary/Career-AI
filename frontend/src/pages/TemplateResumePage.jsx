@@ -80,8 +80,7 @@ const TemplateResumePage = () => {
   const { mode } = useLocalSearchParams();
   const [selectedFile, setSelectedFile] = useState(null);
   const [defaultResumeFile, setDefaultResumeFile] = useState(null);
-  const [defaultResumeLoading, setDefaultResumeLoading] = useState(true);
-  const [resumeSource, setResumeSource] = useState('default');
+  const [resumeSource, setResumeSource] = useState('profile');
   const [templateFile, setTemplateFile] = useState(null); // optional file for template mode
   const [templateMode, setTemplateMode] = useState(mode === 'optimize' ? 'optimize' : 'template'); // 'template' or 'optimize'
   const [selectedTemplate, setSelectedTemplate] = useState('classic');
@@ -99,9 +98,11 @@ const TemplateResumePage = () => {
   const [githubUsername, setGithubUsername] = useState(null);
   const [useGithub, setUseGithub] = useState(true);
   const [githubFetching, setGithubFetching] = useState(false);
-  const [savingUploadDefaultResume, setSavingUploadDefaultResume] = useState(false);
-  const [saveUploadDefaultResumeMessage, setSaveUploadDefaultResumeMessage] = useState('');
-  const [saveUploadDefaultResumeError, setSaveUploadDefaultResumeError] = useState('');
+  const [profileResumeFile, setProfileResumeFile] = useState(null);
+  const [profileResumeLoading, setProfileResumeLoading] = useState(true);
+  const [savingProfileResume, setSavingProfileResume] = useState(false);
+  const [saveProfileResumeMessage, setSaveProfileResumeMessage] = useState('');
+  const [saveProfileResumeError, setSaveProfileResumeError] = useState('');
 
   useEffect(() => {
     getGithubStatus().then(({ connected, username }) => {
@@ -111,22 +112,24 @@ const TemplateResumePage = () => {
 
     const loadDefaultResume = async () => {
       try {
-        setDefaultResumeLoading(true);
+        setProfileResumeLoading(true);
         const response = await apiFetch('/profile');
         const resumeData = response?.data?.resume;
         if (resumeData?.file_data) {
-          setDefaultResumeFile({
+          const file = {
             name: resumeData.file_name || 'default_resume.pdf',
             mimeType: 'application/pdf',
             fileDataBase64: resumeData.file_data,
             uri: `data:application/pdf;base64,${resumeData.file_data}`,
-          });
-          setResumeSource('default');
+          };
+          setDefaultResumeFile(file);
+          setProfileResumeFile(file);
+          setResumeSource('profile');
         }
       } catch (err) {
         console.log('Default resume unavailable:', err?.message || err);
       } finally {
-        setDefaultResumeLoading(false);
+        setProfileResumeLoading(false);
       }
     };
 
@@ -202,9 +205,9 @@ const TemplateResumePage = () => {
   const getActiveResumeUpload = () => {
     const uploadFile = templateMode === 'template' ? templateFile : selectedFile;
     if (resumeSource === 'upload') {
-      return uploadFile || defaultResumeFile;
+      return uploadFile || profileResumeFile || defaultResumeFile;
     }
-    return defaultResumeFile || uploadFile;
+    return profileResumeFile || defaultResumeFile;
   };
 
   const clearUploadedResume = () => {
@@ -229,21 +232,21 @@ const TemplateResumePage = () => {
     await pickDocument(templateMode === 'template');
   };
 
-  const handleSaveUploadedResumeAsDefault = async () => {
+  const handleSaveUploadedResumeAsProfile = async () => {
     const uploadFile = templateMode === 'template' ? templateFile : selectedFile;
     if (!uploadFile) {
       return;
     }
     const token = getAuthToken();
     if (!token) {
-      setSaveUploadDefaultResumeError('Please sign in to save your default resume.');
+      setSaveProfileResumeError('Please sign in to save your profile resume.');
       return;
     }
 
     try {
-      setSavingUploadDefaultResume(true);
-      setSaveUploadDefaultResumeError('');
-      setSaveUploadDefaultResumeMessage('');
+      setSavingProfileResume(true);
+      setSaveProfileResumeError('');
+      setSaveProfileResumeMessage('');
 
       const name = uploadFile.name || 'profile_resume.pdf';
       const type = uploadFile.mimeType || 'application/pdf';
@@ -279,16 +282,18 @@ const TemplateResumePage = () => {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.message || data?.detail || 'Failed to save default resume.');
+        throw new Error(data?.message || data?.detail || 'Failed to save profile resume.');
       }
 
-      setDefaultResumeFile({ ...uploadFile, name: data?.data?.file_name || name });
-      setResumeSource('default');
-      setSaveUploadDefaultResumeMessage('Saved to default resume.');
+      const saved = { ...uploadFile, name: data?.data?.file_name || name };
+      setProfileResumeFile(saved);
+      setDefaultResumeFile(saved);
+      setResumeSource('profile');
+      setSaveProfileResumeMessage('Saved to profile resume.');
     } catch (error) {
-      setSaveUploadDefaultResumeError(error?.message || 'Failed to save default resume.');
+      setSaveProfileResumeError(error?.message || 'Failed to save profile resume.');
     } finally {
-      setSavingUploadDefaultResume(false);
+      setSavingProfileResume(false);
     }
   };
 
@@ -497,29 +502,29 @@ const TemplateResumePage = () => {
                           <Text style={styles.selectedFileText}>
                             {resumeSource === 'upload'
                               ? `Selected source: File upload (${templateFile.name})`
-                              : `Selected source: Default resume (${defaultResumeFile?.name || 'No default resume found'})`}
+                              : `Selected source: Profile resume (${profileResumeFile?.name || defaultResumeFile?.name || 'No profile resume found'})`}
                           </Text>
                           <View style={styles.selectedFileActions}>
                             <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
                               <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
                             </Pressable>
                             <Pressable
-                              style={[styles.saveUploadButton, savingUploadProfileResume && styles.saveUploadButtonDisabled]}
+                              style={[styles.saveUploadButton, savingProfileResume && styles.saveUploadButtonDisabled]}
                               onPress={handleSaveUploadedResumeAsProfile}
-                              disabled={savingUploadProfileResume}
+                              disabled={savingProfileResume}
                             >
                               <Text style={styles.saveUploadButtonText}>
-                                {savingUploadProfileResume ? 'Saving...' : 'Make Profile Resume'}
+                                {savingProfileResume ? 'Saving...' : 'Make Profile Resume'}
                               </Text>
                             </Pressable>
                           </View>
                         </View>
                       )}
-                      {!templateFile && defaultResumeFile && (
-                        <Text style={styles.resumeFallbackText}>No upload selected, using default resume.</Text>
+                      {!templateFile && (profileResumeFile || defaultResumeFile) && (
+                        <Text style={styles.resumeFallbackText}>No upload selected, using profile resume.</Text>
                       )}
-                      {!!saveUploadDefaultResumeMessage && <Text style={styles.saveProfileSuccess}>{saveUploadDefaultResumeMessage}</Text>}
-                      {!!saveUploadDefaultResumeError && <Text style={styles.saveProfileError}>{saveUploadDefaultResumeError}</Text>}
+                      {!!saveProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveProfileResumeMessage}</Text>}
+                      {!!saveProfileResumeError && <Text style={styles.saveProfileError}>{saveProfileResumeError}</Text>}
                     </View>
 
                     {/* Template Selection */}
@@ -644,29 +649,29 @@ const TemplateResumePage = () => {
                           <Text style={styles.selectedFileText}>
                             {resumeSource === 'upload'
                               ? `Selected source: File upload (${selectedFile.name})`
-                              : `Selected source: Default resume (${defaultResumeFile?.name || 'No default resume found'})`}
+                              : `Selected source: Profile resume (${profileResumeFile?.name || defaultResumeFile?.name || 'No profile resume found'})`}
                           </Text>
                           <View style={styles.selectedFileActions}>
                             <Pressable style={styles.clearUploadButton} onPress={clearUploadedResume}>
                               <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
                             </Pressable>
                             <Pressable
-                              style={[styles.saveUploadButton, savingUploadProfileResume && styles.saveUploadButtonDisabled]}
+                              style={[styles.saveUploadButton, savingProfileResume && styles.saveUploadButtonDisabled]}
                               onPress={handleSaveUploadedResumeAsProfile}
-                              disabled={savingUploadProfileResume}
+                              disabled={savingProfileResume}
                             >
                               <Text style={styles.saveUploadButtonText}>
-                                {savingUploadProfileResume ? 'Saving...' : 'Make Profile Resume'}
+                                {savingProfileResume ? 'Saving...' : 'Make Profile Resume'}
                               </Text>
                             </Pressable>
                           </View>
                         </View>
                       )}
-                      {!selectedFile && defaultResumeFile && (
-                        <Text style={styles.resumeFallbackText}>No upload selected, using default resume.</Text>
+                      {!selectedFile && (profileResumeFile || defaultResumeFile) && (
+                        <Text style={styles.resumeFallbackText}>No upload selected, using profile resume.</Text>
                       )}
-                      {!!saveUploadDefaultResumeMessage && <Text style={styles.saveProfileSuccess}>{saveUploadDefaultResumeMessage}</Text>}
-                      {!!saveUploadDefaultResumeError && <Text style={styles.saveProfileError}>{saveUploadDefaultResumeError}</Text>}
+                      {!!saveProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveProfileResumeMessage}</Text>}
+                      {!!saveProfileResumeError && <Text style={styles.saveProfileError}>{saveProfileResumeError}</Text>}
                     </View>
                   </>
                 )}

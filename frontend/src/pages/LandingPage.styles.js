@@ -118,14 +118,30 @@ export default StyleSheet.create({
     }),
   },
 
-  // Floating UI Elements
+  // Floating UI Elements (visibility controlled in LandingPage.jsx via useBreakpoints)
   floatingElements: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    display: isDesktop ? 'flex' : 'none',
+  },
+  heroSectionNarrow: {
+    minHeight: 620,
+    paddingTop: 80,
+    paddingBottom: 48,
+  },
+  heroTitleNarrow: {
+    fontSize: 28,
+    lineHeight: 36,
+    letterSpacing: -0.75,
+    marginBottom: 16,
+  },
+  heroSubtitleNarrow: {
+    fontSize: 15,
+    lineHeight: 24,
+    marginBottom: 28,
+    paddingHorizontal: 4,
   },
   floatingCard1: {
     position: 'absolute',

@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import styles from './PricingPage.styles';
 import { PLAN_CONFIG } from '../config/planConfig';
+import { useBreakpoints } from '../hooks/useBreakpoints';
 
 // Page-specific feature lists merged with shared colour/theme config
 const PLANS = [
@@ -61,97 +62,118 @@ const PLANS = [
   },
 ];
 
-const PlanCard = ({ plan, selected, onSelect }) => {
+const PlanCard = ({ plan, selected, onSelect, isWideLayout }) => {
   const [hovered, setHovered] = useState(false);
+  const isFree = plan.id === 'free';
 
-  const cardBorder = selected
+  const cardBorder = isFree
+    ? plan.borderColor
+    : selected
     ? plan.selectedBorderColor
     : hovered
     ? plan.accentColor.replace(')', ', 0.6)').replace('rgba', 'rgba').replace('rgb(', 'rgba(')
     : plan.borderColor;
 
   const cardShadow = Platform.OS === 'web'
-    ? selected || hovered
+    ? isFree
+      ? `0 8px 32px ${plan.glowColor}`
+      : selected || hovered
       ? `0 0 0 2px ${plan.accentColor}40, 0 16px 48px ${plan.glowColor}`
       : `0 8px 32px ${plan.glowColor}`
     : {};
+
+  const gradient = (
+    <LinearGradient
+      colors={plan.gradientColors}
+      style={[
+        styles.planCardGradient,
+        isWideLayout && Platform.OS === 'web' && { minHeight: plan.stairHeight },
+      ]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <Text style={[styles.planName, plan.featured && styles.planNameFeatured]}>
+        {plan.name}
+      </Text>
+
+      {isFree && (
+        <Text style={styles.currentPlanLabel}>(Current plan)</Text>
+      )}
+
+      <View style={styles.priceRow}>
+        <Text style={[styles.planPrice, plan.featured && styles.planPriceFeatured]}>
+          {plan.price}
+        </Text>
+        <Text style={styles.planPeriod}>{plan.period}</Text>
+      </View>
+
+      {plan.yearlyNote && (
+        <Text style={styles.yearlyNote}>{plan.yearlyNote}</Text>
+      )}
+
+      <View style={[styles.divider, { backgroundColor: plan.dividerColor }]} />
+
+      <View style={styles.featuresList}>
+        {plan.features.map((feature, index) => (
+          <View key={index}>
+            <View style={styles.featureRow}>
+              <Text style={[styles.bulletDot, { color: plan.accentColor }]}>•</Text>
+              <Text style={styles.featureText}>{feature.text}</Text>
+            </View>
+            {feature.subItems && feature.subItems.map((sub, si) => (
+              <View key={si} style={styles.subFeatureRow}>
+                <Text style={styles.subBulletIndent}>{'   '}</Text>
+                <Text style={styles.subFeatureText}>{sub}</Text>
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+
+      {plan.badge && (
+        <View style={[styles.badgeContainer, { borderTopColor: plan.dividerColor }]}>
+          <Text style={[styles.badgeText, { color: plan.accentColor }]}>• {plan.badge}</Text>
+        </View>
+      )}
+    </LinearGradient>
+  );
+
+  const outerStyle = [
+    styles.planCard,
+    isWideLayout && styles.planCardWide,
+    { borderColor: cardBorder },
+    Platform.OS === 'web' && { boxShadow: cardShadow },
+    !isFree && hovered && styles.planCardHovered,
+    isFree && styles.planCardStatic,
+  ];
+
+  if (isFree) {
+    return (
+      <View style={outerStyle} accessibilityLabel="Free plan, current plan">
+        {gradient}
+      </View>
+    );
+  }
 
   return (
     <Pressable
       onPress={() => onSelect(plan.id)}
       onHoverIn={() => Platform.OS === 'web' && setHovered(true)}
       onHoverOut={() => Platform.OS === 'web' && setHovered(false)}
-      style={[
-        styles.planCard,
-        { borderColor: cardBorder },
-        Platform.OS === 'web' && { boxShadow: cardShadow },
-        hovered && styles.planCardHovered,
-      ]}
+      style={outerStyle}
     >
-      <LinearGradient
-        colors={plan.gradientColors}
-        style={[
-          styles.planCardGradient,
-          // Staircase: enforce minimum height per plan (web only)
-          Platform.OS === 'web' && { minHeight: plan.stairHeight },
-        ]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <Text style={[styles.planName, plan.featured && styles.planNameFeatured]}>
-          {plan.name}
-        </Text>
-
-        <View style={styles.priceRow}>
-          <Text style={[styles.planPrice, plan.featured && styles.planPriceFeatured]}>
-            {plan.price}
-          </Text>
-          <Text style={styles.planPeriod}>{plan.period}</Text>
-        </View>
-
-        {plan.yearlyNote && (
-          <Text style={styles.yearlyNote}>{plan.yearlyNote}</Text>
-        )}
-
-        <View style={[styles.divider, { backgroundColor: plan.dividerColor }]} />
-
-        <View style={styles.featuresList}>
-          {plan.features.map((feature, index) => (
-            <View key={index}>
-              <View style={styles.featureRow}>
-                <Text style={[styles.bulletDot, { color: plan.accentColor }]}>•</Text>
-                <Text style={styles.featureText}>{feature.text}</Text>
-              </View>
-              {feature.subItems && feature.subItems.map((sub, si) => (
-                <View key={si} style={styles.subFeatureRow}>
-                  <Text style={styles.subBulletIndent}>{'   '}</Text>
-                  <Text style={styles.subFeatureText}>{sub}</Text>
-                </View>
-              ))}
-            </View>
-          ))}
-        </View>
-
-        {plan.badge && (
-          <View style={[styles.badgeContainer, { borderTopColor: plan.dividerColor }]}>
-            <Text style={[styles.badgeText, { color: plan.accentColor }]}>• {plan.badge}</Text>
-          </View>
-        )}
-      </LinearGradient>
+      {gradient}
     </Pressable>
   );
 };
 
 const PricingPage = () => {
   const router = useRouter();
+  const { isWideLayout } = useBreakpoints();
   const [selectedPlan, setSelectedPlan] = useState('premium');
 
   const handleContinue = () => {
-    if (selectedPlan === 'free') {
-      router.push({ pathname: '/payment-success', params: { plan: 'free' } });
-    } else {
-      router.push({ pathname: '/payment', params: { plan: selectedPlan } });
-    }
+    router.push({ pathname: '/payment', params: { plan: selectedPlan } });
   };
 
   return (
@@ -169,17 +191,20 @@ const PricingPage = () => {
               <Pressable onPress={() => router.back()} style={styles.backButton}>
                 <Text style={styles.backArrow}>←</Text>
               </Pressable>
-              <Text style={styles.pageTitle}>Choose Your Plan</Text>
+              <Text style={[styles.pageTitle, isWideLayout && styles.pageTitleLarge]}>
+                Choose Your Plan
+              </Text>
               <View style={styles.headerSpacer} />
             </View>
 
-            <View style={styles.cardsWrapper}>
+            <View style={[styles.cardsWrapper, isWideLayout ? styles.cardsWrapperWide : styles.cardsWrapperNarrow]}>
               {PLANS.map((plan) => (
                 <PlanCard
                   key={plan.id}
                   plan={plan}
                   selected={selectedPlan === plan.id}
                   onSelect={setSelectedPlan}
+                  isWideLayout={isWideLayout}
                 />
               ))}
             </View>

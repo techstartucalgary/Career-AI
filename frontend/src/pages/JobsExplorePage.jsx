@@ -5,9 +5,11 @@ import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './JobsExplorePage.styles';
 import './JobPages.css';
+import { useBreakpoints } from '../hooks/useBreakpoints';
 
 const JobsExplorePage = () => {
   const router = useRouter();
+  const { isWideLayout } = useBreakpoints();
   const [selectedTab, setSelectedTab] = useState('Recommended For You');
   const [searchQuery, setSearchQuery] = useState('');
   const [focusedSearch, setFocusedSearch] = useState(false);
@@ -109,7 +111,8 @@ const JobsExplorePage = () => {
                     key={tab}
                     style={[
                       styles.tab,
-                      selectedTab === tab && styles.tabActive
+                      selectedTab === tab && styles.tabActive,
+                      !isWideLayout && { minWidth: 0, flex: 1, paddingHorizontal: 12, paddingVertical: 10 },
                     ]}
                     onPress={() => setSelectedTab(tab)}
                   >
@@ -119,10 +122,14 @@ const JobsExplorePage = () => {
                         <View style={styles.checkmarkLine2} />
                       </View>
                     )}
-                    <Text style={[
-                      styles.tabText,
-                      selectedTab === tab && styles.tabTextActive
-                    ]}>
+                    <Text
+                      style={[
+                        styles.tabText,
+                        selectedTab === tab && styles.tabTextActive,
+                        !isWideLayout && { fontSize: 13, textAlign: 'center' },
+                      ]}
+                      numberOfLines={2}
+                    >
                       {tab}
                     </Text>
                     {selectedTab === tab && (

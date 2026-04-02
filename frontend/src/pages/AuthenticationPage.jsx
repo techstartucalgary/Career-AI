@@ -11,9 +11,11 @@ import styles from './AuthenticationPage.styles';
 import { THEME } from '../styles/theme';
 import { setAuthToken } from '../services/api';
 import verexaLogo from '../assets/verexalogo.png';
+import { useBreakpoints } from '../hooks/useBreakpoints';
 
 export default function AuthenticationPage() {
   const router = useRouter();
+  const { isWideLayout } = useBreakpoints();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -191,7 +193,7 @@ export default function AuthenticationPage() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.card}>
+            <View style={[styles.card, !isWideLayout && { paddingVertical: 32, paddingHorizontal: 22 }]}>
               {/* Visual Background Elements */}
               <View style={styles.cardVisual}>
                 <View style={styles.cardCircle1} />

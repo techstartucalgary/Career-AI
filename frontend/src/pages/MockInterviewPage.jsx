@@ -4,8 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import styles from './MockInterviewPage.styles';
 import { THEME } from '../styles/theme';
+import { useBreakpoints } from '../hooks/useBreakpoints';
 
 const MockInterviewPage = () => {
+  const { isWideLayout } = useBreakpoints();
   const [interviewStarted, setInterviewStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
@@ -74,7 +76,7 @@ const MockInterviewPage = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.content}>
+          <View style={[styles.content, !isWideLayout && { paddingHorizontal: 16, paddingTop: 28 }]}>
             {!interviewStarted ? (
               <>
                 <View style={styles.headerSection}>

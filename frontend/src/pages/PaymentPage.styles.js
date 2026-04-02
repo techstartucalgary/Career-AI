@@ -3,8 +3,6 @@ import { THEME } from '../styles/theme';
 
 const { colors: COLORS } = THEME;
 
-const isWeb = Platform.OS === 'web';
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -14,7 +12,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageBackground: {
-    ...(isWeb ? { minHeight: '100vh' } : {}),
+    ...(Platform.OS === 'web' ? { minHeight: '100vh' } : {}),
     paddingBottom: 80,
   },
   pageContent: {
@@ -47,25 +45,40 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     color: COLORS.white,
-    fontSize: isWeb ? 32 : 24,
+    fontSize: 24,
     fontWeight: '600',
     letterSpacing: -0.5,
+  },
+  pageTitleLarge: {
+    fontSize: 32,
   },
   headerSpacer: {
     width: 44,
   },
   mainLayout: {
-    flexDirection: isWeb ? 'row' : 'column',
     gap: 32,
-    alignItems: isWeb ? 'flex-start' : 'stretch',
+  },
+  mainLayoutWide: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  mainLayoutNarrow: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
   },
   planSummaryCard: {
-    ...(isWeb ? { width: 320, flexShrink: 0 } : {}),
+    width: '100%',
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
     // borderColor and boxShadow set inline from plan config
     borderColor: 'transparent',
+  },
+  planSummaryCardWide: {
+    width: 320,
+    maxWidth: '100%',
+    flexShrink: 0,
+    alignSelf: 'flex-start',
   },
   planSummaryGradient: {
     padding: 28,
@@ -85,6 +98,32 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 28,
     fontWeight: '700',
+  },
+  freePlanCurrentLabel: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  freePlanBody: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 20,
+  },
+  freePlanCta: {
+    alignSelf: 'flex-start',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(167, 139, 250, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.45)',
+  },
+  freePlanCtaText: {
+    color: '#A78BFA',
+    fontSize: 15,
+    fontWeight: '600',
   },
   planSummaryPricing: {
     flexDirection: 'row',
@@ -218,7 +257,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     color: COLORS.white,
     fontSize: 15,
-    ...(isWeb ? { outlineStyle: 'none' } : {}),
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
   },
   inputHint: {
     color: 'rgba(255,255,255,0.35)',

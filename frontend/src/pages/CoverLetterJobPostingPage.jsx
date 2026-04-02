@@ -10,6 +10,7 @@ import { generateCoverLetter, downloadPDFFromBase64 } from '../services/aiServic
 import PDFViewer from '../components/PDFViewer';
 import { API_BASE_URL, apiFetch, getAuthToken } from '../services/api';
 import { getGithubStatus, openGithubConnect, fetchGithubContext } from '../services/githubService';
+import { useBreakpoints } from '../hooks/useBreakpoints';
 
 const ProgressRing = ({ progress = 0, size = 60, strokeWidth = 4, color = '#A78BFA' }) => {
   const radius = (size - strokeWidth) / 2;
@@ -127,11 +128,10 @@ const extractKeywords = (jobDescription) => {
 
 const CoverLetterJobPostingPage = () => {
   const router = useRouter();
+  const { isDesktop } = useBreakpoints();
   const [searchQuery, setSearchQuery] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
-  const [defaultResumeFile, setDefaultResumeFile] = useState(null);
-  const [defaultResumeLoading, setDefaultResumeLoading] = useState(true);
   const [resumeSource, setResumeSource] = useState('profile');
   const [selectedTags, setSelectedTags] = useState(['Student', 'AI', 'Software Development', 'Calgary']);
   const [hoveredButton, setHoveredButton] = useState(null);
@@ -147,9 +147,11 @@ const CoverLetterJobPostingPage = () => {
   const [atsLoading, setAtsLoading] = useState(false);
   const [atsError, setAtsError] = useState('');
   const [pdfGenerating, setPdfGenerating] = useState(false);
-  const [savingUploadDefaultResume, setSavingUploadDefaultResume] = useState(false);
-  const [saveUploadDefaultResumeMessage, setSaveUploadDefaultResumeMessage] = useState('');
-  const [saveUploadDefaultResumeError, setSaveUploadDefaultResumeError] = useState('');
+  const [profileResumeFile, setProfileResumeFile] = useState(null);
+  const [profileResumeLoading, setProfileResumeLoading] = useState(true);
+  const [savingProfileResume, setSavingProfileResume] = useState(false);
+  const [saveProfileResumeMessage, setSaveProfileResumeMessage] = useState('');
+  const [saveProfileResumeError, setSaveProfileResumeError] = useState('');
   const [keywords, setKeywords] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState('classic');
   const [hoveredTemplate, setHoveredTemplate] = useState(null);
@@ -168,22 +170,23 @@ const CoverLetterJobPostingPage = () => {
 
     const loadDefaultResume = async () => {
       try {
-        setDefaultResumeLoading(true);
+        setProfileResumeLoading(true);
         const response = await apiFetch('/profile');
         const resumeData = response?.data?.resume;
         if (resumeData?.file_data) {
-          setDefaultResumeFile({
+          const file = {
             name: resumeData.file_name || 'default_resume.pdf',
             mimeType: 'application/pdf',
             fileDataBase64: resumeData.file_data,
             uri: `data:application/pdf;base64,${resumeData.file_data}`,
-          });
-          setResumeSource('default');
+          };
+          setProfileResumeFile(file);
+          setResumeSource('profile');
         }
       } catch (err) {
         console.log('Default resume unavailable:', err?.message || err);
       } finally {
-        setDefaultResumeLoading(false);
+        setProfileResumeLoading(false);
       }
     };
 
@@ -218,21 +221,21 @@ const CoverLetterJobPostingPage = () => {
     setResumeSource('profile');
   };
 
-  const handleSaveUploadedResumeAsDefault = async () => {
+  const handleSaveUploadedResumeAsProfile = async () => {
     if (!selectedFile) {
       return;
     }
 
     const token = getAuthToken();
     if (!token) {
-      setSaveUploadDefaultResumeError('Please sign in to save your default resume.');
+      setSaveProfileResumeError('Please sign in to save your profile resume.');
       return;
     }
 
     try {
-      setSavingUploadDefaultResume(true);
-      setSaveUploadDefaultResumeError('');
-      setSaveUploadDefaultResumeMessage('');
+      setSavingProfileResume(true);
+      setSaveProfileResumeError('');
+      setSaveProfileResumeMessage('');
 
       const name = selectedFile.name || 'profile_resume.pdf';
       const type = selectedFile.mimeType || 'application/pdf';
@@ -272,16 +275,17 @@ const CoverLetterJobPostingPage = () => {
         throw new Error(data?.message || data?.detail || 'Failed to save profile resume.');
       }
 
-      setProfileResumeFile({
+      const saved = {
         ...selectedFile,
         name: data?.data?.file_name || name,
-      });
+      };
+      setProfileResumeFile(saved);
       setResumeSource('profile');
-      setSaveUploadProfileResumeMessage('Saved to profile resume.');
+      setSaveProfileResumeMessage('Saved to profile resume.');
     } catch (error) {
-      setSaveUploadProfileResumeError(error?.message || 'Failed to save profile resume.');
+      setSaveProfileResumeError(error?.message || 'Failed to save profile resume.');
     } finally {
-      setSavingUploadProfileResume(false);
+      setSavingProfileResume(false);
     }
   };
 
@@ -359,8 +363,8 @@ const CoverLetterJobPostingPage = () => {
 
   const handleGenerateCoverLetter = async () => {
     const activeResumeFile = resumeSource === 'upload'
-      ? (selectedFile || profileResumeFile)
-      : (profileResumeFile || selectedFile);
+      ? selectedFile
+      : profileResumeFile;
 
     if (!jobDescription.trim()) {
       setError('Please enter a job description');
@@ -450,9 +454,9 @@ const CoverLetterJobPostingPage = () => {
               </Text>
             </View>
 
-            <View style={styles.panelsContainer}>
+            <View style={[styles.panelsContainer, { flexDirection: isDesktop ? 'row' : 'column' }]}>
               {/* Left Panel - Input Section */}
-              <View style={styles.leftPanel}>
+              <View style={[styles.leftPanel, { minHeight: isDesktop ? 600 : 400 }]}>
                 {/* Job Posting Section */}
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Job Posting</Text>
@@ -471,12 +475,12 @@ const CoverLetterJobPostingPage = () => {
                     />
                     {resumeSource === 'upload' && selectedFile && (
                       <Pressable
-                        style={[styles.saveUploadButton, savingUploadDefaultResume && styles.saveUploadButtonDisabled]}
-                        onPress={handleSaveUploadedResumeAsDefault}
-                        disabled={savingUploadDefaultResume}
+                        style={[styles.saveUploadButton, savingProfileResume && styles.saveUploadButtonDisabled]}
+                        onPress={handleSaveUploadedResumeAsProfile}
+                        disabled={savingProfileResume}
                       >
                         <Text style={styles.saveUploadButtonText}>
-                          {savingUploadDefaultResume ? 'Saving...' : 'Make Default Resume'}
+                          {savingProfileResume ? 'Saving...' : 'Make Profile Resume'}
                         </Text>
                       </Pressable>
                     )}
@@ -579,12 +583,12 @@ const CoverLetterJobPostingPage = () => {
                         <Text style={styles.clearUploadButtonText}>Remove Upload</Text>
                       </Pressable>
                       <Pressable
-                        style={[styles.saveUploadButton, savingUploadProfileResume && styles.saveUploadButtonDisabled]}
+                        style={[styles.saveUploadButton, savingProfileResume && styles.saveUploadButtonDisabled]}
                         onPress={handleSaveUploadedResumeAsProfile}
-                        disabled={savingUploadProfileResume}
+                        disabled={savingProfileResume}
                       >
                         <Text style={styles.saveUploadButtonText}>
-                          {savingUploadProfileResume ? 'Saving...' : 'Make Profile Resume'}
+                          {savingProfileResume ? 'Saving...' : 'Make Profile Resume'}
                         </Text>
                       </Pressable>
                     </View>
@@ -593,8 +597,8 @@ const CoverLetterJobPostingPage = () => {
                 {!selectedFile && profileResumeFile && (
                   <Text style={styles.resumeFallbackText}>No upload selected, using profile resume.</Text>
                 )}
-                {!!saveUploadProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveUploadProfileResumeMessage}</Text>}
-                {!!saveUploadProfileResumeError && <Text style={styles.saveProfileError}>{saveUploadProfileResumeError}</Text>}
+                {!!saveProfileResumeMessage && <Text style={styles.saveProfileSuccess}>{saveProfileResumeMessage}</Text>}
+                {!!saveProfileResumeError && <Text style={styles.saveProfileError}>{saveProfileResumeError}</Text>}
               </View>
 
               {/* Cover Letter Template Section */}
@@ -735,7 +739,7 @@ const CoverLetterJobPostingPage = () => {
             </View>
 
             {/* Right Panel - Cover Letter Preview */}
-            <View style={styles.rightPanel}>
+            <View style={[styles.rightPanel, { minHeight: isDesktop ? 600 : 400 }]}>
               <View style={styles.previewArea}>
                 {isLoading ? (
                   <>
@@ -817,7 +821,7 @@ const CoverLetterJobPostingPage = () => {
                 )}
               </View>
 
-              <View style={styles.actionRow}>
+              <View style={[styles.actionRow, { flexDirection: isDesktop ? 'row' : 'column' }]}>
                 <View 
                   style={[
                     styles.atsScorePanel,
