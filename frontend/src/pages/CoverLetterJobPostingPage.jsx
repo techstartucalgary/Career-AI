@@ -544,7 +544,7 @@ const CoverLetterJobPostingPage = () => {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 }}>
                     <ProgressRing progress={finalAtsScore ?? 0} size={70} strokeWidth={5} color="#A78BFA" />
                     <View style={styles.atsScoreInfo}>
-                      <Text style={styles.atsScoreTitle}>ATS Match Score</Text>
+                      <Text style={styles.atsScoreTitle}>ATS Score</Text>
                       {atsLoading && (
                         <Text style={styles.atsScoreDesc}>Analyzing ATS match...</Text>
                       )}
@@ -557,6 +557,16 @@ const CoverLetterJobPostingPage = () => {
                         </Text>
                       )}
                       {!!atsError && <Text style={styles.atsScoreError}>{atsError}</Text>}
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.atsScorePanel}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 }}>
+                    <ProgressRing progress={0} size={70} strokeWidth={5} color="#A78BFA" />
+                    <View style={styles.atsScoreInfo}>
+                      <Text style={styles.atsScoreTitle}>Match Score</Text>
+                      <Text style={styles.atsScoreDesc}>---</Text>
                     </View>
                   </View>
                 </View>

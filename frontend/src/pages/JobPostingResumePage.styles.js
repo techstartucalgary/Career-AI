@@ -469,9 +469,10 @@ const styles = StyleSheet.create({
     }),
   },
   actionRow: {
-    flexDirection: 'column',
-    gap: 12,
+    flexDirection: isDesktop ? 'row' : 'column',
+    gap: 16,
     alignItems: 'stretch',
+    justifyContent: 'space-between',
   },
   previewScroll: {
     flex: 1,
