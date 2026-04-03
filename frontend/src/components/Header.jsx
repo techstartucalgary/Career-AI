@@ -14,6 +14,8 @@ const Header = () => {
   const { isWideLayout } = useBreakpoints();
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [accountAvatarUri, setAccountAvatarUri] = useState(null);
+  const [accountInitials, setAccountInitials] = useState('U');
   const accountMenuRef = useRef(null);
 
   const isLoggedIn = !!getAuthToken();
@@ -29,6 +31,53 @@ const Header = () => {
     setMenuOpen(false);
     setAccountMenuOpen(false);
   }, [currentRoute]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!isLoggedIn) {
+      setAccountAvatarUri(null);
+      setAccountInitials('U');
+      return undefined;
+    }
+    const loadAccountAvatar = async () => {
+      try {
+        const response = await apiFetch('/profile');
+        const data = response?.data ?? {};
+        const profile = data.profile || {};
+        const isBcrypt = (value) => typeof value === 'string' && value.startsWith('$2');
+        const first = profile.first_name || (isBcrypt(data.first_name) ? '' : data.first_name) || '';
+        const last = profile.last_name || (isBcrypt(data.last_name) ? '' : data.last_name) || '';
+        const fullName = `${first} ${last}`.trim();
+        const combinedName = data.name || fullName;
+        const initials = combinedName.trim()
+          ? combinedName
+              .trim()
+              .split(/\s+/)
+              .map((part) => part[0])
+              .join('')
+              .slice(0, 2)
+              .toUpperCase()
+          : 'U';
+        const uri =
+          profile.avatar_base64 && profile.avatar_mime
+            ? `data:${profile.avatar_mime};base64,${profile.avatar_base64}`
+            : null;
+        if (!cancelled) {
+          setAccountAvatarUri(uri);
+          setAccountInitials(initials);
+        }
+      } catch {
+        if (!cancelled) {
+          setAccountAvatarUri(null);
+          setAccountInitials('U');
+        }
+      }
+    };
+    loadAccountAvatar();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn, currentRoute]);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || !accountMenuOpen) return undefined;
@@ -109,14 +158,22 @@ const Header = () => {
                 <Pressable
                   onPress={() => setAccountMenuOpen((o) => !o)}
                   style={[
-                    styles.menuIconButton,
+                    styles.accountMenuButton,
                     accountMenuOpen && styles.accountMenuTriggerActive,
                   ]}
                   accessibilityRole="button"
                   accessibilityLabel={accountMenuOpen ? 'Close account menu' : 'Open account menu'}
                   accessibilityState={{ expanded: accountMenuOpen }}
                 >
-                  <Text style={styles.menuIcon}>{accountMenuOpen ? '✕' : '☰'}</Text>
+                  {accountAvatarUri ? (
+                    <Image
+                      source={{ uri: accountAvatarUri }}
+                      style={styles.accountAvatarImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Text style={styles.accountAvatarInitials}>{accountInitials}</Text>
+                  )}
                 </Pressable>
                 {accountMenuOpen && (
                   <View style={styles.accountDropdown}>

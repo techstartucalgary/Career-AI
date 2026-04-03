@@ -135,6 +135,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderLight,
   },
+  /** Desktop account menu: circular profile photo or initials */
+  accountMenuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surfaceLight,
+  },
+  accountAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  accountAvatarInitials: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.primary,
+    letterSpacing: 0.5,
+  },
   menuIcon: {
     color: COLORS.textPrimary,
     fontSize: 18,
