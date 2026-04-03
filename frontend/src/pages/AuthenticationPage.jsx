@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
 import Header from '../components/Header';
 import styles from './AuthenticationPage.styles';
 import { THEME } from '../styles/theme';
@@ -14,7 +15,6 @@ import verexaLogo from '../assets/verexalogo.png';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
 const GOOGLE_GSI_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
-const GOOGLE_BUTTON_CONTAINER_ID = 'google-signin-button';
 
 export default function AuthenticationPage() {
   const router = useRouter();
@@ -32,16 +32,64 @@ export default function AuthenticationPage() {
   const [isGoogleScriptLoaded, setIsGoogleScriptLoaded] = useState(Platform.OS !== 'web');
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleClientId, setGoogleClientId] = useState('');
+  const [googleOriginAllowed, setGoogleOriginAllowed] = useState(false);
+  const [isGoogleReady, setIsGoogleReady] = useState(false);
   const googleInitialized = useRef(false);
+  const googleInitializedForClientId = useRef('');
   const hasGoogleClientId = googleClientId.trim().length > 0;
+  const canUseGoogleGsi = hasGoogleClientId && googleOriginAllowed;
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') {
+      return undefined;
+    }
+
+    const upsertMeta = (httpEquiv, content) => {
+      let meta = document.querySelector(`meta[http-equiv="${httpEquiv}"]`);
+      const previous = meta ? meta.getAttribute('content') : null;
+
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('http-equiv', httpEquiv);
+        document.head.appendChild(meta);
+      }
+
+      meta.setAttribute('content', content);
+
+      return () => {
+        if (!meta) return;
+        if (previous === null) {
+          meta.remove();
+        } else {
+          meta.setAttribute('content', previous);
+        }
+      };
+    };
+
+    const restoreCoop = upsertMeta('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    const restoreCoep = upsertMeta('Cross-Origin-Embedder-Policy', 'unsafe-none');
+
+    return () => {
+      restoreCoop();
+      restoreCoep();
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     const fetchGoogleClientId = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/google/client-id`);
+        const currentOrigin =
+          Platform.OS === 'web' && typeof window !== 'undefined' && window.location
+            ? window.location.origin
+            : '';
+        const query = currentOrigin ? `?origin=${encodeURIComponent(currentOrigin)}` : '';
+        const response = await fetch(`${API_BASE_URL}/auth/google/client-id${query}`);
         if (!response.ok) {
+          if (!cancelled) {
+            setGoogleOriginAllowed(false);
+          }
           return;
         }
 
@@ -49,13 +97,16 @@ export default function AuthenticationPage() {
         const clientId = payload && payload.data && typeof payload.data.client_id === 'string'
           ? payload.data.client_id
           : '';
+        const originAllowed = Boolean(payload && payload.data && payload.data.origin_allowed);
 
         if (!cancelled) {
           setGoogleClientId(clientId);
+          setGoogleOriginAllowed(originAllowed);
         }
       } catch {
         if (!cancelled) {
           setGoogleClientId('');
+          setGoogleOriginAllowed(false);
         }
       }
     };
@@ -109,17 +160,12 @@ export default function AuthenticationPage() {
   }, []);
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || !isGoogleScriptLoaded || typeof window === 'undefined' || !hasGoogleClientId) {
+    if (Platform.OS !== 'web' || !isGoogleScriptLoaded || typeof window === 'undefined' || !canUseGoogleGsi) {
       return;
     }
 
     const googleAccounts = window.google && window.google.accounts && window.google.accounts.id;
     if (!googleAccounts) {
-      return;
-    }
-
-    const buttonContainer = document.getElementById(GOOGLE_BUTTON_CONTAINER_ID);
-    if (!buttonContainer) {
       return;
     }
 
@@ -152,23 +198,46 @@ export default function AuthenticationPage() {
       }
     };
 
-    if (!googleInitialized.current) {
+    const googleWindow = window;
+    const alreadyInitializedForThisClient =
+      googleInitialized.current &&
+      googleInitializedForClientId.current === googleClientId &&
+      googleWindow.__careerAiGoogleClientId === googleClientId;
+
+    if (!alreadyInitializedForThisClient) {
       googleAccounts.initialize({
         client_id: googleClientId,
         callback: handleGoogleCredentialResponse,
+        use_fedcm_for_prompt: false,
       });
       googleInitialized.current = true;
+      googleInitializedForClientId.current = googleClientId;
+      googleWindow.__careerAiGoogleClientId = googleClientId;
+    } else {
+      googleWindow.__careerAiGoogleClientId = googleClientId;
     }
 
-    buttonContainer.innerHTML = '';
-    googleAccounts.renderButton(buttonContainer, {
-      theme: 'outline',
-      size: 'large',
-      shape: 'pill',
-      width: buttonContainer.offsetWidth || 360,
-      text: isSignUp ? 'signup_with' : 'signin_with',
-    });
-  }, [googleClientId, hasGoogleClientId, isGoogleScriptLoaded, isSignUp, router]);
+    setIsGoogleReady(true);
+  }, [canUseGoogleGsi, googleClientId, isGoogleScriptLoaded, router]);
+
+  const handleGoogleContinue = () => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') {
+      setErrors({ general: 'Google sign-in is available on web.' });
+      return;
+    }
+
+    const googleAccounts = window.google && window.google.accounts && window.google.accounts.id;
+    if (!googleAccounts || !isGoogleReady || !canUseGoogleGsi) {
+      setErrors({ general: 'Google sign-in is not ready yet. Please try again.' });
+      return;
+    }
+
+    try {
+      googleAccounts.prompt();
+    } catch {
+      setErrors({ general: 'Unable to open Google sign-in prompt.' });
+    }
+  };
 
   const validate = () => {
     const newErrors = {};
@@ -221,10 +290,7 @@ export default function AuthenticationPage() {
 
       // Navigate to onboarding for new sign-ups, home for existing users
       if (isSignUp) {
-        router.replace({
-          pathname: '/onboarding',
-          params: { email: email }
-        });
+        router.replace('/onboarding');
       } else {
         router.replace('/jobs');
       }
@@ -487,28 +553,27 @@ export default function AuthenticationPage() {
                 </View>
 
                 <View style={styles.googleSection}>
-                  {Platform.OS === 'web' ? (
-                    hasGoogleClientId ? (
-                      <>
-                        <View
-                          id={GOOGLE_BUTTON_CONTAINER_ID}
-                          style={styles.googleButtonContainer}
-                        />
-                        {googleLoading && (
-                          <View style={styles.googleLoadingRow}>
-                            <ActivityIndicator size="small" color={THEME.colors.textSecondary} />
-                          </View>
-                        )}
-                      </>
-                    ) : (
-                      <Pressable style={styles.googleFallbackButton}>
-                        <Text style={styles.googleFallbackButtonText}>Continue with Google</Text>
-                      </Pressable>
-                    )
-                  ) : (
-                    <Pressable style={styles.googleFallbackButton}>
+                  <Pressable
+                    style={styles.googleFallbackButton}
+                    onPress={handleGoogleContinue}
+                    disabled={Platform.OS === 'web' && canUseGoogleGsi && !isGoogleReady}
+                  >
+                    <View style={styles.googleButtonInner}>
+                      <View style={styles.googleIconBadge}>
+                        <FontAwesome name="google" size={16} color="#ffffff" />
+                      </View>
                       <Text style={styles.googleFallbackButtonText}>Continue with Google</Text>
-                    </Pressable>
+                    </View>
+                  </Pressable>
+                  {googleLoading && (
+                    <View style={styles.googleLoadingRow}>
+                      <ActivityIndicator size="small" color={THEME.colors.textSecondary} />
+                    </View>
+                  )}
+                  {Platform.OS === 'web' && hasGoogleClientId && !googleOriginAllowed && (
+                    <Text style={styles.googleHintText}>
+                      Google sign-in disabled: add this web origin to backend env GOOGLE_ALLOWED_ORIGINS and Google OAuth authorized origins.
+                    </Text>
                   )}
                 </View>
 

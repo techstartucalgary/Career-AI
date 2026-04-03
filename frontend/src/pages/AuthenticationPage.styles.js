@@ -7,6 +7,63 @@ const isDesktop = width > 992;
 
 const { colors: COLORS } = THEME;
 
+const cardShadowStyle = Platform.OS === 'web'
+  ? { boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)' }
+  : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.35,
+      shadowRadius: 32,
+      elevation: 16,
+    };
+
+const logoCircleShadowStyle = Platform.OS === 'web'
+  ? { boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)' }
+  : {
+      shadowColor: COLORS.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
+      elevation: 8,
+    };
+
+const inputFocusedShadowStyle = Platform.OS === 'web'
+  ? { boxShadow: '0 0 0 3px rgba(167, 139, 250, 0.25)' }
+  : {
+      shadowColor: COLORS.primary,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.5,
+      shadowRadius: 8,
+      elevation: 4,
+    };
+
+const submitButtonShadowStyle = Platform.OS === 'web'
+  ? { boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)' }
+  : {
+      shadowColor: COLORS.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
+      elevation: 8,
+    };
+
+const submitButtonHoverShadowStyle = Platform.OS === 'web'
+  ? { boxShadow: '0 6px 18px rgba(139, 92, 246, 0.5)' }
+  : {
+      shadowOpacity: 0.6,
+      shadowRadius: 16,
+    };
+
+const selectOptionsShadowStyle = Platform.OS === 'web'
+  ? { boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)' }
+  : {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 20,
+      elevation: 12,
+    };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -42,18 +99,7 @@ const styles = StyleSheet.create({
     padding: isDesktop ? 52 : isTablet ? 44 : 36,
     borderWidth: 1.5,
     borderColor: COLORS.borderLight,
-    ...Platform.select({
-      web: {
-        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)',
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.35,
-        shadowRadius: 32,
-        elevation: 16,
-      },
-    }),
+    ...cardShadowStyle,
     position: 'relative',
     overflow: 'visible',
     ...Platform.select({
@@ -107,11 +153,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    ...logoCircleShadowStyle,
   },
   logoStar: {
     width: 24,
@@ -225,16 +267,7 @@ const styles = StyleSheet.create({
   },
   inputFocused: {
     borderColor: COLORS.primary,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 4,
-    ...Platform.select({
-      web: {
-        boxShadow: `0 0 0 3px rgba(167, 139, 250, 0.25)`,
-      },
-    }),
+    ...inputFocusedShadowStyle,
   },
   inputError: {
     borderColor: COLORS.danger,
@@ -275,11 +308,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 8,
     marginBottom: 24,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    ...submitButtonShadowStyle,
     ...Platform.select({
       web: {
         transition: 'all 0.3s ease',
@@ -290,8 +319,7 @@ const styles = StyleSheet.create({
   submitButtonHover: {
     transform: [{ translateY: -2 }],
     backgroundColor: COLORS.primaryDark,
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
+    ...submitButtonHoverShadowStyle,
   },
   submitButtonText: {
     color: COLORS.white,
@@ -335,22 +363,50 @@ const styles = StyleSheet.create({
   googleFallbackButton: {
     width: '100%',
     minHeight: 48,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
-    backgroundColor: COLORS.bgAlt,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: '#6D28D9',
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 12px 28px rgba(109, 40, 217, 0.35)',
+        cursor: 'pointer',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
+      },
+    }),
+  },
+  googleButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  googleIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   googleFallbackButtonText: {
-    color: COLORS.textPrimary,
+    color: COLORS.white,
     fontSize: 15,
     fontWeight: '600',
     fontFamily: Platform.select({
       web: 'system-ui, sans-serif',
       default: 'sans-serif',
     }),
+  },
+  googleHintText: {
+    marginTop: 8,
+    fontSize: 12,
+    textAlign: 'center',
+    color: COLORS.textMuted,
+    opacity: 0.9,
   },
   switchButton: {
     alignItems: 'center',
@@ -510,18 +566,13 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     borderTopWidth: 0,
     maxHeight: 200,
+    ...selectOptionsShadowStyle,
     ...Platform.select({
       web: {
         zIndex: 11000,
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)',
       },
       default: {
         zIndex: 1000,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.4,
-        shadowRadius: 20,
-        elevation: 12,
       },
     }),
   },
