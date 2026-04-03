@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
+import { JobPostingOptionIcon, TemplateOptimizeOptionIcon } from '../components/HubOptionIcons';
 import styles from './CoverLetterPage.styles';
 import './JobPages.css';
 
@@ -66,19 +67,8 @@ const CoverLetterPage = () => {
                   onHoverOut={() => Platform.OS === 'web' && setHoveredCard(null)}
                 >
                   <View style={styles.optionIcon}>
-                    {option.icon === 'ai' && (
-                      <>
-                        <View style={styles.iconStar} />
-                      </>
-                    )}
-                    {option.icon === 'template-optimize' && (
-                      <>
-                        <View style={styles.iconDocument} />
-                        <View style={styles.iconDocumentFold} />
-                        <View style={styles.iconGear} />
-                        <View style={styles.iconGearInner} />
-                      </>
-                    )}
+                    {option.icon === 'ai' && <JobPostingOptionIcon />}
+                    {option.icon === 'template-optimize' && <TemplateOptimizeOptionIcon />}
                   </View>
                   <Text style={styles.optionTitle}>{option.title}</Text>
                   <Text style={styles.optionDescription}>{option.description}</Text>
