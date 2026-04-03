@@ -1,9 +1,6 @@
 """
 Authentication routes using Google OAuth + profile completion
 """
-import os
-
-from fastapi import APIRouter, Header, HTTPException
 
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
