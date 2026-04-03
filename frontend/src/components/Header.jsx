@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, Pressable, Image, Platform } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
-import { apiFetch, getAuthToken, clearAuthToken } from '../services/api';
+import { apiFetch, apiUrl, getAuthToken, clearAuthToken } from '../services/api';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 import styles from './Header.styles';
 import verexaLogo from '../assets/verexalogo.png';
@@ -91,16 +91,21 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', onMouseDown);
   }, [accountMenuOpen]);
 
-  const handleLogout = async () => {
-    try {
-      await apiFetch('/logout');
-    } catch {
-      // Ignore logout failures and clear local auth state
-    }
+  const handleLogout = () => {
     clearAuthToken();
     setMenuOpen(false);
     setAccountMenuOpen(false);
     router.replace('/authentication');
+
+    // Fire-and-forget server logout so the UI never waits on the network.
+    void fetch(apiUrl('/logout'), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).catch(() => {
+      // Ignore logout failures; local auth has already been cleared.
+    });
   };
 
   const handleLogin = () => {
