@@ -4,7 +4,7 @@ Authentication routes using Google OAuth + profile completion
 
 import os
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import JSONResponse
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -26,10 +26,27 @@ def _get_google_client_id() -> str:
     return os.getenv("GOOGLE_CLIENT_ID") or os.getenv("EXPO_PUBLIC_GOOGLE_CLIENT_ID") or ""
 
 
+def _get_allowed_origins() -> list[str]:
+    raw_origins = os.getenv("GOOGLE_ALLOWED_ORIGINS", "")
+    return [origin.strip().rstrip("/") for origin in raw_origins.split(",") if origin.strip()]
+
+
 @router.get("/auth/google/client-id")
-async def get_google_client_id():
-    """Return the public Google client ID from backend environment variables."""
-    return {"success": True, "data": {"client_id": _get_google_client_id()}}
+async def get_google_client_id(origin: str | None = Query(default=None)):
+    """Return public Google client ID and whether the requesting origin is allowed."""
+    client_id = _get_google_client_id()
+    allowed_origins = _get_allowed_origins()
+    normalized_origin = (origin or "").strip().rstrip("/")
+    origin_allowed = bool(client_id and normalized_origin and normalized_origin in allowed_origins)
+
+    return {
+        "success": True,
+        "data": {
+            "client_id": client_id,
+            "origin_allowed": origin_allowed,
+            "allowed_origins": allowed_origins,
+        },
+    }
 
 
 # =========================
