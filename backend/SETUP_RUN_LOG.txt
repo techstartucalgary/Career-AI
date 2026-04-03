@@ -1,0 +1,30 @@
+Career-AI backend setup / run log (2026-04-02)
+
+DONE
+- Created Python venv at backend/.venv (Python 3.13.1).
+- pip install -r requirements.txt completed successfully (~80s).
+- Created backend/.env from .env.example (was missing).
+- Replaced placeholder JWT_SECRET with a randomly generated dev secret.
+
+ISSUES / NOTES
+1) Docker: `docker run` failed with exit 127 (Docker not in PATH or not installed).
+   MongoDB was already running on localhost:27017, so the app connected successfully.
+
+2) Python version: HOW_TO_RUN.md suggests 3.11; this machine used 3.13.1. Install succeeded.
+
+3) Deprecation warning on import: interview_orb (or dependency path) triggers
+   FutureWarning for deprecated `google.generativeai` — Google recommends migrating to `google.genai`.
+
+4) Cold import of `main:app` is slow (~30–35s) due to heavy packages (torch, sentence-transformers, etc.).
+
+5) Root-level `interview_orb/conversation.py` appears on sys.path during backend import (warning path in logs).
+   Verify this is intentional for your deployment layout.
+
+6) GEMINI_API_KEY in .env: import reported key length 24 — confirm it is a real key if AI calls fail.
+
+7) backend/package-lock.json is an empty npm lockfile; the backend is Python-only for runtime.
+
+RUN
+- uvicorn main:app --reload --host 127.0.0.1 --port 8000 started in background.
+- First worker process takes ~30–45s to become ready (heavy imports); then GET http://127.0.0.1:8000/docs returns 200.
+- Early curl to /docs may time out until the worker finishes loading.
