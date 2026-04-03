@@ -92,4 +92,24 @@ def serialize_user(user: dict) -> dict:
         combined_name = f"{first_name} {last_name}".strip()
         if combined_name:
             user["name"] = combined_name
+
+    # Signup stores sex/gender/disability/race as bcrypt; PUT /demographics stores plaintext.
+    # Never expose hashes to the client — they won't match form options and look "empty".
+    for demo_key in ("sex", "gender", "disability", "race"):
+        v = user.get(demo_key)
+        if is_bcrypt(v):
+            user[demo_key] = ""
+
+    # Stable shape for clients (onboarding uses nested job_preferences.*)
+    jp = user.get("job_preferences")
+    if not isinstance(jp, dict):
+        jp = {}
+    pos = jp.get("positions")
+    loc = jp.get("locations")
+    user["job_preferences"] = {
+        "positions": pos if isinstance(pos, list) else [],
+        "locations": loc if isinstance(loc, list) else [],
+        "work_arrangement": jp.get("work_arrangement") or "any",
+    }
+
     return user

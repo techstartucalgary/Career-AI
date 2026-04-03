@@ -1,15 +1,85 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, ScrollView, Pressable } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, ScrollView, Pressable, Image, Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import styles from './ProfilePage.styles';
-import { API_BASE_URL, apiFetch, clearAuthToken, getAuthToken } from '../services/api';
+import { THEME } from '../styles/theme';
+import { API_BASE_URL, apiFetch, apiUrl, clearAuthToken, getAuthToken } from '../services/api';
 import { Redirect } from 'expo-router';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
+const PROFILE_NAV_SECTIONS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'personal', label: 'Personal' },
+  { id: 'preferences', label: 'Job preferences' },
+  { id: 'identification', label: 'Identification' },
+  { id: 'resume', label: 'Resume' },
+  { id: 'stats', label: 'Profile stats' },
+  { id: 'save', label: 'Save' },
+];
+
+/** Must match strings saved by onboarding (OnboardingStep4) so GET /profile values match a radio. */
+const SEX_OPTIONS = ['Male', 'Female', 'Intersex', 'Prefer not to say', 'Another Gender'];
+const GENDER_OPTIONS = [
+  'Man',
+  'Woman',
+  'Non-binary',
+  'Genderqueer',
+  'Two-Spirit',
+  'Another gender',
+  'Prefer not to say',
+];
+const DISABILITY_OPTIONS = [
+  'Yes, I have a disability',
+  'No, I do not have a disability',
+  'Prefer not to say',
+];
+const RACE_ETHNICITY_OPTIONS = [
+  'American Indian or Alaska Native',
+  'Asian',
+  'Black or African American',
+  'Hispanic or Latino',
+  'Native Hawaiian or Other Pacific Islander',
+  'White',
+  'Two or more races',
+  'Another race/ethnicity',
+  'Prefer not to say',
+];
+
+/** Map older profile-only values onto onboarding labels where obvious. */
+function normalizeIdentificationFromApi(raw) {
+  const sex = raw.sex || '';
+  let s = sex;
+  if (sex === 'Man') s = 'Male';
+  else if (sex === 'Woman') s = 'Female';
+  else if (sex === 'I do not wish to answer') s = 'Prefer not to say';
+
+  const gender = raw.gender || '';
+  let g = gender;
+  if (gender === 'Non-Binary') g = 'Non-binary';
+  else if (gender === 'Another Gender') g = 'Another gender';
+
+  const disability = raw.disability || '';
+  let d = disability;
+  if (disability === 'Yes') d = 'Yes, I have a disability';
+  else if (disability === 'No') d = 'No, I do not have a disability';
+  else if (disability === 'I do not wish to answer') d = 'Prefer not to say';
+
+  const race = raw.race || '';
+  let r = race;
+  if (race === 'Yes' || race === 'No' || race === 'I do not wish to answer') {
+    r = '';
+  }
+
+  return { sex: s, gender: g, disability: d, race: r };
+}
+
 export default function ProfilePage() {
-  const { isWideLayout } = useBreakpoints();
+  const { isWideLayout, isDesktop } = useBreakpoints();
+  const scrollRef = useRef(null);
+  const sectionYs = useRef({});
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -41,6 +111,10 @@ export default function ProfilePage() {
   const [removingResume, setRemovingResume] = useState(false);
   const [resumeError, setResumeError] = useState('');
   const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [avatarImageUri, setAvatarImageUri] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [removingAvatar, setRemovingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
 
   useEffect(() => {
     let isActive = true;
@@ -85,14 +159,21 @@ export default function ProfilePage() {
         setWebsite(profile.website || '');
         setSubscriptionTier(tierLabel);
         const preferences = data.job_preferences || {};
-        setPreferredPositions(preferences.positions || []);
-        setPreferredLocations(preferences.locations || []);
+        setPreferredPositions(Array.isArray(preferences.positions) ? preferences.positions : []);
+        setPreferredLocations(Array.isArray(preferences.locations) ? preferences.locations : []);
         setWorkArrangement(preferences.work_arrangement || 'any');
+        const idVal = (v) => (isBcrypt(v) ? '' : v || '');
+        const idRaw = normalizeIdentificationFromApi({
+          sex: idVal(data.sex),
+          gender: idVal(data.gender),
+          disability: idVal(data.disability),
+          race: idVal(data.race),
+        });
         setIdentification({
-          sex: data.sex || '',
-          gender: data.gender || '',
-          disability: data.disability || '',
-          race: data.race || '',
+          sex: idRaw.sex,
+          gender: idRaw.gender,
+          disability: idRaw.disability,
+          race: idRaw.race,
         });
         
         // Load resume file name if exists
@@ -102,6 +183,12 @@ export default function ProfilePage() {
         }
         if (resume.file_data) {
           setResumeFileData(resume.file_data);
+        }
+
+        if (profile.avatar_base64 && profile.avatar_mime) {
+          setAvatarImageUri(`data:${profile.avatar_mime};base64,${profile.avatar_base64}`);
+        } else {
+          setAvatarImageUri(null);
         }
       } catch (error) {
         if (!isActive) return;
@@ -122,6 +209,17 @@ export default function ProfilePage() {
     return () => {
       isActive = false;
     };
+  }, []);
+
+  const onSectionLayout = useCallback((id) => (e) => {
+    sectionYs.current[id] = e.nativeEvent.layout.y;
+  }, []);
+
+  /** Align section top (title) with top of scroll area beside the sidebar */
+  const scrollToSection = useCallback((id) => {
+    const y = sectionYs.current[id];
+    if (y == null || !scrollRef.current) return;
+    scrollRef.current.scrollTo({ y: Math.max(0, y), animated: true });
   }, []);
 
   if (shouldRedirect) {
@@ -289,16 +387,136 @@ export default function ProfilePage() {
     }
   };
 
+  const handlePickAvatar = async () => {
+    if (uploadingAvatar || removingAvatar) return;
+    setAvatarError('');
+    setSaveError('');
+    setSaveSuccess('');
+
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (perm.status !== 'granted') {
+        setAvatarError('Allow photo library access to set a profile picture.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
+
+      if (result.canceled || !result.assets?.length) return;
+
+      const asset = result.assets[0];
+      setUploadingAvatar(true);
+
+      const formData = new FormData();
+      const fileName = asset.fileName || 'avatar.jpg';
+      const mime = asset.mimeType || 'image/jpeg';
+
+      if (Platform.OS === 'web') {
+        const resBlob = await fetch(asset.uri);
+        const blob = await resBlob.blob();
+        formData.append('avatar_file', blob, fileName);
+      } else {
+        formData.append('avatar_file', {
+          uri: asset.uri,
+          name: fileName,
+          type: mime,
+        });
+      }
+
+      const postAvatar = (path) =>
+        fetch(apiUrl(path), {
+          method: 'POST',
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        });
+
+      let response = await postAvatar('/profile/avatar');
+      if (response.status === 404) {
+        response = await postAvatar('/api/profile/avatar');
+      }
+
+      const text = await response.text();
+      let body = {};
+      try {
+        body = text ? JSON.parse(text) : {};
+      } catch {
+        body = {};
+      }
+
+      if (!response.ok) {
+        const msg =
+          body.message ||
+          (typeof body.detail === 'string' ? body.detail : null) ||
+          'Could not upload photo.';
+        throw new Error(msg);
+      }
+
+      const me = await apiFetch('/profile');
+      const p = me.data?.profile || {};
+      if (p.avatar_base64 && p.avatar_mime) {
+        setAvatarImageUri(`data:${p.avatar_mime};base64,${p.avatar_base64}`);
+      }
+      setSaveSuccess('Profile photo updated.');
+    } catch (err) {
+      setAvatarError(err.message || 'Could not update profile photo.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!avatarImageUri || removingAvatar || uploadingAvatar) return;
+    setAvatarError('');
+    setSaveError('');
+    setSaveSuccess('');
+
+    try {
+      setRemovingAvatar(true);
+      const token = getAuthToken();
+      const del = (path) =>
+        fetch(apiUrl(path), {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+      let res = await del('/profile/avatar');
+      if (res.status === 404) {
+        res = await del('/api/profile/avatar');
+      }
+      const text = await res.text();
+      let body = {};
+      try {
+        body = text ? JSON.parse(text) : {};
+      } catch {
+        body = {};
+      }
+      if (!res.ok) {
+        const msg =
+          body.message ||
+          (typeof body.detail === 'string' ? body.detail : null) ||
+          `Request failed (${res.status})`;
+        throw new Error(msg);
+      }
+      setAvatarImageUri(null);
+      setSaveSuccess('Profile photo removed.');
+    } catch (err) {
+      setAvatarError(err.message || 'Could not remove profile photo.');
+    } finally {
+      setRemovingAvatar(false);
+    }
+  };
+
   const workArrangementOptions = [
     { value: 'any', label: 'Any (Remote, Hybrid, On-Site)' },
     { value: 'remote', label: 'Remote Only' },
     { value: 'onsite', label: 'On Site / Hybrid Only' },
   ];
-
-  const sexOptions = ['Man', 'Woman', 'Another Gender', 'I do not wish to answer'];
-  const genderOptions = ['Man', 'Woman', 'Non-Binary', 'Two-Spirit', 'Another Gender', 'I do not wish to answer'];
-  const disabilityOptions = ['Yes', 'No', 'I do not wish to answer'];
-  const raceOptions = ['Yes', 'No', 'I do not wish to answer'];
 
   const handleAddPosition = () => {
     const trimmed = positionInput.trim();
@@ -335,42 +553,120 @@ export default function ProfilePage() {
   return (
     <View style={styles.container}>
       <Header />
-      <LinearGradient 
-        colors={['#1F1C2F', '#2D1B3D', '#1F1C2F']} 
-        style={styles.gradient}
-      >
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <View style={[styles.content, !isWideLayout && { paddingHorizontal: 16, paddingTop: 24 }]}>
-            {/* Header Section */}
-            <View style={styles.headerSection}>
-              <View style={styles.titleContainer}>
-                <Text style={styles.title}>My Profile</Text>
-                <Text style={styles.subtitle}>Manage your personal information</Text>
-              </View>
+      <LinearGradient colors={THEME.gradients.page} style={styles.gradient}>
+        <View style={isDesktop ? styles.layoutWithSidebar : styles.profileLayoutNarrow}>
+          {isDesktop && (
+            <View style={styles.profileSidebar} accessibilityRole="navigation">
+              <Text style={styles.profileSidebarHeading}>On this page</Text>
+              {PROFILE_NAV_SECTIONS.map(({ id, label }) => (
+                <Pressable
+                  key={id}
+                  onPress={() => scrollToSection(id)}
+                  style={({ pressed }) => [
+                    styles.profileNavLink,
+                    pressed && styles.profileNavLinkPressed,
+                  ]}
+                >
+                  <Text style={styles.profileNavLinkText}>{label}</Text>
+                </Pressable>
+              ))}
             </View>
+          )}
+          <ScrollView
+            ref={scrollRef}
+            style={isDesktop ? styles.mainScroll : styles.scrollView}
+            contentContainerStyle={isDesktop ? styles.mainScrollContent : undefined}
+            showsVerticalScrollIndicator={false}
+          >
+            <View
+              style={
+                isDesktop
+                  ? styles.scrollInnerWithSidebar
+                  : [styles.content, !isWideLayout && { paddingHorizontal: 16, paddingTop: 24 }]
+              }
+            >
+              <View collapsable={false}>
+                  <View onLayout={onSectionLayout('overview')}>
+                    <View style={styles.headerSection}>
+                      <View style={styles.titleContainer}>
+                        <View style={styles.heroBadge}>
+                          <View style={styles.heroBadgeDot} />
+                          <Text style={styles.heroBadgeText}>Account</Text>
+                        </View>
+                        <Text style={styles.title}>My Profile</Text>
+                        <Text style={styles.subtitle}>Manage your personal information</Text>
+                      </View>
+                    </View>
 
-            {loadingProfile && (
-              <Text style={styles.statusText}>Loading profile...</Text>
-            )}
-            {!!profileError && (
-              <Text style={styles.errorText}>{profileError}</Text>
-            )}
+                    {loadingProfile && (
+                      <Text style={styles.statusText}>Loading profile...</Text>
+                    )}
+                    {!!profileError && (
+                      <Text style={styles.errorText}>{profileError}</Text>
+                    )}
 
-            {/* Profile Avatar Section */}
-            <View style={styles.avatarSection}>
-              <View style={styles.avatarContainer}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{initials}</Text>
-                </View>
-              </View>
-              <Text style={styles.avatarName}>{displayName}</Text>
-              <Text style={styles.avatarRole}>{subscriptionTier || 'Subscription not set'}</Text>
-            </View>
+                    <View style={styles.avatarSection}>
+                      <View style={styles.avatarContainer}>
+                        <Pressable
+                          onPress={handlePickAvatar}
+                          disabled={uploadingAvatar || removingAvatar}
+                          accessibilityRole="button"
+                          accessibilityLabel="Change profile photo"
+                        >
+                          <View style={styles.avatar}>
+                            {avatarImageUri ? (
+                              <Image
+                                source={{ uri: avatarImageUri }}
+                                style={styles.avatarImage}
+                                resizeMode="cover"
+                              />
+                            ) : (
+                              <Text style={styles.avatarText}>{initials}</Text>
+                            )}
+                          </View>
+                        </Pressable>
+                      </View>
+                      <View style={styles.avatarActionsRow}>
+                        <Pressable
+                          onPress={handlePickAvatar}
+                          disabled={uploadingAvatar || removingAvatar}
+                        >
+                          <Text
+                            style={[
+                              styles.avatarActionLink,
+                              (uploadingAvatar || removingAvatar) && styles.avatarActionDisabled,
+                            ]}
+                          >
+                            {uploadingAvatar ? 'Uploading…' : 'Change photo'}
+                          </Text>
+                        </Pressable>
+                        {avatarImageUri ? (
+                          <Pressable
+                            onPress={handleRemoveAvatar}
+                            disabled={uploadingAvatar || removingAvatar}
+                          >
+                            <Text
+                              style={[
+                                styles.avatarActionLinkMuted,
+                                (uploadingAvatar || removingAvatar) && styles.avatarActionDisabled,
+                              ]}
+                            >
+                              {removingAvatar ? 'Removing…' : 'Remove'}
+                            </Text>
+                          </Pressable>
+                        ) : null}
+                      </View>
+                      {!!avatarError && (
+                        <Text style={styles.errorText}>{avatarError}</Text>
+                      )}
+                      <Text style={styles.avatarName}>{displayName}</Text>
+                      <Text style={styles.avatarRole}>{subscriptionTier || 'Subscription not set'}</Text>
+                    </View>
+                  </View>
 
-            {/* Info Cards */}
-            <View style={styles.cardsContainer}>
-              {/* Personal Information Card */}
-              <View style={styles.card}>
+                  <View style={styles.cardsContainer}>
+                    <View onLayout={onSectionLayout('personal')}>
+                      <View style={styles.card}>
                 <Text style={styles.cardTitle}>Personal Information</Text>
                 
                 <View style={styles.inputGroup}>
@@ -456,7 +752,9 @@ export default function ProfilePage() {
                   />
                 </View>
               </View>
+                    </View>
 
+                    <View onLayout={onSectionLayout('preferences')}>
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>Job Preferences</Text>
 
@@ -464,15 +762,23 @@ export default function ProfilePage() {
                   <Text style={styles.sectionTitle}>Positions</Text>
                   <View style={styles.inputWithButton}>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, styles.inputWithButtonField]}
                       placeholder="e.g. Data Analyst"
                       placeholderTextColor="#6B7280"
                       value={positionInput}
                       onChangeText={setPositionInput}
                       onSubmitEditing={handleAddPosition}
                     />
-                    <Pressable style={styles.addButton} onPress={handleAddPosition}>
-                      <Text style={styles.addButtonText}>+</Text>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.addButton,
+                        pressed && styles.addButtonPressed,
+                      ]}
+                      onPress={handleAddPosition}
+                    >
+                      <View style={styles.addButtonGlyph}>
+                        <Text style={styles.addButtonText}>+</Text>
+                      </View>
                     </Pressable>
                   </View>
                   {preferredPositions.length > 0 && (
@@ -496,15 +802,23 @@ export default function ProfilePage() {
                   <Text style={styles.sectionTitle}>Locations</Text>
                   <View style={styles.inputWithButton}>
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, styles.inputWithButtonField]}
                       placeholder="e.g. New York, NY"
                       placeholderTextColor="#6B7280"
                       value={locationInput}
                       onChangeText={setLocationInput}
                       onSubmitEditing={handleAddLocation}
                     />
-                    <Pressable style={styles.addButton} onPress={handleAddLocation}>
-                      <Text style={styles.addButtonText}>+</Text>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.addButton,
+                        pressed && styles.addButtonPressed,
+                      ]}
+                      onPress={handleAddLocation}
+                    >
+                      <View style={styles.addButtonGlyph}>
+                        <Text style={styles.addButtonText}>+</Text>
+                      </View>
                     </Pressable>
                   </View>
                   {preferredLocations.length > 0 && (
@@ -526,55 +840,55 @@ export default function ProfilePage() {
 
                 <View style={styles.preferenceSection}>
                   <Text style={styles.sectionTitle}>Work Arrangement</Text>
-                  <View style={styles.checkboxContainer}>
+                  <View style={styles.radioGroup}>
                     {workArrangementOptions.map((option) => (
                       <Pressable
                         key={option.value}
-                        style={styles.checkboxRow}
+                        style={styles.radioRow}
                         onPress={() => setWorkArrangement(option.value)}
                       >
-                        <View style={[
-                          styles.checkbox,
-                          workArrangement === option.value && styles.checkboxChecked
-                        ]}>
-                          {workArrangement === option.value && (
-                            <View style={styles.checkmark}>
-                              <View style={styles.checkmarkLine1} />
-                              <View style={styles.checkmarkLine2} />
-                            </View>
-                          )}
+                        <View
+                          style={[
+                            styles.radioOuter,
+                            workArrangement === option.value && styles.radioOuterSelected,
+                          ]}
+                        >
+                          {workArrangement === option.value ? (
+                            <View style={styles.radioInner} />
+                          ) : null}
                         </View>
-                        <Text style={styles.checkboxLabel}>{option.label}</Text>
+                        <Text style={styles.radioLabel}>{option.label}</Text>
                       </Pressable>
                     ))}
                   </View>
                 </View>
               </View>
+                    </View>
 
+                    <View onLayout={onSectionLayout('identification')}>
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>Identification</Text>
 
                 <View style={styles.preferenceSection}>
                   <Text style={styles.sectionTitle}>Sex</Text>
-                  <View style={styles.checkboxContainer}>
-                    {sexOptions.map((option) => (
+                  <View style={styles.radioGroup}>
+                    {SEX_OPTIONS.map((option) => (
                       <Pressable
                         key={option}
-                        style={styles.checkboxRow}
+                        style={styles.radioRow}
                         onPress={() => updateIdentification('sex', option)}
                       >
-                        <View style={[
-                          styles.checkbox,
-                          identification.sex === option && styles.checkboxChecked
-                        ]}>
-                          {identification.sex === option && (
-                            <View style={styles.checkmark}>
-                              <View style={styles.checkmarkLine1} />
-                              <View style={styles.checkmarkLine2} />
-                            </View>
-                          )}
+                        <View
+                          style={[
+                            styles.radioOuter,
+                            identification.sex === option && styles.radioOuterSelected,
+                          ]}
+                        >
+                          {identification.sex === option ? (
+                            <View style={styles.radioInner} />
+                          ) : null}
                         </View>
-                        <Text style={styles.checkboxLabel}>{option}</Text>
+                        <Text style={styles.radioLabel}>{option}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -582,25 +896,24 @@ export default function ProfilePage() {
 
                 <View style={styles.preferenceSection}>
                   <Text style={styles.sectionTitle}>Gender</Text>
-                  <View style={styles.checkboxContainer}>
-                    {genderOptions.map((option) => (
+                  <View style={styles.radioGroup}>
+                    {GENDER_OPTIONS.map((option) => (
                       <Pressable
                         key={option}
-                        style={styles.checkboxRow}
+                        style={styles.radioRow}
                         onPress={() => updateIdentification('gender', option)}
                       >
-                        <View style={[
-                          styles.checkbox,
-                          identification.gender === option && styles.checkboxChecked
-                        ]}>
-                          {identification.gender === option && (
-                            <View style={styles.checkmark}>
-                              <View style={styles.checkmarkLine1} />
-                              <View style={styles.checkmarkLine2} />
-                            </View>
-                          )}
+                        <View
+                          style={[
+                            styles.radioOuter,
+                            identification.gender === option && styles.radioOuterSelected,
+                          ]}
+                        >
+                          {identification.gender === option ? (
+                            <View style={styles.radioInner} />
+                          ) : null}
                         </View>
-                        <Text style={styles.checkboxLabel}>{option}</Text>
+                        <Text style={styles.radioLabel}>{option}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -608,58 +921,57 @@ export default function ProfilePage() {
 
                 <View style={styles.preferenceSection}>
                   <Text style={styles.sectionTitle}>Disability</Text>
-                  <View style={styles.checkboxContainer}>
-                    {disabilityOptions.map((option) => (
+                  <View style={styles.radioGroup}>
+                    {DISABILITY_OPTIONS.map((option) => (
                       <Pressable
                         key={option}
-                        style={styles.checkboxRow}
+                        style={styles.radioRow}
                         onPress={() => updateIdentification('disability', option)}
                       >
-                        <View style={[
-                          styles.checkbox,
-                          identification.disability === option && styles.checkboxChecked
-                        ]}>
-                          {identification.disability === option && (
-                            <View style={styles.checkmark}>
-                              <View style={styles.checkmarkLine1} />
-                              <View style={styles.checkmarkLine2} />
-                            </View>
-                          )}
+                        <View
+                          style={[
+                            styles.radioOuter,
+                            identification.disability === option && styles.radioOuterSelected,
+                          ]}
+                        >
+                          {identification.disability === option ? (
+                            <View style={styles.radioInner} />
+                          ) : null}
                         </View>
-                        <Text style={styles.checkboxLabel}>{option}</Text>
+                        <Text style={styles.radioLabel}>{option}</Text>
                       </Pressable>
                     ))}
                   </View>
                 </View>
 
                 <View style={styles.preferenceSection}>
-                  <Text style={styles.sectionTitle}>Race</Text>
-                  <View style={styles.checkboxContainer}>
-                    {raceOptions.map((option) => (
+                  <Text style={styles.sectionTitle}>Race / ethnicity</Text>
+                  <View style={styles.radioGroup}>
+                    {RACE_ETHNICITY_OPTIONS.map((option) => (
                       <Pressable
                         key={option}
-                        style={styles.checkboxRow}
+                        style={styles.radioRow}
                         onPress={() => updateIdentification('race', option)}
                       >
-                        <View style={[
-                          styles.checkbox,
-                          identification.race === option && styles.checkboxChecked
-                        ]}>
-                          {identification.race === option && (
-                            <View style={styles.checkmark}>
-                              <View style={styles.checkmarkLine1} />
-                              <View style={styles.checkmarkLine2} />
-                            </View>
-                          )}
+                        <View
+                          style={[
+                            styles.radioOuter,
+                            identification.race === option && styles.radioOuterSelected,
+                          ]}
+                        >
+                          {identification.race === option ? (
+                            <View style={styles.radioInner} />
+                          ) : null}
                         </View>
-                        <Text style={styles.checkboxLabel}>{option}</Text>
+                        <Text style={styles.radioLabel}>{option}</Text>
                       </Pressable>
                     ))}
                   </View>
                 </View>
               </View>
+                    </View>
 
-              {/* Resume Card */}
+                    <View onLayout={onSectionLayout('resume')}>
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>Resume</Text>
                 
@@ -701,8 +1013,9 @@ export default function ProfilePage() {
                 
                 {!!resumeError && <Text style={styles.errorText}>{resumeError}</Text>}
               </View>
+                    </View>
 
-              {/* Stats Card */}
+                    <View onLayout={onSectionLayout('stats')}>
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>Profile Stats</Text>
                 
@@ -723,9 +1036,10 @@ export default function ProfilePage() {
                   </View>
                 </View>
               </View>
+                    </View>
             </View>
 
-            {/* Save Button */}
+            <View onLayout={onSectionLayout('save')}>
             <Pressable 
               disabled={saving || loadingProfile}
               style={({ pressed }) => [
@@ -748,8 +1062,11 @@ export default function ProfilePage() {
             </Pressable>
             {!!saveError && <Text style={styles.errorText}>{saveError}</Text>}
             {!!saveSuccess && <Text style={styles.successText}>{saveSuccess}</Text>}
-          </View>
-        </ScrollView>
+            </View>
+                </View>
+            </View>
+          </ScrollView>
+        </View>
       </LinearGradient>
     </View>
   );
