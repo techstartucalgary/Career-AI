@@ -51,7 +51,7 @@ app.include_router(linkedin_router)
 
 
 
-api_key = os.getenv("SCRAPEDOG")
+api_key = os.getenv("SCRAPEDOG-JOBS")
 url = "https://api.scrapingdog.com/jobs"
 
 params = {
