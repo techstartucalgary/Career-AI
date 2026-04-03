@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TextInput, Pressable,
   StyleSheet, KeyboardAvoidingView, Platform,
@@ -9,9 +9,22 @@ import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './AuthenticationPage.styles';
 import { THEME } from '../styles/theme';
-import { setAuthToken } from '../services/api';
+import { API_BASE_URL, setAuthToken } from '../services/api';
 import verexaLogo from '../assets/verexalogo.png';
 import { useBreakpoints } from '../hooks/useBreakpoints';
+
+const GOOGLE_GSI_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
+const GOOGLE_BUTTON_CONTAINER_ID = 'google-signin-button';
+
+const getEnvValue = (key) => {
+  if (typeof globalThis !== 'undefined' && globalThis.process && globalThis.process.env) {
+    return globalThis.process.env[key];
+  }
+
+  return undefined;
+};
+
+const GOOGLE_CLIENT_ID = getEnvValue('GOOGLE_CLIENT_ID') || '';
 
 export default function AuthenticationPage() {
   const router = useRouter();
@@ -26,6 +39,112 @@ export default function AuthenticationPage() {
   const [focusedInput, setFocusedInput] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredSwitch, setHoveredSwitch] = useState(false);
+  const [isGoogleScriptLoaded, setIsGoogleScriptLoaded] = useState(Platform.OS !== 'web');
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const googleInitialized = useRef(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined' || typeof document === 'undefined') {
+      return undefined;
+    }
+
+    let isCancelled = false;
+
+    const onScriptReady = () => {
+      if (!isCancelled) {
+        setIsGoogleScriptLoaded(true);
+      }
+    };
+
+    const existingScript = document.querySelector('script[data-google-gsi="true"]');
+    if (existingScript) {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        onScriptReady();
+      } else {
+        existingScript.addEventListener('load', onScriptReady, { once: true });
+      }
+
+      return () => {
+        isCancelled = true;
+        existingScript.removeEventListener('load', onScriptReady);
+      };
+    }
+
+    const script = document.createElement('script');
+    script.src = GOOGLE_GSI_SCRIPT_SRC;
+    script.async = true;
+    script.defer = true;
+    script.dataset.googleGsi = 'true';
+    script.addEventListener('load', onScriptReady, { once: true });
+    document.head.appendChild(script);
+
+    return () => {
+      isCancelled = true;
+      script.removeEventListener('load', onScriptReady);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !isGoogleScriptLoaded || typeof window === 'undefined' || !GOOGLE_CLIENT_ID) {
+      return;
+    }
+
+    const googleAccounts = window.google && window.google.accounts && window.google.accounts.id;
+    if (!googleAccounts) {
+      return;
+    }
+
+    const buttonContainer = document.getElementById(GOOGLE_BUTTON_CONTAINER_ID);
+    if (!buttonContainer) {
+      return;
+    }
+
+    const handleGoogleCredentialResponse = async (response) => {
+      if (!response || !response.credential) {
+        return;
+      }
+
+      setGoogleLoading(true);
+      setErrors({});
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: response.credential }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.data && data.data.token) {
+            setAuthToken(data.data.token);
+            router.replace('/jobs');
+          }
+        }
+      } catch {
+        setErrors({ general: 'Google sign-in is not fully configured yet.' });
+      } finally {
+        setGoogleLoading(false);
+      }
+    };
+
+    if (!googleInitialized.current) {
+      googleAccounts.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse,
+      });
+      googleInitialized.current = true;
+    }
+
+    buttonContainer.innerHTML = '';
+    googleAccounts.renderButton(buttonContainer, {
+      theme: 'outline',
+      size: 'large',
+      shape: 'pill',
+      width: buttonContainer.offsetWidth || 360,
+      text: isSignUp ? 'signup_with' : 'signin_with',
+    });
+  }, [isGoogleScriptLoaded, isSignUp, router]);
 
   const validate = () => {
     const newErrors = {};
@@ -48,8 +167,8 @@ export default function AuthenticationPage() {
 
     try {
       const url = isSignUp
-        ? 'http://localhost:8000/signup'
-        : 'http://localhost:8000/login';
+        ? `${API_BASE_URL}/signup`
+        : `${API_BASE_URL}/login`;
 
       const payload = isSignUp
         ? { email, password, name }
@@ -341,6 +460,26 @@ export default function AuthenticationPage() {
                   <View style={styles.dividerLine} />
                   <Text style={styles.dividerText}>or</Text>
                   <View style={styles.dividerLine} />
+                </View>
+
+                <View style={styles.googleSection}>
+                  {Platform.OS === 'web' ? (
+                    <>
+                      <View
+                        id={GOOGLE_BUTTON_CONTAINER_ID}
+                        style={styles.googleButtonContainer}
+                      />
+                      {googleLoading && (
+                        <View style={styles.googleLoadingRow}>
+                          <ActivityIndicator size="small" color={THEME.colors.textSecondary} />
+                        </View>
+                      )}
+                    </>
+                  ) : (
+                    <Pressable style={styles.googleFallbackButton}>
+                      <Text style={styles.googleFallbackButtonText}>Continue with Google</Text>
+                    </Pressable>
+                  )}
                 </View>
 
                 {/* Switch Mode Button */}

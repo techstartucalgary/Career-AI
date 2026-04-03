@@ -319,6 +319,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     opacity: 0.7,
   },
+  googleSection: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  googleButtonContainer: {
+    width: '100%',
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  googleLoadingRow: {
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  googleFallbackButton: {
+    width: '100%',
+    minHeight: 48,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderLight,
+    backgroundColor: COLORS.bgAlt,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+  googleFallbackButtonText: {
+    color: COLORS.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
+    fontFamily: Platform.select({
+      web: 'system-ui, sans-serif',
+      default: 'sans-serif',
+    }),
+  },
   switchButton: {
     alignItems: 'center',
     paddingVertical: 12,
