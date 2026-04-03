@@ -389,7 +389,7 @@ def complete_onboarding(payload: OnboardingCompleteRequest, authorization: str =
     try:
         col.update_one(
             {"_id": user_id},
-            {"$set": {**profile_update, **preferences_update, **identification_update, "onboarding_complete": True}}
+            {"$set": {**profile_update, **preferences_update, **identification_update, "profile_completed": True}}
         )
         return JSONResponse(
             status_code=200,
