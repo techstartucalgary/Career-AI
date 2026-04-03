@@ -16,16 +16,6 @@ import { useBreakpoints } from '../hooks/useBreakpoints';
 const GOOGLE_GSI_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
 const GOOGLE_BUTTON_CONTAINER_ID = 'google-signin-button';
 
-const getEnvValue = (key) => {
-  if (typeof globalThis !== 'undefined' && globalThis.process && globalThis.process.env) {
-    return globalThis.process.env[key];
-  }
-
-  return undefined;
-};
-
-const GOOGLE_CLIENT_ID = getEnvValue('GOOGLE_CLIENT_ID') || '';
-
 export default function AuthenticationPage() {
   const router = useRouter();
   const { isWideLayout } = useBreakpoints();
@@ -41,7 +31,41 @@ export default function AuthenticationPage() {
   const [hoveredSwitch, setHoveredSwitch] = useState(false);
   const [isGoogleScriptLoaded, setIsGoogleScriptLoaded] = useState(Platform.OS !== 'web');
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleClientId, setGoogleClientId] = useState('');
   const googleInitialized = useRef(false);
+  const hasGoogleClientId = googleClientId.trim().length > 0;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchGoogleClientId = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/google/client-id`);
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = await response.json();
+        const clientId = payload && payload.data && typeof payload.data.client_id === 'string'
+          ? payload.data.client_id
+          : '';
+
+        if (!cancelled) {
+          setGoogleClientId(clientId);
+        }
+      } catch {
+        if (!cancelled) {
+          setGoogleClientId('');
+        }
+      }
+    };
+
+    fetchGoogleClientId();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined' || typeof document === 'undefined') {
@@ -85,7 +109,7 @@ export default function AuthenticationPage() {
   }, []);
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || !isGoogleScriptLoaded || typeof window === 'undefined' || !GOOGLE_CLIENT_ID) {
+    if (Platform.OS !== 'web' || !isGoogleScriptLoaded || typeof window === 'undefined' || !hasGoogleClientId) {
       return;
     }
 
@@ -130,7 +154,7 @@ export default function AuthenticationPage() {
 
     if (!googleInitialized.current) {
       googleAccounts.initialize({
-        client_id: GOOGLE_CLIENT_ID,
+        client_id: googleClientId,
         callback: handleGoogleCredentialResponse,
       });
       googleInitialized.current = true;
@@ -144,7 +168,7 @@ export default function AuthenticationPage() {
       width: buttonContainer.offsetWidth || 360,
       text: isSignUp ? 'signup_with' : 'signin_with',
     });
-  }, [isGoogleScriptLoaded, isSignUp, router]);
+  }, [googleClientId, hasGoogleClientId, isGoogleScriptLoaded, isSignUp, router]);
 
   const validate = () => {
     const newErrors = {};
@@ -464,17 +488,23 @@ export default function AuthenticationPage() {
 
                 <View style={styles.googleSection}>
                   {Platform.OS === 'web' ? (
-                    <>
-                      <View
-                        id={GOOGLE_BUTTON_CONTAINER_ID}
-                        style={styles.googleButtonContainer}
-                      />
-                      {googleLoading && (
-                        <View style={styles.googleLoadingRow}>
-                          <ActivityIndicator size="small" color={THEME.colors.textSecondary} />
-                        </View>
-                      )}
-                    </>
+                    hasGoogleClientId ? (
+                      <>
+                        <View
+                          id={GOOGLE_BUTTON_CONTAINER_ID}
+                          style={styles.googleButtonContainer}
+                        />
+                        {googleLoading && (
+                          <View style={styles.googleLoadingRow}>
+                            <ActivityIndicator size="small" color={THEME.colors.textSecondary} />
+                          </View>
+                        )}
+                      </>
+                    ) : (
+                      <Pressable style={styles.googleFallbackButton}>
+                        <Text style={styles.googleFallbackButtonText}>Continue with Google</Text>
+                      </Pressable>
+                    )
                   ) : (
                     <Pressable style={styles.googleFallbackButton}>
                       <Text style={styles.googleFallbackButtonText}>Continue with Google</Text>
