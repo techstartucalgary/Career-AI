@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, Pressable, ScrollView, Platform, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Octicons from '@expo/vector-icons/Octicons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Header from '../components/Header';
+import { BackArrowIcon } from '../components/ForwardArrowIcon';
+import { THEME } from '../styles/theme';
 import styles from './JobPostingPage.styles';
 import './JobPages.css';
 import { cacheJobs, fetchJobById, getCachedJob } from '../services/api';
@@ -59,6 +62,8 @@ const normalizeForView = (job) => ({
     ]).slice(0, 3),
   ],
 });
+
+const { colors: THEME_COLORS } = THEME;
 
 const JobPostingPage = () => {
   const router = useRouter();
@@ -148,9 +153,8 @@ const JobPostingPage = () => {
               onHoverIn={() => Platform.OS === 'web' && setHoveredButton('back')}
               onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
             >
-              <View style={styles.backArrow}>
-                <View style={styles.backArrowLine} />
-                <View style={styles.backArrowHead} />
+              <View style={styles.backArrowWrap}>
+                <BackArrowIcon color={THEME_COLORS.white} size={18} />
               </View>
               <Text style={styles.backButtonText}>Back</Text>
             </Pressable>
@@ -168,7 +172,7 @@ const JobPostingPage = () => {
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
                 <View style={styles.actionButtonIcon}>
-                  <View style={styles.applyIcon} />
+                  <Octicons name="paper-airplane" size={20} color={THEME_COLORS.white} />
                 </View>
                 <Text style={styles.actionButtonText}>{canApply ? 'Apply Now' : 'Apply Link Unavailable'}</Text>
               </Pressable>
@@ -182,7 +186,7 @@ const JobPostingPage = () => {
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
                 <View style={styles.actionButtonIcon}>
-                  <View style={styles.interviewIcon} />
+                  <Octicons name="comment-discussion" size={20} color={THEME_COLORS.white} />
                 </View>
                 <Text style={styles.actionButtonText}>Interview Prep</Text>
               </Pressable>
@@ -196,7 +200,7 @@ const JobPostingPage = () => {
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
                 <View style={styles.actionButtonIcon}>
-                  <View style={styles.letterIcon} />
+                  <Octicons name="mail" size={20} color={THEME_COLORS.white} />
                 </View>
                 <Text style={styles.actionButtonText}>Generate Cover Letter</Text>
               </Pressable>
@@ -210,7 +214,7 @@ const JobPostingPage = () => {
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
                 <View style={styles.actionButtonIcon}>
-                  <View style={styles.resumeIcon} />
+                  <Octicons name="file" size={20} color={THEME_COLORS.white} />
                 </View>
                 <Text style={styles.actionButtonText}>Generate Resume</Text>
               </Pressable>
@@ -264,19 +268,19 @@ const JobPostingPage = () => {
                     <View style={styles.jobMeta}>
                       <View style={styles.jobMetaItem}>
                         <View style={styles.metaIcon}>
-                          <View style={styles.locationIcon} />
+                          <Octicons name="location" size={16} color={THEME_COLORS.textSecondary} />
                         </View>
                         <Text style={styles.metaText}>{jobData.location}</Text>
                       </View>
                       <View style={styles.jobMetaItem}>
                         <View style={styles.metaIcon}>
-                          <View style={styles.typeIcon} />
+                          <Octicons name="briefcase" size={16} color={THEME_COLORS.textSecondary} />
                         </View>
                         <Text style={styles.metaText}>{jobData.type}</Text>
                       </View>
                       <View style={styles.jobMetaItem}>
                         <View style={styles.metaIcon}>
-                          <View style={styles.moneyIcon} />
+                          <Octicons name="tag" size={16} color={THEME_COLORS.textSecondary} />
                         </View>
                         <Text style={styles.metaText}>{jobData.salary}</Text>
                       </View>
@@ -287,11 +291,12 @@ const JobPostingPage = () => {
                   style={styles.bookmarkButton}
                   onPress={() => setIsBookmarked(!isBookmarked)}
                 >
-                  <View style={[
-                    styles.bookmarkIcon,
-                    isBookmarked && styles.bookmarkIconActive
-                  ]}>
-                    <View style={styles.bookmarkShape} />
+                  <View style={styles.bookmarkIcon}>
+                    <Octicons
+                      name={isBookmarked ? 'bookmark-filled' : 'bookmark'}
+                      size={22}
+                      color={isBookmarked ? THEME_COLORS.primary : THEME_COLORS.textSecondary}
+                    />
                   </View>
                 </Pressable>
               </View>
@@ -300,7 +305,7 @@ const JobPostingPage = () => {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIcon}>
-                    <View style={styles.aboutIcon} />
+                    <Octicons name="info" size={22} color={THEME_COLORS.primary} />
                   </View>
                   <Text style={styles.sectionHeading}>About This Role</Text>
                 </View>
@@ -315,7 +320,7 @@ const JobPostingPage = () => {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIcon}>
-                    <View style={styles.responsibilitiesIcon} />
+                    <Octicons name="checklist" size={22} color={THEME_COLORS.primary} />
                   </View>
                   <Text style={styles.sectionHeading}>What You'll Do</Text>
                 </View>
@@ -333,7 +338,7 @@ const JobPostingPage = () => {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIcon}>
-                    <View style={styles.qualificationsIcon} />
+                    <Octicons name="mortar-board" size={22} color={THEME_COLORS.primary} />
                   </View>
                   <Text style={styles.sectionHeading}>Who You Are</Text>
                 </View>

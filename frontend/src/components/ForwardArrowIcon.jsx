@@ -43,3 +43,12 @@ export default function ForwardArrowIcon({ color = COLORS.textPrimary, size = 16
     </View>
   );
 }
+
+/** Same geometry as ForwardArrowIcon, mirrored for back navigation. */
+export function BackArrowIcon(props) {
+  return (
+    <View style={{ transform: [{ scaleX: -1 }] }}>
+      <ForwardArrowIcon {...props} />
+    </View>
+  );
+}
