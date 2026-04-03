@@ -1,6 +1,8 @@
 """
 Authentication routes (login, signup, logout)
 """
+import os
+
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
 from datetime import datetime
@@ -10,6 +12,13 @@ from database import col
 from dependencies import hash_, verify_hash, create_access_token
 
 router = APIRouter()
+
+
+@router.get("/auth/google/client-id")
+async def get_google_client_id():
+    """Return public Google client ID for frontend Google Sign-In initialization."""
+    client_id = os.getenv("GOOGLE_CLIENT_ID") or os.getenv("EXPO_PUBLIC_GOOGLE_CLIENT_ID") or ""
+    return {"success": True, "data": {"client_id": client_id}}
 
 
 @router.post("/login")
