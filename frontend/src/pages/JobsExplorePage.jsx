@@ -1,60 +1,363 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView, TextInput, Platform } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, Pressable, ScrollView, TextInput, Platform, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import styles from './JobsExplorePage.styles';
 import './JobPages.css';
 import { useBreakpoints } from '../hooks/useBreakpoints';
+import { cacheJobs, fetchLinkedInJobs, getUserProfile } from '../services/api';
+
+const DEFAULT_LOCATION = '';
+const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 30, 50];
+const JOB_TYPE_OPTIONS = ['All Types', 'Internship', 'Full-time', 'Part-time', 'Contract', 'Temporary', 'Co-op', 'Remote'];
+
+const toArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.jobs)) return value.jobs;
+  if (Array.isArray(value?.value)) return value.value;
+  if (Array.isArray(value?.data)) return value.data;
+  if (Array.isArray(value?.data?.jobs)) return value.data.jobs;
+  return [];
+};
+
+const normalizeTypes = (job) => {
+  const rawTypes = [
+    job.employment_type,
+    job.job_type,
+    ...(Array.isArray(job.types) ? job.types : []),
+  ]
+    .flat()
+    .filter(Boolean);
+
+  if (job.remote || /remote/i.test(String(job.job_location || ''))) {
+    rawTypes.push('Remote');
+  }
+
+  const uniqueTypes = [...new Set(rawTypes.map((type) => String(type).trim()).filter(Boolean))];
+  return uniqueTypes.length > 0 ? uniqueTypes : ['Full-time'];
+};
+
+const sanitizeJobTitle = (value) => {
+  const text = String(value || '').replace(/\*+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+
+  const blockedPrefixes = /^(about|pay|benefits|responsibilities|qualifications|work location|job type|location|requirements|what you will do|who you are|overview)/i;
+  const fragments = [
+    text,
+    ...text
+      .split(/\s[-–—|:]\s|,\s+/)
+      .map((part) => part.trim())
+      .filter(Boolean),
+  ];
+
+  for (const fragment of fragments) {
+    if (blockedPrefixes.test(fragment)) continue;
+    if (fragment.length < 3) continue;
+
+    const candidate = fragment.length > 80
+      ? fragment.split(/\b(?:join|build|work|help|support|develop|create|collaborate|design|manage|lead)\b/i)[0].trim()
+      : fragment;
+
+    if (candidate.length > 90) continue;
+    if (candidate.split(/\s+/).length <= 12) return candidate;
+  }
+
+  const fallback = fragments[0];
+  if (fallback.length > 90) {
+    return fallback.split(/\s+/).slice(0, 12).join(' ');
+  }
+
+  return fallback;
+};
+
+const extractTitleFromDescription = (description) => {
+  const lines = String(description || '')
+    .split(/\n+/)
+    .map((line) => line.replace(/\*+/g, ' ').replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+
+  const blockedPrefixes = /^(about|pay|benefits|responsibilities|qualifications|work location|job type|location|requirements|what you will do|who you are|overview)/i;
+  const roleHint = /\b(engineer|developer|analyst|manager|intern|co-op|specialist|designer|consultant|associate|architect|scientist|product|program manager)\b/i;
+
+  for (const line of lines.slice(0, 20)) {
+    if (blockedPrefixes.test(line) || line.length < 6 || line.length > 90 || line.endsWith(':')) continue;
+    if (roleHint.test(line)) return line;
+  }
+
+  return '';
+};
+
+const normalizeJob = (job, index) => {
+  const company =
+    job.company ||
+    job.company_name ||
+    job.employer_name ||
+    'Company';
+
+  const title =
+    job.title ||
+    job.job_title ||
+    job.job_position ||
+    job.position ||
+    'Untitled role';
+
+  const sanitizedTitle = sanitizeJobTitle(title);
+  const descriptionTitle = extractTitleFromDescription(job.job_description || job.description || job.snippet || '');
+
+  const fallbackTitle = (() => {
+    if (sanitizedTitle && sanitizedTitle.toLowerCase() !== 'untitled role') return sanitizedTitle;
+    if (descriptionTitle) return descriptionTitle;
+    return sanitizedTitle || title;
+  })();
+
+  return {
+    id: String(job.id || job.job_id || job.job_urn || job.job_link || `${company}-${fallbackTitle}-${index}`),
+    source: String(job.source || (String(job.job_link || '').toLowerCase().includes('indeed') ? 'indeed' : 'linkedin')),
+    company,
+    title: fallbackTitle,
+    location: job.location || job.job_location || 'Location not listed',
+    rate: job.salary || job.base_pay || job.compensation || 'Compensation not listed',
+    types: normalizeTypes(job),
+    description: job.job_description || job.description || job.snippet || 'No description available yet.',
+    posted: job.posted || job.job_posting_time || job.job_posting_date || job.date || 'Recently posted',
+    matchScore: Number(job.match_score || 82),
+    applyUrl: job.apply_url || job.job_link || job.link || job.url || null,
+  };
+};
 
 const JobsExplorePage = () => {
   const router = useRouter();
   const { isWideLayout } = useBreakpoints();
+  const scrollViewRef = useRef(null);
   const [selectedTab, setSelectedTab] = useState('Recommended For You');
   const [searchQuery, setSearchQuery] = useState('');
+  const [locationQuery, setLocationQuery] = useState(DEFAULT_LOCATION);
+  const [pageSize, setPageSize] = useState(10);
+  const [showPageSizeMenu, setShowPageSizeMenu] = useState(false);
+  const [selectedJobType, setSelectedJobType] = useState('All Types');
+  const [showJobTypeMenu, setShowJobTypeMenu] = useState(false);
+  const [page, setPage] = useState(1);
   const [focusedSearch, setFocusedSearch] = useState(false);
   const [hoveredJob, setHoveredJob] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [jobsError, setJobsError] = useState('');
+  const [sourceWarnings, setSourceWarnings] = useState([]);
+  const [preferredPositions, setPreferredPositions] = useState([]);
+  const [preferredLocations, setPreferredLocations] = useState([]);
+  const jobsListYRef = useRef(0);
+  const shimmerProgress = useRef(new Animated.Value(0)).current;
+  const loadRequestIdRef = useRef(0);
 
   const tabs = ['Recommended For You', 'All Jobs', 'Applied Jobs'];
 
-  const jobs = [
-    {
-      id: 1,
-      company: 'Cenovus',
-      title: 'Student Data Analyst Summer, 2026',
-      location: 'Calgary, AB',
-      rate: '$28.25/hr',
-      types: ['Full-time', 'Hybrid', 'Internship'],
-      description: 'Are you looking for an exciting student opportunity full of meaningful, diverse, and challenging assignments working alongside industry leading professionals? You will be part of a driven, and collaborative team completing important projects while receiving the mentorship, knowledge, and experience to develop the skills you need to build an exciting career. Our team is on a mission to further enable Canadian Thermal Development and Production teams by implementing advanced data and analytics solutions, with a strong focus on generative AI.',
-      posted: '2 days ago',
-      matchScore: 95,
-    },
-    {
-      id: 2,
-      company: 'TechCorp',
-      title: 'Software Engineer Intern',
-      location: 'Toronto, ON',
-      rate: '$32.50/hr',
-      types: ['Full-time', 'Remote', 'Internship'],
-      description: 'Join our innovative team to build cutting-edge software solutions. Work on real-world projects, collaborate with experienced engineers, and grow your skills in a supportive environment.',
-      posted: '1 day ago',
-      matchScore: 88,
-    },
-    {
-      id: 3,
-      company: 'DataFlow Inc',
-      title: 'Junior Data Scientist',
-      location: 'Vancouver, BC',
-      rate: '$35.00/hr',
-      types: ['Full-time', 'Hybrid', 'Entry Level'],
-      description: 'Exciting opportunity for a junior data scientist to work on machine learning projects and data analytics solutions. Perfect for recent graduates looking to start their career in data science.',
-      posted: '3 days ago',
-      matchScore: 92,
-    },
-  ];
+  const activeKeywords = useMemo(
+    () => searchQuery.split(/\s+/).map((word) => word.trim()).filter(Boolean),
+    [searchQuery]
+  );
 
-  const handleJobPress = (jobId) => {
-    router.push(`/job/${jobId}`);
+  const shimmerTranslateX = shimmerProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-260, 260],
+  });
+
+  useEffect(() => {
+    if (!loadingJobs) {
+      shimmerProgress.stopAnimation();
+      shimmerProgress.setValue(0);
+      return undefined;
+    }
+
+    const shimmerLoop = Animated.loop(
+      Animated.timing(shimmerProgress, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+
+    shimmerLoop.start();
+    return () => {
+      shimmerLoop.stop();
+    };
+  }, [loadingJobs, shimmerProgress]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPreferences = async () => {
+      try {
+        const profileResponse = await getUserProfile();
+        const profileData = profileResponse?.data || {};
+        const jobPreferences = profileData?.job_preferences || {};
+
+        if (!isMounted) return;
+
+        const positions = Array.isArray(jobPreferences.positions)
+          ? jobPreferences.positions.map((v) => String(v).trim()).filter(Boolean)
+          : [];
+        const locations = Array.isArray(jobPreferences.locations)
+          ? jobPreferences.locations.map((v) => String(v).trim()).filter(Boolean)
+          : [];
+
+        setPreferredPositions(positions);
+        setPreferredLocations(locations);
+      } catch {
+        if (!isMounted) return;
+        setPreferredPositions([]);
+        setPreferredLocations([]);
+      }
+    };
+
+    loadPreferences();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const loadJobs = useCallback(async () => {
+    const requestId = loadRequestIdRef.current + 1;
+    loadRequestIdRef.current = requestId;
+    const requestStartedAt = Date.now();
+
+    if (selectedTab === 'Applied Jobs') {
+      setJobs([]);
+      setTotalJobs(0);
+      setLoadingJobs(false);
+      setJobsError('');
+      setHasLoadedOnce(true);
+      return;
+    }
+
+    setLoadingJobs(true);
+    setJobs([]);
+    setJobsError('');
+    setSourceWarnings([]);
+
+    try {
+      const isRecommended = selectedTab === 'Recommended For You';
+      const hasProfilePreferences = preferredPositions.length > 0 || preferredLocations.length > 0;
+      const requestKeywords =
+        activeKeywords.length > 0
+          ? activeKeywords
+          : (isRecommended ? (preferredPositions.length > 0 ? preferredPositions : preferredLocations) : []);
+
+      const requestLocation =
+        locationQuery?.trim()
+          ? locationQuery
+          : (isRecommended && preferredLocations.length > 0 ? preferredLocations[0] : DEFAULT_LOCATION);
+
+      const response = await fetchLinkedInJobs({
+        keywords: requestKeywords,
+        location: requestLocation,
+        page,
+        limit: pageSize,
+        sources: ['linkedin', 'indeed'],
+        includeDetails: true,
+        jobTypes: selectedJobType !== 'All Types' ? [selectedJobType] : [],
+        preferredPositions: isRecommended ? preferredPositions : [],
+        preferredLocations: isRecommended ? preferredLocations : [],
+        minFitScore: isRecommended ? (hasProfilePreferences ? 60 : 0) : 0,
+      });
+
+      if (requestId !== loadRequestIdRef.current) return;
+
+      const normalizedJobs = toArray(response).map(normalizeJob);
+      setJobs(normalizedJobs);
+      setTotalJobs(Number(response?.total_count ?? response?.total ?? response?.count ?? normalizedJobs.length) || 0);
+      cacheJobs(normalizedJobs);
+      setSourceWarnings(
+        Object.keys(response?.source_errors || {}).length > 0
+          // ? ['Some jobs are temporarily unavailable.']
+          // : []
+      );
+      setHasLoadedOnce(true);
+    } catch (error) {
+      if (requestId !== loadRequestIdRef.current) return;
+      setJobs([]);
+      setTotalJobs(0);
+      setJobsError(error?.message || 'Unable to load jobs right now.');
+      setHasLoadedOnce(true);
+    } finally {
+      if (requestId === loadRequestIdRef.current) {
+        const elapsed = Date.now() - requestStartedAt;
+        const remainingDelay = Math.max(0, 150 - elapsed);
+        if (remainingDelay > 0) {
+          setTimeout(() => {
+            if (requestId === loadRequestIdRef.current) {
+              setLoadingJobs(false);
+            }
+          }, remainingDelay);
+        } else {
+          setLoadingJobs(false);
+        }
+      }
+    }
+  }, [activeKeywords, locationQuery, page, pageSize, preferredLocations, preferredPositions, selectedJobType, selectedTab]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadJobs();
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [loadJobs]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, locationQuery, selectedJobType, selectedTab, pageSize]);
+
+  useEffect(() => {
+    setShowPageSizeMenu(false);
+    setShowJobTypeMenu(false);
+    setHoveredJob(null);
+    if (scrollViewRef.current && typeof scrollViewRef.current.scrollTo === 'function') {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: Math.max(0, jobsListYRef.current - 16), animated: true });
+      }, 0);
+    }
+  }, [page]);
+
+  const tailoredContent = useMemo(() => {
+    if (selectedTab === 'All Jobs') {
+      return {
+        title: 'Explore Every Opportunity',
+        text: `Browse ${totalJobs} open roles and refine results by keywords, location, and filters.`,
+      };
+    }
+
+    if (selectedTab === 'Applied Jobs') {
+      return {
+        title: 'Application Tracker',
+        text: 'Keep track of roles you have already applied to and revisit next steps quickly.',
+      };
+    }
+
+    if (preferredPositions.length > 0 || preferredLocations.length > 0) {
+      return {
+        title: 'Tailored Just For You',
+        text: `Showing roles that match your preferred positions or locations (${totalJobs} found).`,
+      };
+    }
+
+    return {
+      title: 'Tailored Just For You',
+      text: `Based on your search, we found ${totalJobs} jobs that match your goals.`,
+    };
+  }, [preferredLocations.length, preferredPositions.length, selectedTab, totalJobs]);
+
+  const handleJobPress = (job) => {
+    cacheJobs([job]);
+    router.push({
+      pathname: `/job/${job.id}`,
+      params: {
+        source: job.source || 'linkedin',
+      },
+    });
   };
 
   return (
@@ -66,7 +369,7 @@ const JobsExplorePage = () => {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView ref={scrollViewRef} style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
             {/* Hero Section */}
             <View style={styles.heroSection}>
@@ -88,18 +391,18 @@ const JobsExplorePage = () => {
             {/* Stats Bar */}
             <View style={styles.statsBar}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{jobs.length}+</Text>
+                <Text style={styles.statValue}>{totalJobs}</Text>
                 <Text style={styles.statLabel}>Jobs Found</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>92%</Text>
+                <Text style={styles.statValue}>{jobs.length ? `${Math.round(jobs.reduce((sum, job) => sum + job.matchScore, 0) / jobs.length)}%` : '0%'}</Text>
                 <Text style={styles.statLabel}>Avg Match</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>24h</Text>
-                <Text style={styles.statLabel}>Updated</Text>
+                <Text style={styles.statLabel}>Updated</Text> 
               </View>
             </View>
 
@@ -141,7 +444,7 @@ const JobsExplorePage = () => {
             </View>
 
             {/* Enhanced Search Bar */}
-            <View style={styles.searchSection}>
+            <View style={[styles.searchSection, styles.searchSectionSticky]}>
               <View style={[
                 styles.searchBar,
                 focusedSearch && styles.searchBarFocused
@@ -163,27 +466,90 @@ const JobsExplorePage = () => {
                 />
                 <View style={styles.searchDivider} />
                 <View style={styles.searchFilters}>
-                  <Pressable style={styles.filterChip}>
-                    <Text style={styles.filterChipText}>Location</Text>
-                    <View style={styles.filterArrowIcon}>
-                      <View style={styles.filterArrowUp} />
-                      <View style={styles.filterArrowDown} />
-                    </View>
-                  </Pressable>
-                  <Pressable style={styles.filterChip}>
-                    <Text style={styles.filterChipText}>Remote</Text>
-                    <View style={styles.filterArrowIcon}>
-                      <View style={styles.filterArrowUp} />
-                      <View style={styles.filterArrowDown} />
-                    </View>
-                  </Pressable>
-                  <Pressable style={styles.filterChip}>
-                    <Text style={styles.filterChipText}>Salary</Text>
-                    <View style={styles.filterArrowIcon}>
-                      <View style={styles.filterArrowUp} />
-                      <View style={styles.filterArrowDown} />
-                    </View>
-                  </Pressable>
+                  <TextInput
+                    style={styles.locationInput}
+                    placeholder="Location"
+                    placeholderTextColor="#6B7280"
+                    value={locationQuery}
+                    onChangeText={setLocationQuery}
+                  />
+                  <View style={styles.pageSizeContainer}>
+                    <Pressable
+                      style={styles.filterChip}
+                      onPress={() => setShowJobTypeMenu((prev) => !prev)}
+                    >
+                      <Text style={styles.filterChipText}>{selectedJobType}</Text>
+                      <View style={styles.filterArrowIcon}>
+                        <View style={styles.filterArrowUp} />
+                        <View style={styles.filterArrowDown} />
+                      </View>
+                    </Pressable>
+                    {showJobTypeMenu ? (
+                      <View style={[styles.pageSizeMenu, styles.jobTypeMenu]}>
+                        {JOB_TYPE_OPTIONS.map((type) => (
+                          <Pressable
+                            key={type}
+                            style={[
+                              styles.pageSizeOption,
+                              selectedJobType === type && styles.pageSizeOptionActive,
+                            ]}
+                            onPress={() => {
+                              setSelectedJobType(type);
+                              setShowJobTypeMenu(false);
+                              setPage(1);
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.pageSizeOptionText,
+                                selectedJobType === type && styles.pageSizeOptionTextActive,
+                              ]}
+                            >
+                              {type}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    ) : null}
+                  </View>
+                  <View style={styles.pageSizeContainer}>
+                    <Pressable
+                      style={styles.filterChip}
+                      onPress={() => setShowPageSizeMenu((prev) => !prev)}
+                    >
+                      <Text style={styles.filterChipText}>{pageSize} per page</Text>
+                      <View style={styles.filterArrowIcon}>
+                        <View style={styles.filterArrowUp} />
+                        <View style={styles.filterArrowDown} />
+                      </View>
+                    </Pressable>
+                    {showPageSizeMenu ? (
+                      <View style={styles.pageSizeMenu}>
+                        {PAGE_SIZE_OPTIONS.map((size) => (
+                          <Pressable
+                            key={size}
+                            style={[
+                              styles.pageSizeOption,
+                              pageSize === size && styles.pageSizeOptionActive,
+                            ]}
+                            onPress={() => {
+                              setPageSize(size);
+                              setShowPageSizeMenu(false);
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.pageSizeOptionText,
+                                pageSize === size && styles.pageSizeOptionTextActive,
+                              ]}
+                            >
+                              {size} per page
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    ) : null}
+                  </View>
                 </View>
               </View>
             </View>
@@ -198,15 +564,105 @@ const JobsExplorePage = () => {
                 </View>
               </View>
               <View style={styles.tailoredContent}>
-                <Text style={styles.tailoredTitle}>Tailored Just For You</Text>
+                <Text style={styles.tailoredTitle}>{tailoredContent.title}</Text>
                 <Text style={styles.tailoredText}>
-                  Based on your resume, we found {jobs.length} jobs that match your skills and preferences
+                  {tailoredContent.text}
                 </Text>
               </View>
             </View>
 
             {/* Job Listings */}
-            <View style={styles.jobsList}>
+            <View
+              key={`jobs-page-${page}-${pageSize}-${selectedTab}`}
+              style={styles.jobsList}
+              onLayout={(event) => {
+                jobsListYRef.current = event.nativeEvent.layout.y;
+              }}
+            >
+              {loadingJobs && (
+                <>
+                  {!hasLoadedOnce && (
+                    <View style={styles.statusCard}>
+                      <Text style={styles.statusText}>Loading latest jobs...</Text>
+                    </View>
+                  )}
+                  {[1, 2].map((placeholder) => (
+                    <View key={`skeleton-${placeholder}`} style={styles.skeletonCard}>
+                      <Animated.View
+                        pointerEvents="none"
+                        style={[
+                          styles.skeletonShimmer,
+                          { transform: [{ translateX: shimmerTranslateX }, { skewX: '-18deg' }] },
+                        ]}
+                      >
+                        <LinearGradient
+                          colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.14)', 'rgba(255,255,255,0)']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.skeletonShimmerGradient}
+                        />
+                      </Animated.View>
+                      <View style={styles.skeletonHeaderRow}>
+                        <View style={styles.skeletonAvatar} />
+                        <View style={styles.skeletonHeaderCopy}>
+                          <View style={styles.skeletonLineWrap}>
+                            <View style={styles.skeletonLineBase} />
+                            <View style={styles.skeletonLineShine} />
+                            <View style={[styles.skeletonLine, styles.skeletonLineWide]} />
+                          </View>
+                          <View style={styles.skeletonLineWrap}>
+                            <View style={styles.skeletonLineBase} />
+                            <View style={styles.skeletonLineShine} />
+                            <View style={[styles.skeletonLine, styles.skeletonLineMedium]} />
+                          </View>
+                        </View>
+                      </View>
+                      <View style={styles.skeletonMetaRow}>
+                        <View style={styles.skeletonMetaPill} />
+                        <View style={styles.skeletonMetaPill} />
+                        <View style={styles.skeletonMetaPill} />
+                      </View>
+                      <View style={styles.skeletonLineWrap}>
+                        <View style={styles.skeletonLineBase} />
+                        <View style={styles.skeletonLineShine} />
+                        <View style={[styles.skeletonLine, styles.skeletonLineLong]} />
+                      </View>
+                      <View style={styles.skeletonLineWrap}>
+                        <View style={styles.skeletonLineBase} />
+                        <View style={styles.skeletonLineShine} />
+                        <View style={[styles.skeletonLine, styles.skeletonLineWide]} />
+                      </View>
+                      <View style={styles.skeletonFooterRow}>
+                        <View style={styles.skeletonFooterButton} />
+                        <View style={styles.skeletonFooterButton} />
+                      </View>
+                    </View>
+                  ))}
+                </>
+              )}
+
+              {!loadingJobs && jobsError ? (
+                <View style={styles.statusCard}>
+                  <Text style={styles.errorText}>{jobsError}</Text>
+                  <Pressable style={styles.retryButton} onPress={loadJobs}>
+                    <Text style={styles.retryText}>Retry</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+
+              {!loadingJobs && !jobsError && jobs.length === 0 ? (
+                <View style={styles.statusCard}>
+                  <Text style={styles.statusText}>No jobs found for this search yet.</Text>
+                </View>
+              ) : null}
+
+              {!loadingJobs && !jobsError && sourceWarnings.length > 0 ? (
+                <View style={styles.statusCard}>
+                  <Text style={styles.statusText}>Some job sources are temporarily unavailable:</Text>
+                  <Text style={styles.warningText}>{sourceWarnings.join(' | ')}</Text>
+                </View>
+              ) : null}
+
               {jobs.map((job) => (
                 <Pressable
                   key={job.id}
@@ -214,7 +670,7 @@ const JobsExplorePage = () => {
                     styles.jobCard,
                     hoveredJob === job.id && styles.jobCardHover
                   ]}
-                  onPress={() => handleJobPress(job.id)}
+                  onPress={() => handleJobPress(job)}
                   onHoverIn={() => Platform.OS === 'web' && setHoveredJob(job.id)}
                   onHoverOut={() => Platform.OS === 'web' && setHoveredJob(null)}
                 >
@@ -287,6 +743,25 @@ const JobsExplorePage = () => {
                   </View>
                 </Pressable>
               ))}
+
+              {!loadingJobs && !jobsError && selectedTab !== 'Applied Jobs' && jobs.length > 0 ? (
+                <View style={styles.paginationRow}>
+                  <Pressable
+                    style={[styles.pageButton, page === 1 && styles.pageButtonDisabled]}
+                    onPress={() => setPage((prev) => Math.max(1, prev - 1))}
+                    disabled={page === 1}
+                  >
+                    <Text style={[styles.pageButtonText, page === 1 && styles.pageButtonTextDisabled]}>Previous</Text>
+                  </Pressable>
+                  <Text style={styles.pageLabel}>Page {page}</Text>
+                  <Pressable
+                    style={styles.pageButton}
+                    onPress={() => setPage((prev) => prev + 1)}
+                  >
+                    <Text style={styles.pageButtonText}>Next</Text>
+                  </Pressable>
+                </View>
+              ) : null}
             </View>
           </View>
         </ScrollView>

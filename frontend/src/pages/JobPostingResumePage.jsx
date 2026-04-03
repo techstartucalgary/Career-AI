@@ -8,7 +8,7 @@ import styles from './JobPostingResumePage.styles';
 import './JobPages.css';
 import { tailorResume, downloadPDFFromBase64 } from '../services/aiService';
 import PDFViewer from '../components/PDFViewer';
-import { API_BASE_URL, apiFetch, getAuthToken } from '../services/api';
+import { API_BASE_URL, apiFetch, getAuthToken, getUserProfile } from '../services/api';
 import { getGithubStatus, openGithubConnect, fetchGithubContext } from '../services/githubService';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
@@ -239,7 +239,7 @@ const JobPostingResumePage = () => {
     const loadDefaultResume = async () => {
       try {
         setDefaultResumeLoading(true);
-        const response = await apiFetch('/profile');
+        const response = await getUserProfile();
         const resumeData = response?.data?.resume;
         if (resumeData?.file_data) {
           const file = {

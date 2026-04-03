@@ -198,6 +198,22 @@ const styles = StyleSheet.create({
     padding: isDesktop ? 48 : isTablet ? 40 : 32,
     paddingTop: isDesktop ? 60 : 48,
   },
+  loadingCard: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+  },
+  loadingText: {
+    color: COLORS.textSecondary,
+    fontSize: 16,
+  },
+  errorText: {
+    color: '#FCA5A5',
+    fontSize: 16,
+  },
   jobHeader: {
     marginBottom: 48,
     paddingBottom: 32,

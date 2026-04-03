@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   heroTitleAccent: {
-    color: COLORS.primary,
+    color: COLORS.primaryLight,
   },
   heroDescription: {
     fontSize: 18,
@@ -217,6 +217,15 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
+  searchSectionSticky: {
+    ...Platform.select({
+      web: {
+        position: 'sticky',
+        top: 12,
+        zIndex: 20,
+      },
+    }),
+  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -284,6 +293,8 @@ const styles = StyleSheet.create({
   searchFilters: {
     flexDirection: 'row',
     gap: 12,
+    alignItems: 'center',
+    flexWrap: 'wrap',
   },
   locationInput: {
     minWidth: 140,
@@ -318,6 +329,46 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontSize: 14,
     fontWeight: '500',
+  },
+  pageSizeContainer: {
+    position: 'relative',
+    zIndex: 5,
+  },
+  pageSizeMenu: {
+    position: 'absolute',
+    top: 44,
+    right: 0,
+    minWidth: 130,
+    backgroundColor: COLORS.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    paddingVertical: 6,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 20px rgba(0,0,0,0.25)',
+      },
+    }),
+  },
+  jobTypeMenu: {
+    minWidth: 160,
+    right: 'auto',
+    left: 0,
+  },
+  pageSizeOption: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  pageSizeOptionActive: {
+    backgroundColor: 'rgba(167, 139, 250, 0.16)',
+  },
+  pageSizeOptionText: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  pageSizeOptionTextActive: {
+    color: COLORS.primary,
   },
   filterArrowIcon: {
     width: 12,
@@ -410,6 +461,145 @@ const styles = StyleSheet.create({
   jobsList: {
     gap: 24,
   },
+  transitionSkeletonCard: {
+    backgroundColor: 'rgba(20, 24, 37, 0.92)',
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    gap: 12,
+  },
+  transitionSkeletonHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  transitionSkeletonAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  transitionSkeletonMeta: {
+    flex: 1,
+    gap: 8,
+  },
+  transitionSkeletonLine: {
+    height: 11,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  transitionSkeletonLineWide: {
+    width: '72%',
+  },
+  transitionSkeletonLineMedium: {
+    width: '44%',
+  },
+  transitionSkeletonLineLong: {
+    width: '86%',
+  },
+  transitionSkeletonFooter: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  transitionSkeletonPill: {
+    width: 72,
+    height: 24,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  skeletonCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 18,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    gap: 14,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  skeletonShimmer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: -30,
+    width: 180,
+    opacity: 0.58,
+  },
+  skeletonShimmerGradient: {
+    flex: 1,
+  },
+  skeletonLine: {
+    height: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    overflow: 'hidden',
+  },
+  skeletonLineWrap: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: 8,
+  },
+  skeletonLineBase: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  skeletonLineShine: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(167,139,250,0.08)',
+    opacity: 0.8,
+  },
+  skeletonLineWide: {
+    width: '84%',
+  },
+  skeletonLineMedium: {
+    width: '58%',
+  },
+  skeletonLineShort: {
+    width: '36%',
+  },
+  skeletonLineLong: {
+    width: '92%',
+  },
+  skeletonHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  skeletonAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  skeletonHeaderCopy: {
+    flex: 1,
+    gap: 10,
+  },
+  skeletonMetaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 2,
+  },
+  skeletonMetaPill: {
+    height: 24,
+    width: 88,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  skeletonFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 6,
+  },
+  skeletonFooterButton: {
+    flex: 1,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
   statusCard: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
@@ -423,6 +613,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: COLORS.textSecondary,
     textAlign: 'center',
+  },
+  warningText: {
+    fontSize: 13,
+    color: '#FDE68A',
+    textAlign: 'center',
+    lineHeight: 19,
   },
   errorText: {
     fontSize: 15,

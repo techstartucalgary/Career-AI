@@ -14,6 +14,43 @@ export default function RootLayout() {
   const segments = useSegments();
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const originalWarn = console.warn;
+    const originalError = console.error;
+
+    const shouldIgnore = (message) => {
+      if (!message) return false;
+      const text = String(message);
+      return (
+        text.includes('"shadow*" style props are deprecated. Use "boxShadow".') ||
+        text.includes('"textShadow*" style props are deprecated. Use "textShadow".') ||
+        text.includes('Cross-Origin-Opener-Policy policy would block the window.postMessage call.') ||
+        text.includes('google.accounts.id.initialize() is called multiple times.') ||
+        text.includes('accounts.google.com/gsi/status') ||
+        text.includes('accounts.google.com/gsi/button')
+      );
+    };
+
+    console.warn = (...args) => {
+      if (shouldIgnore(args[0])) return;
+      originalWarn(...args);
+    };
+
+    console.error = (...args) => {
+      if (shouldIgnore(args[0])) return;
+      originalError(...args);
+    };
+
+    return () => {
+      console.warn = originalWarn;
+      console.error = originalError;
+    };
+  }, []);
+
+  useEffect(() => {
     if (typeof document === 'undefined') {
       return;
     }

@@ -33,11 +33,28 @@ export const apiUrl = (path) => {
   return `${API_BASE_URL}${p}`;
 };
 const TOKEN_KEY = 'career_ai_token';
+const JOBS_CACHE_KEY = 'career_ai_jobs_cache';
+const PROFILE_CACHE_KEY = 'career_ai_profile_cache';
 
 // Memory fallback for environments without localStorage
 let memoryToken = null;
+let memoryProfileCache = null;
+let memoryProfilePromise = null;
+
+export const clearUserProfileCache = () => {
+  memoryProfileCache = null;
+  memoryProfilePromise = null;
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(PROFILE_CACHE_KEY);
+    }
+  } catch (_e) {
+    // Ignore local cache issues and continue.
+  }
+};
 
 export const setAuthToken = (token) => {
+  clearUserProfileCache();
   memoryToken = token;
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
@@ -61,6 +78,7 @@ export const getAuthToken = () => {
 
 export const clearAuthToken = () => {
   memoryToken = null;
+  clearUserProfileCache();
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
       window.localStorage.removeItem(TOKEN_KEY);
@@ -102,6 +120,12 @@ export const fetchLinkedInJobs = async ({
   location = 'Calgary',
   page = 1,
   limit = 10,
+  sources = ['linkedin', 'indeed'],
+  includeDetails = true,
+  jobTypes = [],
+  preferredPositions = [],
+  preferredLocations = [],
+  minFitScore = 0,
 } = {}) => {
   const params = new URLSearchParams();
 
@@ -118,8 +142,141 @@ export const fetchLinkedInJobs = async ({
 
   params.set('page', String(Math.max(1, Number(page) || 1)));
   params.set('limit', String(Math.max(1, Number(limit) || 1)));
+  params.set('include_details', includeDetails ? 'true' : 'false');
+
+  if (Array.isArray(sources)) {
+    sources
+      .map((source) => (typeof source === 'string' ? source.trim().toLowerCase() : ''))
+      .filter(Boolean)
+      .forEach((source) => params.append('sources', source));
+  }
+
+  if (Array.isArray(preferredPositions)) {
+    preferredPositions
+      .map((position) => (typeof position === 'string' ? position.trim() : ''))
+      .filter(Boolean)
+      .forEach((position) => params.append('preferred_positions', position));
+  }
+
+  if (Array.isArray(preferredLocations)) {
+    preferredLocations
+      .map((loc) => (typeof loc === 'string' ? loc.trim() : ''))
+      .filter(Boolean)
+      .forEach((loc) => params.append('preferred_locations', loc));
+  }
+
+  if (Array.isArray(jobTypes)) {
+    jobTypes
+      .map((jobType) => (typeof jobType === 'string' ? jobType.trim() : ''))
+      .filter(Boolean)
+      .forEach((jobType) => params.append('job_types', jobType));
+  }
+
+  params.set('min_fit_score', String(Math.max(0, Number(minFitScore) || 0)));
 
   const query = params.toString();
   const path = query ? `/api/jobs?${query}` : '/api/jobs';
+  return apiFetch(path, { method: 'GET' });
+};
+
+const readProfileCache = () => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = window.localStorage.getItem(PROFILE_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }
+  } catch (_e) {
+    // Ignore local cache issues and continue with memory-only behavior.
+  }
+  return memoryProfileCache;
+};
+
+const writeProfileCache = (profileResponse) => {
+  memoryProfileCache = profileResponse;
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profileResponse));
+    }
+  } catch (_e) {
+    // Ignore local cache issues and continue.
+  }
+};
+
+export const getUserProfile = async ({ forceRefresh = false } = {}) => {
+  if (!forceRefresh) {
+    const cached = readProfileCache();
+    if (cached) {
+      return cached;
+    }
+
+    if (memoryProfilePromise) {
+      return memoryProfilePromise;
+    }
+  }
+
+  const request = apiFetch('/profile');
+  if (!forceRefresh) {
+    memoryProfilePromise = request;
+  }
+
+  try {
+    const response = await request;
+    writeProfileCache(response);
+    return response;
+  } finally {
+    if (!forceRefresh) {
+      memoryProfilePromise = null;
+    }
+  }
+};
+
+const readJobsCache = () => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = window.localStorage.getItem(JOBS_CACHE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }
+  } catch (_e) {
+    // Ignore local cache issues and continue with memory-only behavior.
+  }
+  return {};
+};
+
+const writeJobsCache = (cache) => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(JOBS_CACHE_KEY, JSON.stringify(cache));
+    }
+  } catch (_e) {
+    // Ignore local cache issues and continue.
+  }
+};
+
+export const cacheJobs = (jobs = []) => {
+  if (!Array.isArray(jobs) || !jobs.length) return;
+
+  const nextCache = readJobsCache();
+  jobs.forEach((job) => {
+    const id = job?.id;
+    const source = (job?.source || 'linkedin').toLowerCase();
+    if (!id) return;
+    nextCache[`${source}:${id}`] = job;
+  });
+  writeJobsCache(nextCache);
+};
+
+export const getCachedJob = (id, source = 'linkedin') => {
+  if (!id) return null;
+  const cache = readJobsCache();
+  return cache[`${String(source).toLowerCase()}:${id}`] || null;
+};
+
+export const fetchJobById = async (jobId, source = 'linkedin') => {
+  const id = String(jobId || '').trim();
+  if (!id) throw new Error('Missing job ID');
+
+  const params = new URLSearchParams();
+  if (source) params.set('source', String(source).toLowerCase());
+  const path = `/api/jobs/${encodeURIComponent(id)}${params.toString() ? `?${params.toString()}` : ''}`;
   return apiFetch(path, { method: 'GET' });
 };
