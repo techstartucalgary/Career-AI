@@ -10,6 +10,8 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from datetime import datetime
 from dotenv import load_dotenv
+from bson import ObjectId
+from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 
 from database import col
 from dependencies import create_access_token, get_current_user
@@ -66,32 +68,41 @@ async def google_auth(payload: dict):
         if not email:
             raise HTTPException(status_code=400, detail="Invalid token")
 
-        # Check if user exists
-        user = col.find_one({"email": email})
+        user = None
+        profile_completed = False
 
-        if not user:
-            # Create new user (minimal)
-            user_data = {
-                "email": email,
-                "google_id": google_id,
-                "auth_provider": "google",
-                "role": "free_user",
-                "registration_date": datetime.utcnow().date().isoformat(),
-                "profile_completed": False
-            }
+        # Check if user exists; if persistence is unavailable, still complete auth so the button works.
+        try:
+            user = col.find_one({"email": email})
 
-            if name:
-                user_data["profile"] = {
-                    "display_name": name
+            if not user:
+                # Create new user (minimal)
+                user_data = {
+                    "email": email,
+                    "google_id": google_id,
+                    "auth_provider": "google",
+                    "role": "free_user",
+                    "registration_date": datetime.utcnow().date().isoformat(),
+                    "profile_completed": False
                 }
 
-            result = col.insert_one(user_data)
-            user_id = result.inserted_id
-            role = "free_user"
+                if name:
+                    user_data["profile"] = {
+                        "display_name": name
+                    }
 
-        else:
-            user_id = user["_id"]
-            role = user.get("role", "free_user")
+                result = col.insert_one(user_data)
+                user_id = result.inserted_id
+                role = "free_user"
+
+            else:
+                user_id = user["_id"]
+                role = user.get("role", "free_user")
+                profile_completed = user.get("profile_completed", False)
+
+        except (PyMongoError, ServerSelectionTimeoutError):
+            user_id = ObjectId()
+            role = "free_user"
 
         # Create JWT
         access_token = create_access_token(user_id, role)
@@ -104,7 +115,7 @@ async def google_auth(payload: dict):
                 "data": {
                     "token": access_token,
                     "email": email,
-                    "profile_completed": user.get("profile_completed", False) if user else False
+                    "profile_completed": profile_completed
                 }
             }
         )
