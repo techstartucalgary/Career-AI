@@ -2,20 +2,32 @@
 Authentication routes using Google OAuth + profile completion
 """
 
+import os
+
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from datetime import datetime
+from dotenv import load_dotenv
 
 from database import col
 from dependencies import create_access_token, get_current_user
 from models import SignupRequest
-import os
+
+load_dotenv()
 
 router = APIRouter()
 
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+
+def _get_google_client_id() -> str:
+    return os.getenv("GOOGLE_CLIENT_ID") or os.getenv("EXPO_PUBLIC_GOOGLE_CLIENT_ID") or ""
+
+
+@router.get("/auth/google/client-id")
+async def get_google_client_id():
+    """Return the public Google client ID from backend environment variables."""
+    return {"success": True, "data": {"client_id": _get_google_client_id()}}
 
 
 # =========================
@@ -35,12 +47,16 @@ async def google_auth(payload: dict):
     if not token:
         raise HTTPException(status_code=400, detail="Missing token")
 
+    google_client_id = _get_google_client_id()
+    if not google_client_id:
+        raise HTTPException(status_code=500, detail="GOOGLE_CLIENT_ID not configured")
+
     try:
         # Verify token with Google
         idinfo = id_token.verify_oauth2_token(
             token,
             requests.Request(),
-            GOOGLE_CLIENT_ID
+            google_client_id
         )
 
         email = idinfo.get("email")
