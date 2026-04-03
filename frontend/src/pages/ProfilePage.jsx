@@ -998,87 +998,93 @@ export default function ProfilePage() {
                       <View style={styles.card}>
                 <Text style={styles.cardTitle}>Personal Information</Text>
                 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Full Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={name}
-                    onChangeText={setName}
-                    placeholder="Enter your name"
-                    placeholderTextColor="#6B7280"
-                  />
-                </View>
+                <View style={styles.personalInfoGrid}>
+                  <View style={styles.personalInfoColumn}>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Full Name</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={name}
+                        onChangeText={setName}
+                        placeholder="Enter your name"
+                        placeholderTextColor="#6B7280"
+                      />
+                    </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Email Address</Text>
-                  <TextInput
-                    style={[styles.input, styles.readOnlyInput]}
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="Enter your email"
-                    placeholderTextColor="#6B7280"
-                    keyboardType="email-address"
-                    editable={false}
-                  />
-                </View>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Email Address</Text>
+                      <TextInput
+                        style={[styles.input, styles.readOnlyInput]}
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Enter your email"
+                        placeholderTextColor="#6B7280"
+                        keyboardType="email-address"
+                        editable={false}
+                      />
+                    </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Phone Number</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={phone}
-                    onChangeText={setPhone}
-                    placeholder="Enter your phone"
-                    placeholderTextColor="#6B7280"
-                    keyboardType="phone-pad"
-                  />
-                </View>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Phone Number</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={phone}
+                        onChangeText={setPhone}
+                        placeholder="Enter your phone"
+                        placeholderTextColor="#6B7280"
+                        keyboardType="phone-pad"
+                      />
+                    </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Location</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={location}
-                    onChangeText={setLocation}
-                    placeholder="Enter your location"
-                    placeholderTextColor="#6B7280"
-                  />
-                </View>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Location</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={location}
+                        onChangeText={setLocation}
+                        placeholder="Enter your location"
+                        placeholderTextColor="#6B7280"
+                      />
+                    </View>
+                  </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>LinkedIn</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={linkedin}
-                    onChangeText={setLinkedin}
-                    placeholder="https://linkedin.com/in/username"
-                    placeholderTextColor="#6B7280"
-                    autoCapitalize="none"
-                  />
-                </View>
+                  <View style={styles.personalInfoColumn}>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>LinkedIn</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={linkedin}
+                        onChangeText={setLinkedin}
+                        placeholder="https://linkedin.com/in/username"
+                        placeholderTextColor="#6B7280"
+                        autoCapitalize="none"
+                      />
+                    </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>GitHub</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={github}
-                    onChangeText={setGithub}
-                    placeholder="https://github.com/username"
-                    placeholderTextColor="#6B7280"
-                    autoCapitalize="none"
-                  />
-                </View>
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>GitHub</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={github}
+                        onChangeText={setGithub}
+                        placeholder="https://github.com/username"
+                        placeholderTextColor="#6B7280"
+                        autoCapitalize="none"
+                      />
+                    </View>
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Personal Website</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={website}
-                    onChangeText={setWebsite}
-                    placeholder="https://your-portfolio.com"
-                    placeholderTextColor="#6B7280"
-                    autoCapitalize="none"
-                  />
+                    <View style={styles.inputGroup}>
+                      <Text style={styles.label}>Personal Website</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={website}
+                        onChangeText={setWebsite}
+                        placeholder="https://your-portfolio.com"
+                        placeholderTextColor="#6B7280"
+                        autoCapitalize="none"
+                      />
+                    </View>
+                  </View>
                 </View>
               </View>
                     </View>

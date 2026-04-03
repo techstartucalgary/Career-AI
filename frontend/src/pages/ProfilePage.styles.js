@@ -381,6 +381,14 @@ const styles = StyleSheet.create({
     flex: isTablet ? 1 : undefined,
     width: isTablet ? undefined : '100%',
   },
+  personalInfoGrid: {
+    flexDirection: isTablet ? 'row' : 'column',
+    gap: 20,
+  },
+  personalInfoColumn: {
+    flex: isTablet ? 1 : undefined,
+    width: isTablet ? undefined : '100%',
+  },
 
   // Card
   card: {
