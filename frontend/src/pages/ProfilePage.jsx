@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, TextInput, ScrollView, Pressable, Image, Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -17,8 +17,33 @@ const PROFILE_NAV_SECTIONS = [
   { id: 'identification', label: 'Identification' },
   { id: 'resume', label: 'Resume' },
   { id: 'stats', label: 'Profile stats' },
-  { id: 'save', label: 'Save' },
 ];
+
+function buildProfileFormSnapshot({
+  name,
+  phone,
+  location,
+  linkedin,
+  github,
+  website,
+  preferredPositions,
+  preferredLocations,
+  workArrangement,
+  identification,
+}) {
+  return JSON.stringify({
+    name: name.trim(),
+    phone: phone.trim(),
+    location: location.trim(),
+    linkedin: linkedin.trim(),
+    github: github.trim(),
+    website: website.trim(),
+    preferredPositions: [...preferredPositions],
+    preferredLocations: [...preferredLocations],
+    workArrangement,
+    identification: { ...identification },
+  });
+}
 
 /** Must match strings saved by onboarding (OnboardingStep4) so GET /profile values match a radio. */
 const SEX_OPTIONS = ['Male', 'Female', 'Intersex', 'Prefer not to say', 'Another Gender'];
@@ -115,6 +140,50 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [removingAvatar, setRemovingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState('');
+  /** JSON snapshot of last loaded/saved form fields; null until profile load completes */
+  const [savedBaseline, setSavedBaseline] = useState(null);
+
+  const formFingerprint = useMemo(
+    () =>
+      buildProfileFormSnapshot({
+        name,
+        phone,
+        location,
+        linkedin,
+        github,
+        website,
+        preferredPositions,
+        preferredLocations,
+        workArrangement,
+        identification,
+      }),
+    [
+      name,
+      phone,
+      location,
+      linkedin,
+      github,
+      website,
+      preferredPositions,
+      preferredLocations,
+      workArrangement,
+      identification,
+    ]
+  );
+
+  const hasUnsavedChanges =
+    savedBaseline !== null && !loadingProfile && formFingerprint !== savedBaseline;
+
+  useEffect(() => {
+    if (hasUnsavedChanges) {
+      setSaveSuccess('');
+    }
+  }, [hasUnsavedChanges]);
+
+  const navSections = useMemo(
+    () => PROFILE_NAV_SECTIONS.filter((s) => !(isDesktop && s.id === 'stats')),
+    [isDesktop]
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -130,6 +199,7 @@ export default function ProfilePage() {
     const loadProfile = async () => {
       try {
         setLoadingProfile(true);
+        setSavedBaseline(null);
         setProfileError('');
         const response = await apiFetch('/profile');
         const data = response && response.data ? response.data : {};
@@ -190,6 +260,26 @@ export default function ProfilePage() {
         } else {
           setAvatarImageUri(null);
         }
+
+        setSavedBaseline(
+          buildProfileFormSnapshot({
+            name: combinedName,
+            phone: profile.phone || '',
+            location: profile.location || '',
+            linkedin: profile.linkedin || '',
+            github: profile.github || '',
+            website: profile.website || '',
+            preferredPositions: Array.isArray(preferences.positions) ? preferences.positions : [],
+            preferredLocations: Array.isArray(preferences.locations) ? preferences.locations : [],
+            workArrangement: preferences.work_arrangement || 'any',
+            identification: {
+              sex: idRaw.sex,
+              gender: idRaw.gender,
+              disability: idRaw.disability,
+              race: idRaw.race,
+            },
+          })
+        );
       } catch (error) {
         if (!isActive) return;
         const message = error.message || 'Unable to load profile.';
@@ -276,6 +366,20 @@ export default function ProfilePage() {
         });
       }
       setSaveSuccess('Profile updated.');
+      setSavedBaseline(
+        buildProfileFormSnapshot({
+          name,
+          phone,
+          location,
+          linkedin,
+          github,
+          website,
+          preferredPositions,
+          preferredLocations,
+          workArrangement,
+          identification,
+        })
+      );
     } catch (error) {
       setSaveError(error.message || 'Unable to save profile.');
     } finally {
@@ -550,15 +654,70 @@ export default function ProfilePage() {
 
   const displayName = name.trim() || 'Name not set';
 
+  const renderProfileStatsCard = (railLayout) => (
+    <View style={[styles.card, railLayout && styles.metricsCardCompact]}>
+      <Text style={styles.cardTitle}>Profile Stats</Text>
+      <View style={[styles.statsContainer, railLayout && styles.statsRailColumn]}>
+        <View style={[styles.statItem, railLayout && styles.statItemRail]}>
+          <Text style={styles.statValue}>23</Text>
+          <Text style={styles.statLabel}>Applications</Text>
+        </View>
+        <View style={railLayout ? styles.statDividerHorizontal : styles.statDivider} />
+        <View style={[styles.statItem, railLayout && styles.statItemRail]}>
+          <Text style={styles.statValue}>5</Text>
+          <Text style={styles.statLabel}>Interviews</Text>
+        </View>
+        <View style={railLayout ? styles.statDividerHorizontal : styles.statDivider} />
+        <View style={[styles.statItem, railLayout && styles.statItemRail]}>
+          <Text style={styles.statValue}>87%</Text>
+          <Text style={styles.statLabel}>Success Rate</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderSaveControls = (variant) => (
+    <View style={variant === 'sidebar' ? styles.sidebarSaveBlock : styles.mobileSaveBarInner}>
+      <Pressable
+        disabled={saving || loadingProfile}
+        style={({ pressed }) => [
+          styles.saveButton,
+          variant === 'sidebar' && styles.saveButtonSidebar,
+          variant === 'mobile' && styles.saveButtonMobile,
+          pressed && !saving && styles.saveButtonPressed,
+          (saving || loadingProfile) && styles.saveButtonDisabled,
+        ]}
+        onPress={handleSave}
+      >
+        <LinearGradient
+          colors={['#A78BFA', '#8B7AB8']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.saveButtonGradient, variant === 'sidebar' && styles.saveButtonGradientSidebar]}
+        >
+          <Text style={[styles.saveButtonText, variant === 'sidebar' && styles.saveButtonTextSidebar]}>
+            {saving ? 'Saving...' : 'Save changes'}
+          </Text>
+        </LinearGradient>
+      </Pressable>
+      {!!saveError && (
+        <Text style={[styles.errorText, variant === 'sidebar' && styles.sidebarSaveMessage]}>{saveError}</Text>
+      )}
+      {!!saveSuccess && (
+        <Text style={[styles.successText, variant === 'sidebar' && styles.sidebarSaveMessage]}>{saveSuccess}</Text>
+      )}
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Header />
       <LinearGradient colors={THEME.gradients.page} style={styles.gradient}>
-        <View style={isDesktop ? styles.layoutWithSidebar : styles.profileLayoutNarrow}>
+        <View style={isDesktop ? styles.layoutWithSidebar : styles.profileLayoutWithMobileSave}>
           {isDesktop && (
-            <View style={styles.profileSidebar} accessibilityRole="navigation">
+            <View style={styles.profileSidebarSticky} accessibilityRole="navigation">
               <Text style={styles.profileSidebarHeading}>On this page</Text>
-              {PROFILE_NAV_SECTIONS.map(({ id, label }) => (
+              {navSections.map(({ id, label }) => (
                 <Pressable
                   key={id}
                   onPress={() => scrollToSection(id)}
@@ -570,14 +729,32 @@ export default function ProfilePage() {
                   <Text style={styles.profileNavLinkText}>{label}</Text>
                 </Pressable>
               ))}
+              {isDesktop && !hasUnsavedChanges && !!saveSuccess ? (
+                <View style={styles.sidebarFeedbackOnly}>
+                  <Text style={[styles.successText, styles.sidebarSaveMessage]}>{saveSuccess}</Text>
+                </View>
+              ) : null}
+              {hasUnsavedChanges ? renderSaveControls('sidebar') : null}
             </View>
           )}
-          <ScrollView
-            ref={scrollRef}
-            style={isDesktop ? styles.mainScroll : styles.scrollView}
-            contentContainerStyle={isDesktop ? styles.mainScrollContent : undefined}
-            showsVerticalScrollIndicator={false}
-          >
+          {!isDesktop && !hasUnsavedChanges && !!saveSuccess ? (
+            <View style={styles.mobileSuccessBanner}>
+              <Text style={[styles.successText, styles.mobileSuccessBannerText]}>{saveSuccess}</Text>
+            </View>
+          ) : null}
+          <View style={isDesktop ? styles.desktopMainRow : styles.profileNarrowStack}>
+            <ScrollView
+              ref={scrollRef}
+              style={isDesktop ? styles.mainScroll : styles.scrollView}
+              contentContainerStyle={
+                isDesktop
+                  ? styles.mainScrollContent
+                  : hasUnsavedChanges
+                    ? styles.scrollContentWithMobileSave
+                    : undefined
+              }
+              showsVerticalScrollIndicator={false}
+            >
             <View
               style={
                 isDesktop
@@ -1015,57 +1192,22 @@ export default function ProfilePage() {
               </View>
                     </View>
 
-                    <View onLayout={onSectionLayout('stats')}>
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Profile Stats</Text>
-                
-                <View style={styles.statsContainer}>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statValue}>23</Text>
-                    <Text style={styles.statLabel}>Applications</Text>
+                    {!isDesktop ? (
+                      <View onLayout={onSectionLayout('stats')}>{renderProfileStatsCard(false)}</View>
+                    ) : null}
                   </View>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statItem}>
-                    <Text style={styles.statValue}>5</Text>
-                    <Text style={styles.statLabel}>Interviews</Text>
-                  </View>
-                  <View style={styles.statDivider} />
-                  <View style={styles.statItem}>
-                    <Text style={styles.statValue}>87%</Text>
-                    <Text style={styles.statLabel}>Success Rate</Text>
-                  </View>
-                </View>
               </View>
-                    </View>
             </View>
-
-            <View onLayout={onSectionLayout('save')}>
-            <Pressable 
-              disabled={saving || loadingProfile}
-              style={({ pressed }) => [
-                styles.saveButton,
-                pressed && !saving && styles.saveButtonPressed,
-                (saving || loadingProfile) && styles.saveButtonDisabled
-              ]}
-              onPress={handleSave}
-            >
-              <LinearGradient
-                colors={['#A78BFA', '#8B7AB8']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.saveButtonGradient}
-              >
-                <Text style={styles.saveButtonText}>
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </Text>
-              </LinearGradient>
-            </Pressable>
-            {!!saveError && <Text style={styles.errorText}>{saveError}</Text>}
-            {!!saveSuccess && <Text style={styles.successText}>{saveSuccess}</Text>}
-            </View>
-                </View>
-            </View>
-          </ScrollView>
+            </ScrollView>
+            {isDesktop ? (
+              <View style={styles.metricsRail}>
+                <View style={styles.metricsRailSticky}>{renderProfileStatsCard(true)}</View>
+              </View>
+            ) : null}
+            {!isDesktop && hasUnsavedChanges ? (
+              <View style={styles.mobileSaveBar}>{renderSaveControls('mobile')}</View>
+            ) : null}
+          </View>
         </View>
       </LinearGradient>
     </View>

@@ -21,14 +21,67 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    ...Platform.select({
+      web: {
+        minHeight: 0,
+        alignSelf: 'stretch',
+      },
+    }),
   },
   profileLayoutNarrow: {
     flex: 1,
   },
+  profileLayoutWithMobileSave: {
+    flex: 1,
+    ...Platform.select({
+      web: {
+        minHeight: 0,
+      },
+    }),
+  },
+  profileNarrowStack: {
+    flex: 1,
+    flexDirection: 'column',
+    minWidth: 0,
+    minHeight: 0,
+  },
+  desktopMainRow: {
+    flex: 1,
+    flexDirection: 'row',
+    /** stretch so ScrollView gets a bounded height; rail uses alignSelf flex-start */
+    alignItems: 'stretch',
+    gap: 16,
+    minWidth: 0,
+    minHeight: 0,
+    ...Platform.select({
+      web: {
+        minHeight: 0,
+      },
+    }),
+  },
+  metricsRail: {
+    width: 260,
+    flexShrink: 0,
+    alignSelf: 'flex-start',
+    paddingTop: 32,
+    paddingBottom: 24,
+  },
+  metricsRailSticky: {
+    ...Platform.select({
+      web: {
+        position: 'sticky',
+        top: 24,
+        alignSelf: 'flex-start',
+      },
+    }),
+  },
+  metricsCardCompact: {
+    padding: 22,
+  },
   layoutWithSidebar: {
     flex: 1,
     flexDirection: 'row',
-    maxWidth: 1280,
+    maxWidth: 1440,
     width: '100%',
     alignSelf: 'center',
     paddingHorizontal: 24,
@@ -47,6 +100,24 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: THEME.colors.border,
     marginRight: 8,
+  },
+  profileSidebarSticky: {
+    width: 208,
+    flexShrink: 0,
+    paddingTop: 32,
+    paddingBottom: 24,
+    borderRightWidth: 1,
+    borderRightColor: THEME.colors.border,
+    marginRight: 8,
+    ...Platform.select({
+      web: {
+        position: 'sticky',
+        top: 24,
+        alignSelf: 'flex-start',
+        maxHeight: 'calc(100vh - 48px)',
+        overflowY: 'auto',
+      },
+    }),
   },
   profileSidebarHeading: {
     fontSize: 11,
@@ -78,10 +149,19 @@ const styles = StyleSheet.create({
   mainScroll: {
     flex: 1,
     minWidth: 0,
+    ...Platform.select({
+      web: {
+        minHeight: 0,
+        alignSelf: 'stretch',
+      },
+    }),
   },
   mainScrollContent: {
     paddingTop: 32,
     paddingBottom: 80,
+  },
+  scrollContentWithMobileSave: {
+    paddingBottom: 120,
   },
   scrollInnerWithSidebar: {
     width: '100%',
@@ -510,6 +590,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
+  statItemRail: {
+    flex: 0,
+    width: '100%',
+  },
   statValue: {
     fontSize: 32,
     fontWeight: '800',
@@ -526,6 +610,70 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: '#4B5563',
     marginHorizontal: 16,
+  },
+  statsRailColumn: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 16,
+    paddingVertical: 4,
+  },
+  statDividerHorizontal: {
+    height: 1,
+    width: '100%',
+    backgroundColor: '#4B5563',
+    marginVertical: 0,
+  },
+
+  sidebarFeedbackOnly: {
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: THEME.colors.border,
+  },
+  sidebarSaveBlock: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: THEME.colors.border,
+  },
+  mobileSuccessBanner: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(52, 211, 153, 0.35)',
+  },
+  mobileSuccessBannerText: {
+    marginTop: 0,
+    marginBottom: 0,
+    textAlign: 'center',
+  },
+  sidebarSaveMessage: {
+    textAlign: 'left',
+    marginTop: 8,
+    marginBottom: 0,
+  },
+  mobileSaveBar: {
+    borderTopWidth: 1,
+    borderTopColor: THEME.colors.border,
+    backgroundColor: 'rgba(17, 24, 39, 0.92)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    ...Platform.select({
+      web: {
+        position: 'sticky',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        backdropFilter: 'blur(12px)',
+      },
+    }),
+  },
+  mobileSaveBarInner: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
   },
 
   // Save Button
@@ -553,6 +701,14 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: {
     opacity: 0.6,
+  },
+  saveButtonSidebar: {
+    marginTop: 0,
+    width: '100%',
+  },
+  saveButtonMobile: {
+    marginTop: 0,
+    width: '100%',
   },
   
   // Resume Section
@@ -643,11 +799,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  saveButtonGradientSidebar: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
   saveButtonText: {
     fontSize: 18,
     fontWeight: '700',
     color: WHITE,
     letterSpacing: 0.5,
+  },
+  saveButtonTextSidebar: {
+    fontSize: 15,
   },
 });
 
