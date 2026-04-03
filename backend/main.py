@@ -60,8 +60,6 @@ params = {
     "exp_level": "internship"
 }
 
-
-
 @app.get("/api/jobs")
 async def get_jobs():
     response = requests.get(url, params=params)
@@ -73,6 +71,47 @@ async def get_jobs():
     else:
         print(f"Request failed with status code: {response.status_code}")
 
+
+
+apify_token = os.getenv("APIFY_TOKEN")
+dataset_id = "T8ZwQlSic6k084UlR"
+apify_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items"
+
+apify_params = {
+    "token": f"{apify_token}"
+}
+
+@app.get("/api/indeed-jobs")
+async def get_indeed_jobs():
+    response = requests.get(apify_url, params=apify_params)
+
+    if response.status_code == 200:
+        data = response.json()
+
+        jobs = []
+        for job in data:
+            jobs.append({
+                "title": job.get("title"),
+                "company": job.get("companyName") or job.get("company"),
+                "location": job.get("location"),
+                "salary": job.get("salary"),
+                "type": job.get("jobType"),
+                "posted_at": job.get("postedAt"),
+                "description": job.get("description"),
+                "url": job.get("url") or job.get("jobUrl"),
+                "source": "indeed"
+            })
+
+        return {
+            "success": True,
+            "count": len(jobs),
+            "jobs": jobs
+        }
+    else:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"Apify request failed with status code: {response.status_code} - {response.text}"
+        )
 
 @app.get("/jobs")
 def read_jobs():
