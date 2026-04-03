@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { View, Text, Pressable, Image, Platform } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { apiUrl, clearAuthToken, getAuthToken, getUserProfile } from '../services/api';
@@ -32,51 +32,64 @@ const Header = () => {
     setAccountMenuOpen(false);
   }, [currentRoute]);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadAccountAvatar = useCallback(async (forceRefresh = false) => {
     if (!isLoggedIn) {
       setAccountAvatarUri(null);
       setAccountInitials('U');
+      return;
+    }
+
+    try {
+      const response = await getUserProfile({ forceRefresh });
+      const data = response && response.data ? response.data : (response || {});
+      const profile = (data && data.profile) ? data.profile : {};
+      const isBcrypt = (value) => typeof value === 'string' && value.startsWith('$2');
+      const first = profile.first_name || (isBcrypt(data.first_name) ? '' : data.first_name) || '';
+      const last = profile.last_name || (isBcrypt(data.last_name) ? '' : data.last_name) || '';
+      const fullName = `${first} ${last}`.trim();
+      const combinedName = data.name || fullName;
+      const initials = combinedName.trim()
+        ? combinedName
+            .trim()
+            .split(/\s+/)
+            .map((part) => part[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase()
+        : 'U';
+      const uri =
+        profile.avatar_opt_out
+          ? null
+          : profile.avatar_base64 && profile.avatar_mime
+          ? `data:${profile.avatar_mime};base64,${profile.avatar_base64}`
+          : profile.avatar_url || profile.picture || data.avatar_url || data.picture || null;
+
+      setAccountAvatarUri(uri);
+      setAccountInitials(initials);
+    } catch {
+      setAccountAvatarUri(null);
+      setAccountInitials('U');
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    void loadAccountAvatar(false);
+  }, [loadAccountAvatar]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
       return undefined;
     }
-    const loadAccountAvatar = async () => {
-      try {
-        const data = await getUserProfile();
-        const profile = data.profile || {};
-        const isBcrypt = (value) => typeof value === 'string' && value.startsWith('$2');
-        const first = profile.first_name || (isBcrypt(data.first_name) ? '' : data.first_name) || '';
-        const last = profile.last_name || (isBcrypt(data.last_name) ? '' : data.last_name) || '';
-        const fullName = `${first} ${last}`.trim();
-        const combinedName = data.name || fullName;
-        const initials = combinedName.trim()
-          ? combinedName
-              .trim()
-              .split(/\s+/)
-              .map((part) => part[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase()
-          : 'U';
-        const uri =
-          profile.avatar_base64 && profile.avatar_mime
-            ? `data:${profile.avatar_mime};base64,${profile.avatar_base64}`
-            : null;
-        if (!cancelled) {
-          setAccountAvatarUri(uri);
-          setAccountInitials(initials);
-        }
-      } catch {
-        if (!cancelled) {
-          setAccountAvatarUri(null);
-          setAccountInitials('U');
-        }
-      }
+
+    const handleProfileUpdated = () => {
+      void loadAccountAvatar(true);
     };
-    loadAccountAvatar();
+
+    window.addEventListener('career-ai-profile-updated', handleProfileUpdated);
     return () => {
-      cancelled = true;
+      window.removeEventListener('career-ai-profile-updated', handleProfileUpdated);
     };
-  }, [isLoggedIn]);
+  }, [loadAccountAvatar]);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || !accountMenuOpen) return undefined;

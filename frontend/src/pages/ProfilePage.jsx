@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
 import styles from './ProfilePage.styles';
 import { THEME } from '../styles/theme';
-import { API_BASE_URL, apiFetch, apiUrl, clearAuthToken, getAuthToken } from '../services/api';
+import { API_BASE_URL, apiFetch, apiUrl, clearAuthToken, getAuthToken, getUserProfile, clearUserProfileCache } from '../services/api';
 import { Redirect } from 'expo-router';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
@@ -129,6 +129,12 @@ export default function ProfilePage() {
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
   const [profileError, setProfileError] = useState('');
+
+  const notifyProfileUpdated = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('career-ai-profile-updated'));
+    }
+  };
   const [saving, setSaving] = useState(false);
   const [resumeFileName, setResumeFileName] = useState('');
   const [resumeFileData, setResumeFileData] = useState('');
@@ -201,7 +207,7 @@ export default function ProfilePage() {
         setLoadingProfile(true);
         setSavedBaseline(null);
         setProfileError('');
-        const response = await apiFetch('/profile');
+        const response = await getUserProfile({ forceRefresh: true });
         const data = response && response.data ? response.data : {};
         const profile = data.profile || {};
 
@@ -255,10 +261,12 @@ export default function ProfilePage() {
           setResumeFileData(resume.file_data);
         }
 
-        if (profile.avatar_base64 && profile.avatar_mime) {
+        if (profile.avatar_opt_out) {
+          setAvatarImageUri(null);
+        } else if (profile.avatar_base64 && profile.avatar_mime) {
           setAvatarImageUri(`data:${profile.avatar_mime};base64,${profile.avatar_base64}`);
         } else {
-          setAvatarImageUri(null);
+          setAvatarImageUri(profile.avatar_url || profile.picture || data.avatar_url || data.picture || null);
         }
 
         setSavedBaseline(
@@ -366,6 +374,8 @@ export default function ProfilePage() {
         });
       }
       setSaveSuccess('Profile updated.');
+      clearUserProfileCache();
+      void getUserProfile({ forceRefresh: true }).catch(() => {});
       setSavedBaseline(
         buildProfileFormSnapshot({
           name,
@@ -563,10 +573,18 @@ export default function ProfilePage() {
       }
 
       const me = await apiFetch('/profile');
-      const p = me.data?.profile || {};
-      if (p.avatar_base64 && p.avatar_mime) {
+      const responseData = me && me.data ? me.data : {};
+      const p = responseData.profile || {};
+      if (p.avatar_opt_out) {
+        setAvatarImageUri(null);
+      } else if (p.avatar_base64 && p.avatar_mime) {
         setAvatarImageUri(`data:${p.avatar_mime};base64,${p.avatar_base64}`);
+      } else {
+        setAvatarImageUri(p.avatar_url || p.picture || responseData.avatar_url || responseData.picture || null);
       }
+      clearUserProfileCache();
+      void getUserProfile({ forceRefresh: true }).catch(() => {});
+      notifyProfileUpdated();
       setSaveSuccess('Profile photo updated.');
     } catch (err) {
       setAvatarError(err.message || 'Could not update profile photo.');
@@ -608,6 +626,9 @@ export default function ProfilePage() {
         throw new Error(msg);
       }
       setAvatarImageUri(null);
+      clearUserProfileCache();
+      void getUserProfile({ forceRefresh: true }).catch(() => {});
+      notifyProfileUpdated();
       setSaveSuccess('Profile photo removed.');
     } catch (err) {
       setAvatarError(err.message || 'Could not remove profile photo.');

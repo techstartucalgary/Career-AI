@@ -80,6 +80,7 @@ def serialize_user(user: dict) -> dict:
     user["user_id"] = str(user.pop("_id"))
     user.pop("password", None)
     profile = user.get("profile") or {}
+    avatar_url = profile.get("avatar_url") if isinstance(profile, dict) else None
 
     def is_bcrypt(value: object) -> bool:
         return isinstance(value, str) and value.startswith("$2")
@@ -92,6 +93,10 @@ def serialize_user(user: dict) -> dict:
         combined_name = f"{first_name} {last_name}".strip()
         if combined_name:
             user["name"] = combined_name
+
+    if avatar_url:
+        user["avatar_url"] = avatar_url
+        user["picture"] = avatar_url
 
     # Signup stores sex/gender/disability/race as bcrypt; PUT /demographics stores plaintext.
     # Never expose hashes to the client — they won't match form options and look "empty".

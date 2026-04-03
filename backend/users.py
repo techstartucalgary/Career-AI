@@ -176,6 +176,7 @@ async def _upload_profile_avatar_impl(
                     "profile.avatar_base64": b64,
                     "profile.avatar_mime": mime,
                     "profile.avatar_updated_at": datetime.utcnow().isoformat(),
+                    "profile.avatar_opt_out": False,
                 }
             },
         )
@@ -231,11 +232,15 @@ def _delete_profile_avatar_impl(authorization: str):
         col.update_one(
             {"_id": user_id},
             {
+                "$set": {
+                    "profile.avatar_opt_out": True,
+                },
                 "$unset": {
                     "profile.avatar_base64": "",
                     "profile.avatar_mime": "",
                     "profile.avatar_updated_at": "",
-                }
+                    "profile.avatar_url": "",
+                },
             },
         )
         return JSONResponse(
