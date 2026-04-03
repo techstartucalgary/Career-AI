@@ -114,12 +114,13 @@ const Header = () => {
   };
 
   const showMobileMenu = isLoggedIn && !isWideLayout;
+  const showCenterLinks = isLoggedIn && isWideLayout;
 
   return (
     <View style={styles.header}>
       <View style={styles.container}>
         <View style={styles.nav}>
-          <View style={styles.navLeft}>
+          <View style={styles.navLeftZone}>
             <Pressable onPress={() => router.push(isLoggedIn ? '/jobs' : '/authentication')} style={styles.logoContainer}>
               <Image
                 source={verexaLogo}
@@ -129,8 +130,8 @@ const Header = () => {
             </Pressable>
           </View>
 
-          {isLoggedIn && isWideLayout ? (
-            <View style={styles.navLinksWrap}>
+          <View style={[styles.navCenterZone, !showCenterLinks && styles.navCenterZoneFlex]}>
+            {showCenterLinks ? (
               <View style={styles.navLinks}>
                 {navItems.map((item) => {
                   const isActive = currentRoute === item.route || currentRoute.startsWith(item.route + '/');
@@ -147,10 +148,8 @@ const Header = () => {
                   );
                 })}
               </View>
-            </View>
-          ) : (
-            <View style={styles.navSpacer} />
-          )}
+            ) : null}
+          </View>
 
           <View style={styles.navRight}>
             {isLoggedIn && isWideLayout && (
