@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, useLocalSearchParams, Redirect } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import Header from '../src/components/Header';
 import { THEME } from '../src/styles/theme';
 import OnboardingStep1 from '../src/pages/onboarding/OnboardingStep1';
@@ -9,17 +9,19 @@ import OnboardingStep2 from '../src/pages/onboarding/OnboardingStep2';
 import OnboardingStep3 from '../src/pages/onboarding/OnboardingStep3';
 import OnboardingStep4 from '../src/pages/onboarding/OnboardingStep4';
 import styles from './OnboardingPage.styles';
-import { apiFetch, getAuthToken } from '../src/services/api';
+import { apiFetch, getAuthToken, getUserProfile } from '../src/services/api';
+
+const ONBOARDING_PENDING_KEY = 'career_ai_onboarding_pending';
+const ONBOARDING_EMAIL_KEY = 'career_ai_onboarding_email';
 
 const OnboardingPage = () => {
   const router = useRouter();
-  const params = useLocalSearchParams();
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentStep, setCurrentStep] = useState(1); // step 1 is Resume Upload
   const [formData, setFormData] = useState({
-    // User email from sign-up
-    email: params.email || '',
+    // User email from profile endpoint
+    email: '',
     // Step 1 (Resume) data
     resume: null,
     resumeFileName: '',
@@ -45,9 +47,50 @@ const OnboardingPage = () => {
 
   useEffect(() => {
     const token = getAuthToken();
-    setIsAuthenticated(!!token);
+    const pendingOnboarding = typeof window !== 'undefined' && window.sessionStorage
+      ? window.sessionStorage.getItem(ONBOARDING_PENDING_KEY) === '1'
+      : false;
+    setIsAuthenticated(!!token || pendingOnboarding);
     setIsAuthChecking(false);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const hydrateUserEmail = async () => {
+      try {
+        const response = await getUserProfile();
+        const profileEmail = response && response.data && typeof response.data.email === 'string'
+          ? response.data.email
+          : '';
+        const pendingEmail = typeof window !== 'undefined' && window.sessionStorage
+          ? window.sessionStorage.getItem(ONBOARDING_EMAIL_KEY) || ''
+          : '';
+
+        if (!cancelled && (profileEmail || pendingEmail)) {
+          setFormData((prev) => ({ ...prev, email: profileEmail || pendingEmail }));
+        }
+      } catch {
+        const pendingEmail = typeof window !== 'undefined' && window.sessionStorage
+          ? window.sessionStorage.getItem(ONBOARDING_EMAIL_KEY) || ''
+          : '';
+
+        if (!cancelled && pendingEmail) {
+          setFormData((prev) => ({ ...prev, email: pendingEmail }));
+        }
+      }
+    };
+
+    hydrateUserEmail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   if (isAuthChecking) {
     return (
@@ -88,6 +131,11 @@ const OnboardingPage = () => {
           work_arrangement: nextData.workArrangement,
         }),
       });
+
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.removeItem(ONBOARDING_PENDING_KEY);
+        window.sessionStorage.removeItem(ONBOARDING_EMAIL_KEY);
+      }
 
       // Update demographics separately if any were provided
       const demographics = {
