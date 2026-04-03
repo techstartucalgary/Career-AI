@@ -75,3 +75,30 @@ export const apiFetch = async (path, options = {}) => {
 
   return data;
 };
+
+export const fetchLinkedInJobs = async ({
+  keywords = [],
+  location = 'Calgary',
+  page = 1,
+  limit = 10,
+} = {}) => {
+  const params = new URLSearchParams();
+
+  if (Array.isArray(keywords)) {
+    keywords
+      .map((keyword) => (typeof keyword === 'string' ? keyword.trim() : ''))
+      .filter(Boolean)
+      .forEach((keyword) => params.append('keywords', keyword));
+  }
+
+  if (typeof location === 'string' && location.trim()) {
+    params.set('location', location.trim());
+  }
+
+  params.set('page', String(Math.max(1, Number(page) || 1)));
+  params.set('limit', String(Math.max(1, Number(limit) || 1)));
+
+  const query = params.toString();
+  const path = query ? `/api/jobs?${query}` : '/api/jobs';
+  return apiFetch(path, { method: 'GET' });
+};
