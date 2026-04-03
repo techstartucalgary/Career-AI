@@ -15,6 +15,8 @@ import verexaLogo from '../assets/verexalogo.png';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
 const GOOGLE_GSI_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
+const ONBOARDING_PENDING_KEY = 'career_ai_onboarding_pending';
+const ONBOARDING_EMAIL_KEY = 'career_ai_onboarding_email';
 
 export default function AuthenticationPage() {
   const router = useRouter();
@@ -189,7 +191,17 @@ export default function AuthenticationPage() {
           if (data && data.data && data.data.token) {
             setAuthToken(data.data.token);
             void getUserProfile({ forceRefresh: true }).catch(() => {});
-            router.replace('/jobs');
+
+            const isNewGoogleAccount = Boolean(data.data.is_new_user) || data.data.profile_completed === false;
+            if (isSignUp || isNewGoogleAccount) {
+              if (typeof window !== 'undefined' && window.sessionStorage) {
+                window.sessionStorage.setItem(ONBOARDING_PENDING_KEY, '1');
+                window.sessionStorage.setItem(ONBOARDING_EMAIL_KEY, data.data.email || email);
+              }
+              router.replace('/onboarding');
+            } else {
+              router.replace('/jobs');
+            }
           }
         }
       } catch {
@@ -219,7 +231,7 @@ export default function AuthenticationPage() {
     }
 
     setIsGoogleReady(true);
-  }, [canUseGoogleGsi, googleClientId, isGoogleScriptLoaded, router]);
+  }, [canUseGoogleGsi, googleClientId, isGoogleScriptLoaded, router, isSignUp, email]);
 
   const handleGoogleContinue = () => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') {
@@ -292,6 +304,10 @@ export default function AuthenticationPage() {
 
       // Navigate to onboarding for new sign-ups, home for existing users
       if (isSignUp) {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          window.sessionStorage.setItem(ONBOARDING_PENDING_KEY, '1');
+          window.sessionStorage.setItem(ONBOARDING_EMAIL_KEY, email);
+        }
         router.replace('/onboarding');
       } else {
         router.replace('/jobs');
