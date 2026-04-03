@@ -10,9 +10,12 @@ from datetime import datetime
 from models import SignupRequest, LoginRequest
 from database import col
 from dependencies import hash_, verify_hash, create_access_token
+import os
 
 router = APIRouter()
 
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 @router.get("/auth/google/client-id")
 async def get_google_client_id():
@@ -33,69 +36,66 @@ async def login(payload: LoginRequest):
     """
     email = payload.email
     password = payload.password
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
-    # Missing info
-    if not password or not email:
-        return JSONResponse(
-            status_code=400,
-            content={
-                "success": False,
-                "message": "Missing email or password"
-            }
-        )
+
+@router.post("/auth/google")
+async def google_auth(payload: dict):
+    """
+    Expects:
+    {
+        "token": "google_id_token"
+    }
+    """
+    token = payload.get("token")
+
+    if not token:
+        raise HTTPException(status_code=400, detail="Missing token")
 
     try:
+        # Verify token with Google
+        idinfo = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            GOOGLE_CLIENT_ID
+        )
+
+        email = idinfo.get("email")
+        name = idinfo.get("name")
+
+        if not email:
+            raise HTTPException(status_code=400, detail="Invalid token")
+
+        # Check if user exists
         user = col.find_one({"email": email})
-        # Check that user exists in database
-        if user is None:
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "success": False,
-                    "message": "User does not exist"
-                }
-            )
 
-        user_id = user.get("_id")
-        pwd_hash = user.get("password")
+        if not user:
+            # Create new user automatically
+            user_data = {
+                "email": email,
+                "profile": {
+                    "display_name": name
+                },
+                "role": "free_user",
+                "auth_provider": "google"
+            }
 
-        # Check the password against the saved hash in the database
-        if not pwd_hash or not verify_hash(pwd_hash, password):
-            return JSONResponse(
-                status_code=401,
-                content={
-                    "success": False,
-                    "message": "Invalid password."
-                }
-            )
-        # User's role and create access token which is returned to client end along with other necessary info
-        role = user.get("role", "free_user")
-        access_token = create_access_token(user_id, role)
-        return JSONResponse(
-            status_code=200,
-            content={
-                "success": True,
-                "message": "User logged in successfully.",
-                "data": {
-                    "user_id": str(user_id),
-                    "email": email,
-                    "role": role,
-                    "token": access_token
-                }
-            }
-        )
-    # Unexpected error
-    except Exception as e:
-        print(f"Login error: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "message": "Internal server error."
-            }
-        )
+            result = col.insert_one(user_data)
+            user_id = result.inserted_id
+        else:
+            user_id = user["_id"]
+
+        # Create YOUR JWT
+        access_token = create_access_token(user_id, "free_user")
+
+        return {
+            "success": True,
+            "token": access_token,
+            "email": email
+        }
+
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid Google token")
 
 
 @router.get("/logout")

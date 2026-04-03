@@ -1,27 +1,171 @@
 import { StyleSheet, Platform, Dimensions } from 'react-native';
+import { THEME } from '../styles/theme';
 
 const { width } = Dimensions.get('window');
 const isTablet = width > 768;
 const isDesktop = width > 992;
 
-const DARK_PURPLE = '#1F1C2F';
-const LIGHT_PURPLE = '#8B7AB8';
-const BRIGHT_PURPLE = '#A78BFA';
-const CARD_BG = '#2D1B3D';
-const WHITE = '#ffffff';
-const TEXT_LIGHT = '#D1D5DB';
-const TEXT_MUTED = '#9CA3AF';
+const LIGHT_PURPLE = THEME.colors.lightPurple;
+const BRIGHT_PURPLE = THEME.colors.primary;
+const WHITE = THEME.colors.white;
+const TEXT_LIGHT = THEME.colors.textLight;
+const TEXT_MUTED = THEME.colors.textMuted;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DARK_PURPLE,
+    backgroundColor: THEME.colors.bg,
   },
   gradient: {
     flex: 1,
   },
   scrollView: {
     flex: 1,
+    ...Platform.select({
+      web: {
+        minHeight: 0,
+        alignSelf: 'stretch',
+      },
+    }),
+  },
+  profileLayoutNarrow: {
+    flex: 1,
+  },
+  profileLayoutWithMobileSave: {
+    flex: 1,
+    ...Platform.select({
+      web: {
+        minHeight: 0,
+      },
+    }),
+  },
+  profileNarrowStack: {
+    flex: 1,
+    flexDirection: 'column',
+    minWidth: 0,
+    minHeight: 0,
+  },
+  desktopMainRow: {
+    flex: 1,
+    flexDirection: 'row',
+    /** stretch so ScrollView gets a bounded height; rail uses alignSelf flex-start */
+    alignItems: 'stretch',
+    gap: 16,
+    minWidth: 0,
+    minHeight: 0,
+    ...Platform.select({
+      web: {
+        minHeight: 0,
+      },
+    }),
+  },
+  metricsRail: {
+    width: 260,
+    flexShrink: 0,
+    alignSelf: 'flex-start',
+    paddingTop: 32,
+    paddingBottom: 24,
+  },
+  metricsRailSticky: {
+    ...Platform.select({
+      web: {
+        position: 'sticky',
+        top: 24,
+        alignSelf: 'flex-start',
+      },
+    }),
+  },
+  metricsCardCompact: {
+    padding: 22,
+  },
+  layoutWithSidebar: {
+    flex: 1,
+    flexDirection: 'row',
+    maxWidth: 1440,
+    width: '100%',
+    alignSelf: 'center',
+    paddingHorizontal: 24,
+    gap: 8,
+    ...Platform.select({
+      web: {
+        minHeight: 0,
+      },
+    }),
+  },
+  profileSidebar: {
+    width: 208,
+    flexShrink: 0,
+    paddingTop: 32,
+    paddingBottom: 24,
+    borderRightWidth: 1,
+    borderRightColor: THEME.colors.border,
+    marginRight: 8,
+  },
+  profileSidebarSticky: {
+    width: 208,
+    flexShrink: 0,
+    paddingTop: 32,
+    paddingBottom: 24,
+    borderRightWidth: 1,
+    borderRightColor: THEME.colors.border,
+    marginRight: 8,
+    ...Platform.select({
+      web: {
+        position: 'sticky',
+        top: 24,
+        alignSelf: 'flex-start',
+        maxHeight: 'calc(100vh - 48px)',
+        overflowY: 'auto',
+      },
+    }),
+  },
+  profileSidebarHeading: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: TEXT_MUTED,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
+  },
+  profileNavLink: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    marginBottom: 2,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  profileNavLinkPressed: {
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+  },
+  profileNavLinkText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: TEXT_LIGHT,
+  },
+  mainScroll: {
+    flex: 1,
+    minWidth: 0,
+    ...Platform.select({
+      web: {
+        minHeight: 0,
+        alignSelf: 'stretch',
+      },
+    }),
+  },
+  mainScrollContent: {
+    paddingTop: 32,
+    paddingBottom: 80,
+  },
+  scrollContentWithMobileSave: {
+    paddingBottom: 120,
+  },
+  scrollInnerWithSidebar: {
+    width: '100%',
+    maxWidth: 920,
   },
   content: {
     padding: isDesktop ? 60 : isTablet ? 40 : 24,
@@ -32,24 +176,68 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   
-  // Header Section
+  // Header Section (hero rhythm aligned with JobsExplore / onboarding)
   headerSection: {
     marginBottom: 32,
   },
   titleContainer: {
     alignItems: 'center',
+    maxWidth: 800,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  heroBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.2)',
+    marginBottom: 20,
+    gap: 8,
+  },
+  heroBadgeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: BRIGHT_PURPLE,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 12px rgba(167, 139, 250, 0.6)',
+      },
+    }),
+  },
+  heroBadgeText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: BRIGHT_PURPLE,
+    letterSpacing: 0.5,
   },
   title: {
-    fontSize: isDesktop ? 42 : isTablet ? 36 : 32,
-    fontWeight: '800',
+    fontSize: isDesktop ? 48 : isTablet ? 40 : 34,
+    fontWeight: '700',
     color: WHITE,
-    marginBottom: 8,
+    marginBottom: 16,
     textAlign: 'center',
+    lineHeight: isDesktop ? 56 : isTablet ? 48 : 42,
+    letterSpacing: -1,
+    ...Platform.select({
+      web: {
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      },
+      default: {
+        fontFamily: 'sans-serif',
+      },
+    }),
   },
   subtitle: {
-    fontSize: isDesktop ? 18 : 16,
-    color: TEXT_MUTED,
+    fontSize: 18,
+    color: THEME.colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 28,
   },
   statusText: {
     fontSize: 14,
@@ -82,7 +270,8 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: CARD_BG,
+    overflow: 'hidden',
+    backgroundColor: THEME.colors.surfaceLight,
     borderWidth: 3,
     borderColor: BRIGHT_PURPLE,
     alignItems: 'center',
@@ -101,11 +290,46 @@ const styles = StyleSheet.create({
     }),
     elevation: 10,
   },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
   avatarText: {
     fontSize: 42,
     fontWeight: '700',
     color: BRIGHT_PURPLE,
     letterSpacing: 2,
+  },
+  avatarActionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+    marginTop: 12,
+  },
+  avatarActionLink: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: BRIGHT_PURPLE,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  avatarActionLinkMuted: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: TEXT_MUTED,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  avatarActionDisabled: {
+    opacity: 0.5,
   },
   avatarName: {
     fontSize: 24,
@@ -125,20 +349,20 @@ const styles = StyleSheet.create({
 
   // Card
   card: {
-    backgroundColor: CARD_BG,
+    backgroundColor: THEME.colors.surface,
     borderRadius: 20,
     padding: isDesktop ? 32 : isTablet ? 28 : 24,
     borderWidth: 1,
-    borderColor: LIGHT_PURPLE,
+    borderColor: THEME.colors.border,
     ...Platform.select({
       web: {
-        boxShadow: '0 8px 16px rgba(167, 139, 250, 0.2)',
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.35)',
         transition: 'all 0.3s ease',
       },
       default: {
-        shadowColor: LIGHT_PURPLE,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.2,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.28,
         shadowRadius: 16,
         elevation: 8,
       },
@@ -176,36 +400,61 @@ const styles = StyleSheet.create({
   },
   inputWithButton: {
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'center',
+    gap: 10,
     marginBottom: 12,
   },
+  inputWithButtonField: {
+    flex: 1,
+    minHeight: 52,
+  },
   addButton: {
-    width: 48,
-    height: 48,
+    width: 52,
+    height: 52,
     borderRadius: 12,
-    backgroundColor: BRIGHT_PURPLE,
+    backgroundColor: THEME.colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
     ...Platform.select({
       web: {
         cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        boxShadow: '0 2px 8px rgba(167, 139, 250, 0.4)',
+        transition: 'background-color 0.15s ease, border-color 0.15s ease',
+        boxSizing: 'border-box',
       },
       default: {
-        shadowColor: BRIGHT_PURPLE,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 4,
+        elevation: 0,
       },
     }),
   },
+  addButtonPressed: {
+    backgroundColor: 'rgba(167, 139, 250, 0.12)',
+    borderColor: 'rgba(167, 139, 250, 0.55)',
+  },
+  addButtonGlyph: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   addButtonText: {
-    color: WHITE,
-    fontSize: 24,
-    fontWeight: 'bold',
-    lineHeight: 24,
+    color: BRIGHT_PURPLE,
+    fontSize: 22,
+    fontWeight: '600',
+    lineHeight: 22,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+      },
+      web: {
+        marginTop: -1,
+        lineHeight: 22,
+      },
+    }),
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -247,10 +496,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     lineHeight: 16,
   },
-  checkboxContainer: {
+  radioGroup: {
     gap: 12,
   },
-  checkboxRow: {
+  radioRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -260,61 +509,36 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  checkbox: {
+  radioOuter: {
     width: 22,
     height: 22,
-    borderRadius: 6,
+    borderRadius: 11,
     borderWidth: 2,
-    borderColor: LIGHT_PURPLE,
+    borderColor: THEME.colors.borderLight,
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
       web: {
-        transition: 'all 0.3s ease',
+        transition: 'border-color 0.2s ease',
       },
     }),
   },
-  checkboxChecked: {
-    backgroundColor: BRIGHT_PURPLE,
+  radioOuterSelected: {
     borderColor: BRIGHT_PURPLE,
     ...Platform.select({
       web: {
-        boxShadow: '0 0 8px rgba(167, 139, 250, 0.4)',
-      },
-      default: {
-        shadowColor: BRIGHT_PURPLE,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 4,
+        boxShadow: '0 0 0 1px rgba(167, 139, 250, 0.35)',
       },
     }),
   },
-  checkmark: {
-    width: 12,
-    height: 12,
-    position: 'relative',
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: BRIGHT_PURPLE,
   },
-  checkmarkLine1: {
-    position: 'absolute',
-    width: 4,
-    height: 2,
-    backgroundColor: WHITE,
-    top: 6,
-    left: 2,
-    transform: [{ rotate: '45deg' }],
-  },
-  checkmarkLine2: {
-    position: 'absolute',
-    width: 8,
-    height: 2,
-    backgroundColor: WHITE,
-    top: 4,
-    left: 4,
-    transform: [{ rotate: '-45deg' }],
-  },
-  checkboxLabel: {
+  radioLabel: {
     fontSize: 14,
     color: TEXT_LIGHT,
     flex: 1,
@@ -332,13 +556,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: '#1F1C2F',
+    backgroundColor: THEME.colors.surfaceLight,
     borderRadius: 12,
     padding: 14,
     fontSize: 16,
     color: WHITE,
     borderWidth: 1,
-    borderColor: '#4B5563',
+    borderColor: THEME.colors.borderLight,
     ...Platform.select({
       web: {
         outlineStyle: 'none',
@@ -366,6 +590,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
+  statItemRail: {
+    flex: 0,
+    width: '100%',
+  },
   statValue: {
     fontSize: 32,
     fontWeight: '800',
@@ -382,6 +610,70 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: '#4B5563',
     marginHorizontal: 16,
+  },
+  statsRailColumn: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 16,
+    paddingVertical: 4,
+  },
+  statDividerHorizontal: {
+    height: 1,
+    width: '100%',
+    backgroundColor: '#4B5563',
+    marginVertical: 0,
+  },
+
+  sidebarFeedbackOnly: {
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: THEME.colors.border,
+  },
+  sidebarSaveBlock: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: THEME.colors.border,
+  },
+  mobileSuccessBanner: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(52, 211, 153, 0.12)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(52, 211, 153, 0.35)',
+  },
+  mobileSuccessBannerText: {
+    marginTop: 0,
+    marginBottom: 0,
+    textAlign: 'center',
+  },
+  sidebarSaveMessage: {
+    textAlign: 'left',
+    marginTop: 8,
+    marginBottom: 0,
+  },
+  mobileSaveBar: {
+    borderTopWidth: 1,
+    borderTopColor: THEME.colors.border,
+    backgroundColor: 'rgba(17, 24, 39, 0.92)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    ...Platform.select({
+      web: {
+        position: 'sticky',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        backdropFilter: 'blur(12px)',
+      },
+    }),
+  },
+  mobileSaveBarInner: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
   },
 
   // Save Button
@@ -410,15 +702,23 @@ const styles = StyleSheet.create({
   saveButtonDisabled: {
     opacity: 0.6,
   },
+  saveButtonSidebar: {
+    marginTop: 0,
+    width: '100%',
+  },
+  saveButtonMobile: {
+    marginTop: 0,
+    width: '100%',
+  },
   
   // Resume Section
   resumeContainer: {
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#1F1C2F',
+    backgroundColor: THEME.colors.surfaceLight,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#4B5563',
+    borderColor: THEME.colors.border,
   },
   resumeLabel: {
     fontSize: 12,
@@ -438,7 +738,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   uploadButton: {
-    backgroundColor: '#1F1C2F',
+    backgroundColor: THEME.colors.surfaceLight,
     borderRadius: 12,
     padding: 14,
     borderWidth: 2,
@@ -499,11 +799,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  saveButtonGradientSidebar: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
   saveButtonText: {
     fontSize: 18,
     fontWeight: '700',
     color: WHITE,
     letterSpacing: 0.5,
+  },
+  saveButtonTextSidebar: {
+    fontSize: 15,
   },
 });
 

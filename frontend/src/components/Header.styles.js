@@ -32,17 +32,29 @@ const styles = StyleSheet.create({
   },
   nav: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 16,
     position: 'relative',
   },
-  navLeft: {
+  /** Equal flex with right column so center links sit in true horizontal center */
+  navLeftZone: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
     gap: 12,
+    minWidth: 0,
+  },
+  /** Logged-in desktop: only as wide as links; sides stay balanced */
+  navCenterZone: {
     flexShrink: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  /** Mobile / logged-out: grows so logo + actions stay at edges */
+  navCenterZoneFlex: {
+    flex: 1,
     minWidth: 0,
   },
   accountMenuWrap: {
@@ -109,24 +121,13 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     marginHorizontal: 8,
   },
-  navSpacer: {
-    flex: 1,
-    minWidth: 0,
-  },
-  navLinksWrap: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minWidth: 0,
-  },
   navRight: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: 8,
-    flexShrink: 0,
-    marginLeft: 'auto',
+    minWidth: 0,
   },
   menuIconButton: {
     paddingVertical: 8,
@@ -134,6 +135,28 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: COLORS.borderLight,
+  },
+  /** Desktop account menu: circular profile photo or initials */
+  accountMenuButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surfaceLight,
+  },
+  accountAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  accountAvatarInitials: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.primary,
+    letterSpacing: 0.5,
   },
   menuIcon: {
     color: COLORS.textPrimary,

@@ -1,7 +1,10 @@
 """
 User profile and preferences routes
 """
-from fastapi import APIRouter, Header, HTTPException
+import base64
+from datetime import datetime
+
+from fastapi import APIRouter, File, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
 from models import ProfileUpdateRequest, PreferencesUpdateRequest, OnboardingCompleteRequest, DemographicsUpdateRequest
@@ -9,6 +12,19 @@ from database import col
 from dependencies import get_current_user, serialize_user
 
 router = APIRouter()
+
+AVATAR_MAX_BYTES = 2 * 1024 * 1024
+
+
+def _detect_image_mime(data: bytes):
+    """Validate binary is JPEG, PNG, or WebP via magic bytes."""
+    if len(data) >= 3 and data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if len(data) >= 8 and data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
 
 
 @router.get("/profile")
@@ -115,6 +131,144 @@ def update_profile(payload: ProfileUpdateRequest, authorization: str = Header(No
                 "message": "Server side error!"
             }
         )
+
+
+async def _upload_profile_avatar_impl(
+    avatar_file: UploadFile,
+    authorization: str,
+):
+    """Upload profile picture (JPEG, PNG, or WebP, max 2MB). Stored as base64 on user profile."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        raw = await avatar_file.read()
+        if len(raw) > AVATAR_MAX_BYTES:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "message": "Photo must be 2MB or smaller.",
+                },
+            )
+
+        mime = _detect_image_mime(raw)
+        if not mime:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "message": "Use a JPEG, PNG, or WebP image.",
+                },
+            )
+
+        b64 = base64.b64encode(raw).decode("utf-8")
+        col.update_one(
+            {"_id": user_id},
+            {
+                "$set": {
+                    "profile.avatar_base64": b64,
+                    "profile.avatar_mime": mime,
+                    "profile.avatar_updated_at": datetime.utcnow().isoformat(),
+                }
+            },
+        )
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "Profile photo updated.",
+            },
+        )
+    except Exception as e:
+        print(f"Avatar upload error: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Could not save profile photo.",
+            },
+        )
+
+
+@router.post("/profile/avatar")
+async def upload_profile_avatar(
+    avatar_file: UploadFile = File(...),
+    authorization: str = Header(None),
+):
+    return await _upload_profile_avatar_impl(avatar_file, authorization)
+
+
+@router.post("/api/profile/avatar")
+async def upload_profile_avatar_api_alias(
+    avatar_file: UploadFile = File(...),
+    authorization: str = Header(None),
+):
+    """Same as POST /profile/avatar (alias for proxies that only forward /api/*)."""
+    return await _upload_profile_avatar_impl(avatar_file, authorization)
+
+
+def _delete_profile_avatar_impl(authorization: str):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        col.update_one(
+            {"_id": user_id},
+            {
+                "$unset": {
+                    "profile.avatar_base64": "",
+                    "profile.avatar_mime": "",
+                    "profile.avatar_updated_at": "",
+                }
+            },
+        )
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "Profile photo removed.",
+            },
+        )
+    except Exception as e:
+        print(f"Avatar delete error: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Could not remove profile photo.",
+            },
+        )
+
+
+@router.delete("/profile/avatar")
+def delete_profile_avatar(authorization: str = Header(None)):
+    """Remove stored profile picture."""
+    return _delete_profile_avatar_impl(authorization)
+
+
+@router.delete("/api/profile/avatar")
+def delete_profile_avatar_api_alias(authorization: str = Header(None)):
+    """Same as DELETE /profile/avatar."""
+    return _delete_profile_avatar_impl(authorization)
 
 
 @router.put("/preferences")
