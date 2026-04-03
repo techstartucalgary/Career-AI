@@ -10,7 +10,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import Header from '../components/Header';
 import styles from './AuthenticationPage.styles';
 import { THEME } from '../styles/theme';
-import { API_BASE_URL, setAuthToken } from '../services/api';
+import { API_BASE_URL, getUserProfile, setAuthToken } from '../services/api';
 import verexaLogo from '../assets/verexalogo.png';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
@@ -188,6 +188,7 @@ export default function AuthenticationPage() {
           const data = await res.json();
           if (data && data.data && data.data.token) {
             setAuthToken(data.data.token);
+            void getUserProfile({ forceRefresh: true }).catch(() => {});
             router.replace('/jobs');
           }
         }
@@ -284,6 +285,7 @@ export default function AuthenticationPage() {
       // Save the authentication token
       if (data.data && data.data.token) {
         setAuthToken(data.data.token);
+        void getUserProfile({ forceRefresh: true }).catch(() => {});
       }
 
       setLoading(false);

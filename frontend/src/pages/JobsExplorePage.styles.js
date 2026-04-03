@@ -285,6 +285,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
+  locationInput: {
+    minWidth: 140,
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: '500',
+    backgroundColor: COLORS.surfaceLight,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -397,6 +409,36 @@ const styles = StyleSheet.create({
   },
   jobsList: {
     gap: 24,
+  },
+  statusCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: 'center',
+    gap: 12,
+  },
+  statusText: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 15,
+    color: '#FCA5A5',
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+  },
+  retryText: {
+    color: COLORS.white,
+    fontWeight: '600',
+    fontSize: 14,
   },
   jobCard: {
     backgroundColor: COLORS.surface,
@@ -632,6 +674,38 @@ const styles = StyleSheet.create({
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
     borderLeftColor: COLORS.white,
+  },
+  paginationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  pageButton: {
+    backgroundColor: COLORS.surfaceLight,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  pageButtonDisabled: {
+    opacity: 0.4,
+  },
+  pageButtonText: {
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  pageButtonTextDisabled: {
+    color: COLORS.textMuted,
+  },
+  pageLabel: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

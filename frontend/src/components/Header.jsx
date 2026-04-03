@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, Pressable, Image, Platform } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
-import { apiFetch, apiUrl, getAuthToken, clearAuthToken } from '../services/api';
+import { apiUrl, clearAuthToken, getAuthToken, getUserProfile } from '../services/api';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 import styles from './Header.styles';
 import verexaLogo from '../assets/verexalogo.png';
@@ -41,8 +41,7 @@ const Header = () => {
     }
     const loadAccountAvatar = async () => {
       try {
-        const response = await apiFetch('/profile');
-        const data = response?.data ?? {};
+        const data = await getUserProfile();
         const profile = data.profile || {};
         const isBcrypt = (value) => typeof value === 'string' && value.startsWith('$2');
         const first = profile.first_name || (isBcrypt(data.first_name) ? '' : data.first_name) || '';
@@ -77,7 +76,7 @@ const Header = () => {
     return () => {
       cancelled = true;
     };
-  }, [isLoggedIn, currentRoute]);
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || !accountMenuOpen) return undefined;
