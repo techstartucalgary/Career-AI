@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, TextInput, ScrollView, Pressable, Image, Platform } from 'react-native';
+import { View, Text, TextInput, ScrollView, Pressable, Image, Platform, Modal, Dimensions } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -73,6 +73,127 @@ const RACE_ETHNICITY_OPTIONS = [
   'Prefer not to say',
 ];
 
+const IdentificationSelectField = ({
+  fieldKey,
+  value,
+  onValueChange,
+  options,
+  placeholder,
+  focused,
+  onFocus,
+  onBlur,
+  isOpen,
+  onToggleOpen,
+  onClose,
+}) => {
+  const triggerRef = useRef(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 0 });
+
+  const measureTrigger = useCallback((callback) => {
+    if (!triggerRef.current || typeof triggerRef.current.measureInWindow !== 'function') {
+      callback?.();
+      return;
+    }
+
+    triggerRef.current.measureInWindow((x, y, width, height) => {
+      const windowHeight = Dimensions.get('window').height || 0;
+      const estimatedMenuHeight = Math.min(options.length * 44 + 8, 220);
+      const shouldOpenUp = y + height + estimatedMenuHeight > windowHeight - 16;
+
+      setMenuPosition({
+        top: shouldOpenUp ? Math.max(12, y - estimatedMenuHeight - 4) : y + height,
+        left: x,
+        width,
+      });
+
+      callback?.();
+    });
+  }, [options.length]);
+
+  const handleToggle = () => {
+    if (isOpen) {
+      onToggleOpen(fieldKey);
+      onBlur();
+      return;
+    }
+
+    measureTrigger(() => {
+      onToggleOpen(fieldKey);
+      onFocus();
+    });
+  };
+
+  const handleSelect = (option) => {
+    onValueChange(option);
+    onClose();
+    onBlur();
+  };
+
+  const handleClose = () => {
+    onClose();
+    onBlur();
+  };
+
+  return (
+    <View style={[styles.selectContainer, isOpen && styles.selectContainerOpen]}>
+      <Pressable
+        ref={triggerRef}
+        style={[
+          styles.selectInput,
+          styles.selectInputLayer,
+          focused && styles.selectInputFocused,
+          isOpen && styles.selectInputOpen,
+        ]}
+        onPress={handleToggle}
+        accessibilityRole="button"
+        accessibilityLabel={`Toggle ${placeholder}`}
+      >
+        <Text style={[styles.selectText, !value && styles.selectPlaceholder]} numberOfLines={1}>
+          {value || placeholder}
+        </Text>
+        <View style={styles.selectArrow}>
+          <View style={[styles.arrowTriangle, isOpen && styles.arrowTriangleUp]} />
+        </View>
+      </Pressable>
+
+      {isOpen && (
+        <Modal transparent visible animationType="none" onRequestClose={handleClose}>
+          <View style={styles.selectModalRoot}>
+            <Pressable style={styles.selectModalOverlay} onPress={handleClose} />
+            <View
+              style={[
+                styles.selectModalOptionsContainer,
+                {
+                  top: menuPosition.top,
+                  left: menuPosition.left,
+                  width: menuPosition.width,
+                },
+              ]}
+            >
+              <ScrollView style={styles.selectOptionsScroll} nestedScrollEnabled showsVerticalScrollIndicator={false}>
+                {options.map((option, index) => (
+                  <Pressable
+                    key={`${fieldKey}-${index}`}
+                    style={[styles.selectOption, value === option && styles.selectOptionSelected]}
+                    onPress={() => handleSelect(option)}
+                  >
+                    <Text
+                      style={[styles.selectOptionText, value === option && styles.selectOptionTextSelected]}
+                      numberOfLines={1}
+                    >
+                      {option}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+      )}
+    </View>
+  );
+};
+
 /** Map older profile-only values onto onboarding labels where obvious. */
 function normalizeIdentificationFromApi(raw) {
   const sex = raw.sex || '';
@@ -125,6 +246,8 @@ export default function ProfilePage() {
     disability: '',
     race: ''
   });
+  const [focusedIdentificationField, setFocusedIdentificationField] = useState(null);
+  const [openIdentificationDropdown, setOpenIdentificationDropdown] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
@@ -669,6 +792,14 @@ export default function ProfilePage() {
     setIdentification((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleToggleIdentificationDropdown = (fieldKey) => {
+    setOpenIdentificationDropdown((prev) => (prev === fieldKey ? null : fieldKey));
+  };
+
+  const handleCloseIdentificationDropdowns = () => {
+    setOpenIdentificationDropdown(null);
+  };
+
   const initials = name.trim()
     ? name.trim().split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
     : 'U';
@@ -1063,109 +1194,82 @@ export default function ProfilePage() {
               </View>
                     </View>
 
-                    <View onLayout={onSectionLayout('identification')}>
-              <View style={styles.card}>
+                      <View onLayout={onSectionLayout('identification')} style={styles.identificationSection}>
+                    <View style={[styles.card, styles.identificationCard]}>
                 <Text style={styles.cardTitle}>Identification</Text>
+                  <View style={styles.identificationGrid}>
+                    <View style={styles.identificationColumn}>
+                      <View style={styles.preferenceSection}>
+                        <Text style={styles.sectionTitle}>Sex</Text>
+                        <IdentificationSelectField
+                          fieldKey="sex"
+                          value={identification.sex}
+                          onValueChange={(value) => updateIdentification('sex', value)}
+                          options={SEX_OPTIONS}
+                          placeholder="Select sex"
+                          focused={focusedIdentificationField === 'sex'}
+                          onFocus={() => setFocusedIdentificationField('sex')}
+                          onBlur={() => setFocusedIdentificationField(null)}
+                          isOpen={openIdentificationDropdown === 'sex'}
+                          onToggleOpen={handleToggleIdentificationDropdown}
+                          onClose={handleCloseIdentificationDropdowns}
+                        />
+                      </View>
 
-                <View style={styles.preferenceSection}>
-                  <Text style={styles.sectionTitle}>Sex</Text>
-                  <View style={styles.radioGroup}>
-                    {SEX_OPTIONS.map((option) => (
-                      <Pressable
-                        key={option}
-                        style={styles.radioRow}
-                        onPress={() => updateIdentification('sex', option)}
-                      >
-                        <View
-                          style={[
-                            styles.radioOuter,
-                            identification.sex === option && styles.radioOuterSelected,
-                          ]}
-                        >
-                          {identification.sex === option ? (
-                            <View style={styles.radioInner} />
-                          ) : null}
-                        </View>
-                        <Text style={styles.radioLabel}>{option}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
+                      <View style={styles.preferenceSection}>
+                        <Text style={styles.sectionTitle}>Gender</Text>
+                        <IdentificationSelectField
+                          fieldKey="gender"
+                          value={identification.gender}
+                          onValueChange={(value) => updateIdentification('gender', value)}
+                          options={GENDER_OPTIONS}
+                          placeholder="Select gender"
+                          focused={focusedIdentificationField === 'gender'}
+                          onFocus={() => setFocusedIdentificationField('gender')}
+                          onBlur={() => setFocusedIdentificationField(null)}
+                          isOpen={openIdentificationDropdown === 'gender'}
+                          onToggleOpen={handleToggleIdentificationDropdown}
+                          onClose={handleCloseIdentificationDropdowns}
+                        />
+                      </View>
+                    </View>
 
-                <View style={styles.preferenceSection}>
-                  <Text style={styles.sectionTitle}>Gender</Text>
-                  <View style={styles.radioGroup}>
-                    {GENDER_OPTIONS.map((option) => (
-                      <Pressable
-                        key={option}
-                        style={styles.radioRow}
-                        onPress={() => updateIdentification('gender', option)}
-                      >
-                        <View
-                          style={[
-                            styles.radioOuter,
-                            identification.gender === option && styles.radioOuterSelected,
-                          ]}
-                        >
-                          {identification.gender === option ? (
-                            <View style={styles.radioInner} />
-                          ) : null}
-                        </View>
-                        <Text style={styles.radioLabel}>{option}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
+                    <View style={styles.identificationColumn}>
+                      <View style={styles.preferenceSection}>
+                        <Text style={styles.sectionTitle}>Disability</Text>
+                        <IdentificationSelectField
+                          fieldKey="disability"
+                          value={identification.disability}
+                          onValueChange={(value) => updateIdentification('disability', value)}
+                          options={DISABILITY_OPTIONS}
+                          placeholder="Select disability"
+                          focused={focusedIdentificationField === 'disability'}
+                          onFocus={() => setFocusedIdentificationField('disability')}
+                          onBlur={() => setFocusedIdentificationField(null)}
+                          isOpen={openIdentificationDropdown === 'disability'}
+                          onToggleOpen={handleToggleIdentificationDropdown}
+                          onClose={handleCloseIdentificationDropdowns}
+                        />
+                      </View>
 
-                <View style={styles.preferenceSection}>
-                  <Text style={styles.sectionTitle}>Disability</Text>
-                  <View style={styles.radioGroup}>
-                    {DISABILITY_OPTIONS.map((option) => (
-                      <Pressable
-                        key={option}
-                        style={styles.radioRow}
-                        onPress={() => updateIdentification('disability', option)}
-                      >
-                        <View
-                          style={[
-                            styles.radioOuter,
-                            identification.disability === option && styles.radioOuterSelected,
-                          ]}
-                        >
-                          {identification.disability === option ? (
-                            <View style={styles.radioInner} />
-                          ) : null}
-                        </View>
-                        <Text style={styles.radioLabel}>{option}</Text>
-                      </Pressable>
-                    ))}
+                      <View style={styles.preferenceSection}>
+                        <Text style={styles.sectionTitle}>Race / ethnicity</Text>
+                        <IdentificationSelectField
+                          fieldKey="race"
+                          value={identification.race}
+                          onValueChange={(value) => updateIdentification('race', value)}
+                          options={RACE_ETHNICITY_OPTIONS}
+                          placeholder="Select race/ethnicity"
+                          focused={focusedIdentificationField === 'race'}
+                          onFocus={() => setFocusedIdentificationField('race')}
+                          onBlur={() => setFocusedIdentificationField(null)}
+                          isOpen={openIdentificationDropdown === 'race'}
+                          onToggleOpen={handleToggleIdentificationDropdown}
+                          onClose={handleCloseIdentificationDropdowns}
+                        />
+                      </View>
+                    </View>
                   </View>
-                </View>
-
-                <View style={styles.preferenceSection}>
-                  <Text style={styles.sectionTitle}>Race / ethnicity</Text>
-                  <View style={styles.radioGroup}>
-                    {RACE_ETHNICITY_OPTIONS.map((option) => (
-                      <Pressable
-                        key={option}
-                        style={styles.radioRow}
-                        onPress={() => updateIdentification('race', option)}
-                      >
-                        <View
-                          style={[
-                            styles.radioOuter,
-                            identification.race === option && styles.radioOuterSelected,
-                          ]}
-                        >
-                          {identification.race === option ? (
-                            <View style={styles.radioInner} />
-                          ) : null}
-                        </View>
-                        <Text style={styles.radioLabel}>{option}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
               </View>
                     </View>
 

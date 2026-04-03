@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Pressable, ScrollView, Platform, Animated } from 'react-native';
+import { View, Text, Pressable, ScrollView, Platform, Animated, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Header from '../components/Header';
@@ -10,6 +10,23 @@ import { useBreakpoints } from '../hooks/useBreakpoints';
 import { THEME } from '../styles/theme';
 
 const { colors: LANDING_COLORS } = THEME;
+const VISIBLE_AVATARS = 4;
+const AVATAR_CYCLE_MS = 3600;
+
+const LINKEDIN_PROFILE_IMAGES = [
+  'https://randomuser.me/api/portraits/women/68.jpg',
+  'https://randomuser.me/api/portraits/men/75.jpg',
+  'https://randomuser.me/api/portraits/women/12.jpg',
+  'https://randomuser.me/api/portraits/men/44.jpg',
+  'https://randomuser.me/api/portraits/women/33.jpg',
+  'https://randomuser.me/api/portraits/men/29.jpg',
+  'https://randomuser.me/api/portraits/women/54.jpg',
+  'https://randomuser.me/api/portraits/men/61.jpg',
+  'https://randomuser.me/api/portraits/women/80.jpg',
+  'https://randomuser.me/api/portraits/men/15.jpg',
+  'https://randomuser.me/api/portraits/women/23.jpg',
+  'https://randomuser.me/api/portraits/men/8.jpg',
+];
 
 // Floating UI Card Component
 const FloatingCard = ({ children, style, delay = 0, duration = 3000 }) => {
@@ -216,6 +233,11 @@ const LandingPage = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredFeature, setHoveredFeature] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [avatarStartIndexA, setAvatarStartIndexA] = useState(0);
+  const [avatarStartIndexB, setAvatarStartIndexB] = useState(1);
+  const [isAvatarLayerAActive, setIsAvatarLayerAActive] = useState(true);
+  const avatarOpacityA = useRef(new Animated.Value(1)).current;
+  const avatarOpacityB = useRef(new Animated.Value(0)).current;
 
   // Auto-rotate steps
   useEffect(() => {
@@ -224,6 +246,44 @@ const LandingPage = () => {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const activeIndex = isAvatarLayerAActive ? avatarStartIndexA : avatarStartIndexB;
+      const nextIndex = (activeIndex + 1) % LINKEDIN_PROFILE_IMAGES.length;
+
+      if (isAvatarLayerAActive) {
+        setAvatarStartIndexB(nextIndex);
+      } else {
+        setAvatarStartIndexA(nextIndex);
+      }
+
+      Animated.parallel([
+        Animated.timing(avatarOpacityA, {
+          toValue: isAvatarLayerAActive ? 0 : 1,
+          duration: 520,
+          useNativeDriver: true,
+        }),
+        Animated.timing(avatarOpacityB, {
+          toValue: isAvatarLayerAActive ? 1 : 0,
+          duration: 520,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setIsAvatarLayerAActive(prev => !prev);
+      });
+    }, AVATAR_CYCLE_MS);
+
+    return () => clearInterval(interval);
+  }, [avatarOpacityA, avatarOpacityB, avatarStartIndexA, avatarStartIndexB, isAvatarLayerAActive]);
+
+  const getVisibleAvatars = (startIndex) => Array.from({ length: VISIBLE_AVATARS }, (_, i) => {
+    const imageIndex = (startIndex + i) % LINKEDIN_PROFILE_IMAGES.length;
+    return LINKEDIN_PROFILE_IMAGES[imageIndex];
+  });
+
+  const visibleAvatarsA = getVisibleAvatars(avatarStartIndexA);
+  const visibleAvatarsB = getVisibleAvatars(avatarStartIndexB);
 
   const steps = [
     {
@@ -325,15 +385,32 @@ const LandingPage = () => {
           </View>
 
           <View style={styles.socialProof}>
-            <View style={styles.avatarStack}>
-              {[0, 1, 2, 3].map(i => (
-                <View key={i} style={[styles.stackAvatar, { marginLeft: i > 0 ? -8 : 0, zIndex: 4 - i }]}>
-                  <LinearGradient
-                    colors={['#A78BFA', '#6366F1']}
-                    style={styles.avatarGradient}
-                  />
-                </View>
-              ))}
+            <View style={styles.avatarStackContainer}>
+              <Animated.View style={[styles.avatarStackLayer, { opacity: avatarOpacityA }]}> 
+                {visibleAvatarsA.map((avatarUrl, i) => (
+                  <View key={`a-${i}`} style={[styles.stackAvatar, { marginLeft: i > 0 ? -8 : 0, zIndex: 4 - i }]}>
+                    <LinearGradient
+                      colors={['#A78BFA', '#6366F1']}
+                      style={styles.avatarGradient}
+                    >
+                      <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                    </LinearGradient>
+                  </View>
+                ))}
+              </Animated.View>
+
+              <Animated.View style={[styles.avatarStackLayer, { opacity: avatarOpacityB }]}> 
+                {visibleAvatarsB.map((avatarUrl, i) => (
+                  <View key={`b-${i}`} style={[styles.stackAvatar, { marginLeft: i > 0 ? -8 : 0, zIndex: 4 - i }]}>
+                    <LinearGradient
+                      colors={['#A78BFA', '#6366F1']}
+                      style={styles.avatarGradient}
+                    >
+                      <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                    </LinearGradient>
+                  </View>
+                ))}
+              </Animated.View>
             </View>
             <Text style={styles.socialProofText}>
               <Text style={styles.socialProofHighlight}>400+ job seekers</Text> in beta
@@ -731,7 +808,6 @@ const LandingPage = () => {
               </LinearGradient>
             </Pressable>
 
-            <Text style={styles.ctaNote}>Free to use. No credit card required.</Text>
           </AnimatedSection>
         </View>
       </View>

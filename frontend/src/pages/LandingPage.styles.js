@@ -484,6 +484,19 @@ export default StyleSheet.create({
   avatarStack: {
     flexDirection: 'row',
   },
+  avatarStackContainer: {
+    position: 'relative',
+    width: 104,
+    height: 32,
+  },
+  avatarStackLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+  },
   stackAvatar: {
     width: 32,
     height: 32,
@@ -494,6 +507,10 @@ export default StyleSheet.create({
   },
   avatarGradient: {
     flex: 1,
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   socialProofText: {
     fontSize: 14,

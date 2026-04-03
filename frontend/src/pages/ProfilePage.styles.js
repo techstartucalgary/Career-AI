@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     minWidth: 0,
     minHeight: 0,
+    overflow: 'visible',
   },
   desktopMainRow: {
     flex: 1,
@@ -53,9 +54,11 @@ const styles = StyleSheet.create({
     gap: 16,
     minWidth: 0,
     minHeight: 0,
+    overflow: 'visible',
     ...Platform.select({
       web: {
         minHeight: 0,
+        overflow: 'visible',
       },
     }),
   },
@@ -86,9 +89,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 24,
     gap: 8,
+    overflow: 'visible',
     ...Platform.select({
       web: {
         minHeight: 0,
+        overflow: 'visible',
       },
     }),
   },
@@ -149,16 +154,19 @@ const styles = StyleSheet.create({
   mainScroll: {
     flex: 1,
     minWidth: 0,
+    overflow: 'visible',
     ...Platform.select({
       web: {
         minHeight: 0,
         alignSelf: 'stretch',
+        overflow: 'visible',
       },
     }),
   },
   mainScrollContent: {
     paddingTop: 32,
     paddingBottom: 80,
+    overflow: 'visible',
   },
   scrollContentWithMobileSave: {
     paddingBottom: 120,
@@ -166,6 +174,7 @@ const styles = StyleSheet.create({
   scrollInnerWithSidebar: {
     width: '100%',
     maxWidth: 920,
+    overflow: 'visible',
   },
   content: {
     padding: isDesktop ? 60 : isTablet ? 40 : 24,
@@ -345,10 +354,38 @@ const styles = StyleSheet.create({
   // Cards Container
   cardsContainer: {
     gap: 24,
+    overflow: 'visible',
+  },
+
+  identificationSection: {
+    position: 'relative',
+    zIndex: 5000,
+    overflow: 'visible',
+    ...Platform.select({
+      web: {
+        isolation: 'isolate',
+      },
+    }),
+  },
+
+  identificationCard: {
+    position: 'relative',
+    zIndex: 5001,
+    overflow: 'visible',
+  },
+  identificationGrid: {
+    flexDirection: isTablet ? 'row' : 'column',
+    gap: 20,
+  },
+  identificationColumn: {
+    flex: isTablet ? 1 : undefined,
+    width: isTablet ? undefined : '100%',
   },
 
   // Card
   card: {
+    position: 'relative',
+    zIndex: 1,
     backgroundColor: THEME.colors.surface,
     borderRadius: 20,
     padding: isDesktop ? 32 : isTablet ? 28 : 24,
@@ -542,6 +579,209 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: TEXT_LIGHT,
     flex: 1,
+  },
+
+  // Identification Selects
+  selectContainer: {
+    position: 'relative',
+    width: '100%',
+    overflow: 'visible',
+  },
+  selectContainerOpen: {
+    zIndex: 20000,
+    overflow: 'visible',
+  },
+  selectInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: THEME.colors.surfaceLight,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: THEME.colors.borderLight,
+    minHeight: 48,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+      },
+    }),
+  },
+  selectInputLayer: {
+    position: 'relative',
+    zIndex: 20001,
+  },
+  selectInputFocused: {
+    borderColor: BRIGHT_PURPLE,
+    backgroundColor: 'rgba(167, 139, 250, 0.08)',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 0 0 3px rgba(167, 139, 250, 0.18)',
+      },
+    }),
+  },
+  selectInputOpen: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  selectText: {
+    fontSize: 16,
+    color: WHITE,
+    flex: 1,
+  },
+  selectPlaceholder: {
+    color: TEXT_MUTED,
+    opacity: 0.8,
+  },
+  selectArrow: {
+    marginLeft: 8,
+  },
+  arrowTriangle: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderTopWidth: 6,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: TEXT_LIGHT,
+    ...Platform.select({
+      web: {
+        transition: 'transform 0.2s ease',
+      },
+    }),
+  },
+  arrowTriangleUp: {
+    transform: [{ rotate: '180deg' }],
+  },
+  dropdownOverlay: {
+    ...Platform.select({
+      web: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 29998,
+      },
+      default: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      },
+    }),
+  },
+  selectOptionsContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: THEME.colors.surfaceLight,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: BRIGHT_PURPLE,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    maxHeight: 220,
+    zIndex: 29999,
+    overflow: 'hidden',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+      },
+    }),
+  },
+  selectModalRoot: {
+    ...Platform.select({
+      web: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 99999,
+      },
+      default: {
+        flex: 1,
+      },
+    }),
+  },
+  selectModalOverlay: {
+    ...Platform.select({
+      web: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      },
+      default: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      },
+    }),
+  },
+  selectModalOptionsContainer: {
+    position: 'absolute',
+    backgroundColor: THEME.colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: BRIGHT_PURPLE,
+    borderRadius: 12,
+    maxHeight: 220,
+    zIndex: 100000,
+    overflow: 'hidden',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 10px 24px rgba(0, 0, 0, 0.45)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+        elevation: 12,
+      },
+    }),
+  },
+  selectOptionsScroll: {
+    maxHeight: 220,
+  },
+  selectOption: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'background-color 0.2s ease',
+      },
+    }),
+  },
+  selectOptionSelected: {
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+  },
+  selectOptionText: {
+    fontSize: 15,
+    color: TEXT_LIGHT,
+  },
+  selectOptionTextSelected: {
+    color: BRIGHT_PURPLE,
+    fontWeight: '600',
   },
 
   // Input Group

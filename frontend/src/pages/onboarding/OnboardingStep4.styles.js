@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   selectContainerOpen: {
-    zIndex: 1000,
+    zIndex: 20000,
     overflow: 'visible',
   },
   selectInput: {
@@ -140,6 +140,10 @@ const styles = StyleSheet.create({
         transition: 'all 0.3s ease',
       },
     }),
+  },
+  selectInputLayer: {
+    position: 'relative',
+    zIndex: 20001,
   },
   inputFocused: {
     borderColor: COLORS.primary,
@@ -193,7 +197,7 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: {
         position: 'fixed',
-        zIndex: 998,
+        zIndex: 29998,
       },
     }),
   },
@@ -209,7 +213,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
     maxHeight: 200,
-    zIndex: 1001,
+    zIndex: 29999,
     overflow: 'hidden',
     ...Platform.select({
       web: {

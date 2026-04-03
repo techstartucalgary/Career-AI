@@ -84,7 +84,7 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
         </View>
       )}
       <View style={styles.header}>
-        <Text style={styles.title}>Finally, Tell Us What You're Looking For</Text>
+        <Text style={styles.title}>Tell Us What You're Looking For</Text>
         <Text style={styles.subtitle}>
           This will help us find the best fit jobs for you
         </Text>

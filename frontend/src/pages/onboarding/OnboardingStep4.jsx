@@ -2,6 +2,94 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, Platform, ScrollView } from 'react-native';
 import styles from './OnboardingStep4.styles';
 
+const SelectField = ({
+    fieldKey,
+    value,
+    onValueChange,
+    options,
+    placeholder,
+    focused,
+    onFocus,
+    onBlur,
+    isOpen,
+    onToggleOpen,
+    onClose,
+}) => {
+
+    const handleToggle = () => {
+        onToggleOpen(fieldKey);
+        if (!isOpen) onFocus();
+        else onBlur();
+    };
+
+    const handleSelect = (option) => {
+        onValueChange(option);
+        onClose();
+        onBlur();
+    };
+
+    const handleClose = () => {
+        onClose();
+        onBlur();
+    };
+
+    return (
+        <View style={[styles.selectContainer, isOpen && styles.selectContainerOpen]}>
+            <Pressable
+                style={[
+                    styles.selectInput,
+                    styles.selectInputLayer,
+                    focused && styles.inputFocused,
+                    isOpen && styles.selectInputOpen
+                ]}
+                onPress={handleToggle}
+                accessibilityRole="button"
+                accessibilityLabel={`Toggle ${placeholder}`}
+            >
+                <Text style={[styles.selectText, !value && styles.selectPlaceholder]} numberOfLines={1}>
+                    {value || placeholder}
+                </Text>
+                <View style={styles.selectArrow}>
+                    <View style={[styles.arrowTriangle, isOpen && styles.arrowTriangleUp]} />
+                </View>
+            </Pressable>
+            {isOpen && (
+                <>
+                    <Pressable
+                        style={styles.dropdownOverlay}
+                        onPress={handleClose}
+                    />
+                    <View style={styles.selectOptionsContainer}>
+                        <ScrollView
+                            style={styles.selectOptionsScroll}
+                            nestedScrollEnabled
+                            showsVerticalScrollIndicator={false}
+                        >
+                            {options.map((option, index) => (
+                                <Pressable
+                                    key={index}
+                                    style={[
+                                        styles.selectOption,
+                                        value === option && styles.selectOptionSelected
+                                    ]}
+                                    onPress={() => handleSelect(option)}
+                                >
+                                    <Text style={[
+                                        styles.selectOptionText,
+                                        value === option && styles.selectOptionTextSelected
+                                    ]} numberOfLines={1}>
+                                        {option || placeholder}
+                                    </Text>
+                                </Pressable>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </>
+            )}
+        </View>
+    );
+};
+
 const OnboardingStep4 = ({ formData, onNext, onBack }) => {
     const [localData, setLocalData] = useState({
         sex: formData.sex || '',
@@ -10,6 +98,7 @@ const OnboardingStep4 = ({ formData, onNext, onBack }) => {
         race: formData.race || '',
     });
     const [focusedInput, setFocusedInput] = useState(null);
+    const [openDropdownKey, setOpenDropdownKey] = useState(null);
     const [hoveredButton, setHoveredButton] = useState(null);
 
     const handleChange = (field, value) => {
@@ -20,91 +109,12 @@ const OnboardingStep4 = ({ formData, onNext, onBack }) => {
         onNext(localData);
     };
 
-    // SelectField Component for dropdowns
-    const SelectField = ({ value, onValueChange, options, placeholder, focused, onFocus, onBlur }) => {
-        const [isOpen, setIsOpen] = useState(false);
+    const handleToggleDropdown = (fieldKey) => {
+        setOpenDropdownKey((prev) => (prev === fieldKey ? null : fieldKey));
+    };
 
-        const handleToggle = (e) => {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            setIsOpen((prev) => {
-                const next = !prev;
-                if (next) onFocus();
-                else onBlur();
-                return next;
-            });
-        };
-
-        const handleSelect = (option) => {
-            onValueChange(option);
-            setIsOpen(false);
-            onBlur();
-        };
-
-        const handleClose = (e) => {
-            if (e) {
-                e.stopPropagation();
-            }
-            setIsOpen(false);
-            onBlur();
-        };
-
-        return (
-            <View style={[styles.selectContainer, isOpen && styles.selectContainerOpen]}>
-                <Pressable
-                    style={[
-                        styles.selectInput,
-                        focused && styles.inputFocused,
-                        isOpen && styles.selectInputOpen
-                    ]}
-                    onPress={handleToggle}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Toggle ${placeholder}`}
-                >
-                    <Text style={[styles.selectText, !value && styles.selectPlaceholder]} numberOfLines={1}>
-                        {value || placeholder}
-                    </Text>
-                    <View style={styles.selectArrow}>
-                        <View style={[styles.arrowTriangle, isOpen && styles.arrowTriangleUp]} />
-                    </View>
-                </Pressable>
-                {isOpen && (
-                    <>
-                        <Pressable
-                            style={styles.dropdownOverlay}
-                            onPress={handleClose}
-                        />
-                        <View style={styles.selectOptionsContainer}>
-                            <ScrollView
-                                style={styles.selectOptionsScroll}
-                                nestedScrollEnabled
-                                showsVerticalScrollIndicator={false}
-                            >
-                                {options.map((option, index) => (
-                                    <Pressable
-                                        key={index}
-                                        style={[
-                                            styles.selectOption,
-                                            value === option && styles.selectOptionSelected
-                                        ]}
-                                        onPress={() => handleSelect(option)}
-                                    >
-                                        <Text style={[
-                                            styles.selectOptionText,
-                                            value === option && styles.selectOptionTextSelected
-                                        ]} numberOfLines={1}>
-                                            {option || placeholder}
-                                        </Text>
-                                    </Pressable>
-                                ))}
-                            </ScrollView>
-                        </View>
-                    </>
-                )}
-            </View>
-        );
+    const handleCloseDropdowns = () => {
+        setOpenDropdownKey(null);
     };
 
     return (
@@ -116,7 +126,7 @@ const OnboardingStep4 = ({ formData, onNext, onBack }) => {
                 </View>
             )}
             <View style={styles.header}>
-                <Text style={styles.title}>Tell Us About Yourself</Text>
+                <Text style={styles.title}>Finally, Tell Us About Yourself</Text>
                 <Text style={styles.subtitle}>
                     This information helps us provide better opportunities and is kept confidential
                 </Text>
@@ -129,6 +139,7 @@ const OnboardingStep4 = ({ formData, onNext, onBack }) => {
                         <View style={[styles.inputGroup, focusedInput === 'sex' && styles.inputGroupOpen]}>
                             <Text style={styles.label}>Sex</Text>
                             <SelectField
+                                fieldKey="sex"
                                 value={localData.sex}
                                 onValueChange={(value) => handleChange('sex', value)}
                                 options={['', 'Male', 'Female', 'Intersex', 'Prefer not to say']}
@@ -136,12 +147,16 @@ const OnboardingStep4 = ({ formData, onNext, onBack }) => {
                                 focused={focusedInput === 'sex'}
                                 onFocus={() => setFocusedInput('sex')}
                                 onBlur={() => setFocusedInput(null)}
+                                isOpen={openDropdownKey === 'sex'}
+                                onToggleOpen={handleToggleDropdown}
+                                onClose={handleCloseDropdowns}
                             />
                         </View>
 
                         <View style={[styles.inputGroup, focusedInput === 'gender' && styles.inputGroupOpen]}>
                             <Text style={styles.label}>Gender</Text>
                             <SelectField
+                                fieldKey="gender"
                                 value={localData.gender}
                                 onValueChange={(value) => handleChange('gender', value)}
                                 options={['', 'Man', 'Woman', 'Non-binary', 'Genderqueer', 'Two-Spirit', 'Another gender', 'Prefer not to say']}
@@ -149,6 +164,9 @@ const OnboardingStep4 = ({ formData, onNext, onBack }) => {
                                 focused={focusedInput === 'gender'}
                                 onFocus={() => setFocusedInput('gender')}
                                 onBlur={() => setFocusedInput(null)}
+                                isOpen={openDropdownKey === 'gender'}
+                                onToggleOpen={handleToggleDropdown}
+                                onClose={handleCloseDropdowns}
                             />
                         </View>
                     </View>
@@ -158,6 +176,7 @@ const OnboardingStep4 = ({ formData, onNext, onBack }) => {
                         <View style={[styles.inputGroup, focusedInput === 'disability' && styles.inputGroupOpen]}>
                             <Text style={styles.label}>Disability Status</Text>
                             <SelectField
+                                fieldKey="disability"
                                 value={localData.disability}
                                 onValueChange={(value) => handleChange('disability', value)}
                                 options={['', 'Yes, I have a disability', 'No, I do not have a disability', 'Prefer not to say']}
@@ -165,12 +184,16 @@ const OnboardingStep4 = ({ formData, onNext, onBack }) => {
                                 focused={focusedInput === 'disability'}
                                 onFocus={() => setFocusedInput('disability')}
                                 onBlur={() => setFocusedInput(null)}
+                                isOpen={openDropdownKey === 'disability'}
+                                onToggleOpen={handleToggleDropdown}
+                                onClose={handleCloseDropdowns}
                             />
                         </View>
 
                         <View style={[styles.inputGroup, focusedInput === 'race' && styles.inputGroupOpen]}>
                             <Text style={styles.label}>Race/Ethnicity</Text>
                             <SelectField
+                                fieldKey="race"
                                 value={localData.race}
                                 onValueChange={(value) => handleChange('race', value)}
                                 options={['', 'American Indian or Alaska Native', 'Asian', 'Black or African American', 'Hispanic or Latino', 'Native Hawaiian or Other Pacific Islander', 'White', 'Two or more races', 'Another race/ethnicity', 'Prefer not to say']}
@@ -178,6 +201,9 @@ const OnboardingStep4 = ({ formData, onNext, onBack }) => {
                                 focused={focusedInput === 'race'}
                                 onFocus={() => setFocusedInput('race')}
                                 onBlur={() => setFocusedInput(null)}
+                                isOpen={openDropdownKey === 'race'}
+                                onToggleOpen={handleToggleDropdown}
+                                onClose={handleCloseDropdowns}
                             />
                         </View>
                     </View>
