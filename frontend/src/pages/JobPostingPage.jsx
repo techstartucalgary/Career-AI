@@ -8,7 +8,7 @@ import { BackArrowIcon } from '../components/ForwardArrowIcon';
 import { THEME } from '../styles/theme';
 import styles from './JobPostingPage.styles';
 import './JobPages.css';
-import { cacheJobs, fetchJobById, getCachedJob } from '../services/api';
+import { cacheJobs, fetchJobById, fetchSavedJobs, getAuthToken, getCachedJob, recordAppliedJob, recordSavedJob, removeSavedJob } from '../services/api';
 
 const toParagraphs = (description) => {
   const text = String(description || '').trim();
@@ -46,7 +46,7 @@ const normalizeForView = (job) => ({
   location: String(job?.location || 'Location not listed'),
   type: String(job?.employment_type || (Array.isArray(job?.types) ? job.types[0] : '') || 'Not specified'),
   salary: String(job?.salary || job?.rate || 'Compensation not listed'),
-  matchScore: Number(job?.match_score || job?.matchScore || 82),
+  matchScore: Math.round(Number(job?.fit_score ?? job?.match_score ?? job?.matchScore ?? 72)),
   applyUrl: job?.apply_url || job?.applyUrl || null,
   about: toParagraphs(job?.description),
   responsibilities: sentenceBullets(job?.description, [
@@ -70,6 +70,7 @@ const JobPostingPage = () => {
   const { id, source } = useLocalSearchParams();
   const [hoveredButton, setHoveredButton] = useState(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarkBusy, setBookmarkBusy] = useState(false);
   const [jobData, setJobData] = useState(null);
   const [loadingJob, setLoadingJob] = useState(true);
   const [jobError, setJobError] = useState('');
@@ -121,14 +122,105 @@ const JobPostingPage = () => {
     };
   }, [jobId, jobSource]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSavedState = async () => {
+      if (!jobId || !getAuthToken()) {
+        if (isMounted) setIsBookmarked(false);
+        return;
+      }
+
+      try {
+        const response = await fetchSavedJobs();
+        if (!isMounted) return;
+        const savedJobs = Array.isArray(response?.jobs) ? response.jobs : [];
+        const key = `${jobSource}::${jobId}`;
+        const exists = savedJobs.some((job) => {
+          const source = String(job?.source || 'linkedin').toLowerCase();
+          const id = String(job?.id || '').trim();
+          return `${source}::${id}` === key;
+        });
+        setIsBookmarked(exists);
+      } catch (_error) {
+        if (isMounted) setIsBookmarked(false);
+      }
+    };
+
+    loadSavedState();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [jobId, jobSource]);
+
   const canApply = useMemo(() => Boolean(jobData?.applyUrl), [jobData]);
+
+  const prefillParams = useMemo(() => ({
+    jobId,
+    source: jobSource,
+    jobTitle: jobData?.title || '',
+    company: jobData?.company || '',
+    location: jobData?.location || '',
+  }), [jobData, jobId, jobSource]);
 
   const handleApply = async () => {
     if (!jobData?.applyUrl) return;
     try {
       await Linking.openURL(jobData.applyUrl);
+      if (getAuthToken()) {
+        try {
+          await recordAppliedJob({
+            id: jobId,
+            source: jobSource,
+            title: jobData.title,
+            company: jobData.company,
+            location: jobData.location,
+            apply_url: jobData.applyUrl,
+            match_score: jobData.matchScore,
+          });
+        } catch (_err) {
+          /* non-blocking */
+        }
+      }
     } catch (_e) {
       setJobError('Unable to open the application link for this job.');
+    }
+  };
+
+  const handleToggleBookmark = async () => {
+    if (!jobData || bookmarkBusy) return;
+    if (!getAuthToken()) {
+      setJobError('Please sign in to save jobs.');
+      return;
+    }
+
+    const nextBookmarked = !isBookmarked;
+    setIsBookmarked(nextBookmarked);
+    setBookmarkBusy(true);
+
+    try {
+      if (nextBookmarked) {
+        await recordSavedJob({
+          id: jobId,
+          source: jobSource,
+          title: jobData.title,
+          company: jobData.company,
+          location: jobData.location,
+          apply_url: jobData.applyUrl,
+          description: Array.isArray(jobData.about) ? jobData.about.join('\n\n') : '',
+          salary: jobData.salary,
+          employment_type: jobData.type,
+          match_score: jobData.matchScore,
+        });
+      } else {
+        await removeSavedJob(jobId, jobSource);
+      }
+    } catch (_error) {
+      setIsBookmarked(!nextBookmarked);
+      setJobError('Unable to update saved jobs right now. Please try again.');
+    } finally {
+      setBookmarkBusy(false);
     }
   };
 
@@ -179,23 +271,23 @@ const JobPostingPage = () => {
               <Pressable
                 style={[
                   styles.actionButton,
-                  hoveredButton === 'interview' && styles.actionButtonHover
+                  hoveredButton === 'resume' && styles.actionButtonHover
                 ]}
-                onPress={() => router.push('/interview')}
-                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('interview')}
+                onPress={() => router.push({ pathname: '/resume/job-posting', params: prefillParams })}
+                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('resume')}
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
                 <View style={styles.actionButtonIcon}>
-                  <Octicons name="comment-discussion" size={20} color={THEME_COLORS.white} />
+                  <Octicons name="file" size={20} color={THEME_COLORS.white} />
                 </View>
-                <Text style={styles.actionButtonText}>Interview Prep</Text>
+                <Text style={styles.actionButtonText}>Generate Resume</Text>
               </Pressable>
               <Pressable
                 style={[
                   styles.actionButton,
                   hoveredButton === 'cover-letter' && styles.actionButtonHover
                 ]}
-                onPress={() => router.push('/cover-letter')}
+                onPress={() => router.push({ pathname: '/cover-letter/job-posting', params: prefillParams })}
                 onHoverIn={() => Platform.OS === 'web' && setHoveredButton('cover-letter')}
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
@@ -207,16 +299,16 @@ const JobPostingPage = () => {
               <Pressable
                 style={[
                   styles.actionButton,
-                  hoveredButton === 'resume' && styles.actionButtonHover
+                  hoveredButton === 'interview' && styles.actionButtonHover
                 ]}
-                onPress={() => router.push('/resume')}
-                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('resume')}
+                onPress={() => router.push({ pathname: '/interview-buddy/video-interview', params: prefillParams })}
+                onHoverIn={() => Platform.OS === 'web' && setHoveredButton('interview')}
                 onHoverOut={() => Platform.OS === 'web' && setHoveredButton(null)}
               >
                 <View style={styles.actionButtonIcon}>
-                  <Octicons name="file" size={20} color={THEME_COLORS.white} />
+                  <Octicons name="comment-discussion" size={20} color={THEME_COLORS.white} />
                 </View>
-                <Text style={styles.actionButtonText}>Generate Resume</Text>
+                <Text style={styles.actionButtonText}>AI Interview Prep</Text>
               </Pressable>
             </View>
           </View>
@@ -289,7 +381,8 @@ const JobPostingPage = () => {
                 </View>
                 <Pressable
                   style={styles.bookmarkButton}
-                  onPress={() => setIsBookmarked(!isBookmarked)}
+                  onPress={handleToggleBookmark}
+                  disabled={bookmarkBusy}
                 >
                   <View style={styles.bookmarkIcon}>
                     <Octicons

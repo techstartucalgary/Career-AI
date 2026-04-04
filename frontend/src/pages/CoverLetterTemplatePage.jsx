@@ -8,7 +8,7 @@ import styles from './CoverLetterTemplatePage.styles';
 import './JobPages.css';
 import { generateCoverLetter, downloadPDFFromBase64 } from '../services/aiService';
 import PDFViewer from '../components/PDFViewer';
-import { API_BASE_URL, apiFetch, getAuthToken, getUserProfile } from '../services/api';
+import { API_BASE_URL, apiFetch, fetchJobById, fetchLinkedInJobs, getAuthToken, getUserProfile } from '../services/api';
 import { getGithubStatus, openGithubConnect, fetchGithubContext } from '../services/githubService';
 
 const DEFAULT_OPTIMIZATION_JOB_DESCRIPTION =
@@ -25,14 +25,40 @@ const extractKeywords = (jobDescription) => {
   return commonKeywords.filter(keyword => lowerDesc.includes(keyword));
 };
 
+const toJobArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.jobs)) return value.jobs;
+  if (Array.isArray(value?.value)) return value.value;
+  if (Array.isArray(value?.data)) return value.data;
+  if (Array.isArray(value?.data?.jobs)) return value.data.jobs;
+  return [];
+};
+
+const normalizeSearchJob = (job, index = 0) => ({
+  id: String(job?.id || job?.job_id || job?.job_urn || `job-${index}`),
+  source: String(job?.source || 'linkedin').toLowerCase(),
+  title: String(job?.title || job?.job_title || 'Untitled role'),
+  company: String(job?.company || job?.company_name || 'Company'),
+  location: String(job?.location || job?.job_location || 'Location not listed'),
+  compensation: String(job?.salary || job?.rate || job?.compensation || job?.base_pay || 'Compensation not listed'),
+  description: String(job?.description || job?.job_description || job?.snippet || '').trim(),
+});
+
 const CoverLetterTemplatePage = () => {
-  const { mode } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const { mode } = params;
   const [selectedFile, setSelectedFile] = useState(null);
   const [templateResumeFile, setTemplateResumeFile] = useState(null);
   const [defaultResumeFile, setDefaultResumeFile] = useState(null);
   const [defaultResumeLoading, setDefaultResumeLoading] = useState(true);
   const [resumeSource, setResumeSource] = useState('default');
   const [templateMode, setTemplateMode] = useState(mode === 'optimize' ? 'optimize' : 'template'); // 'template' or 'optimize'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [jobSearchResults, setJobSearchResults] = useState([]);
+  const [selectedJobResultId, setSelectedJobResultId] = useState('');
+  const [selectedJobPosting, setSelectedJobPosting] = useState(null);
+  const [searchingJobs, setSearchingJobs] = useState(false);
+  const [jobSearchError, setJobSearchError] = useState('');
   const [templateJobDescription, setTemplateJobDescription] = useState('');
   const [optimizeJobDescription, setOptimizeJobDescription] = useState('');
   const [hoveredButton, setHoveredButton] = useState(null);
@@ -82,6 +108,112 @@ const CoverLetterTemplatePage = () => {
 
     loadDefaultResume();
   }, []);
+
+  React.useEffect(() => {
+    const routeDescription = String(params?.jobDescription || '').trim();
+    if (routeDescription) {
+      const routeJob = {
+        id: String(params?.jobId || 'route-job'),
+        source: String(params?.source || 'linkedin').toLowerCase(),
+        title: String(params?.jobTitle || 'Selected job'),
+        company: String(params?.company || 'Company'),
+        location: String(params?.location || 'Location not listed'),
+        compensation: 'Compensation not listed',
+        description: routeDescription,
+      };
+      setSelectedJobPosting(routeJob);
+      setSelectedJobResultId(routeJob.id);
+    }
+  }, [params?.jobDescription]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const routeJobId = String(params?.jobId || '').trim();
+    const routeSource = String(params?.source || 'linkedin').trim();
+
+    if (!routeJobId) return undefined;
+
+    const loadRouteJob = async () => {
+      try {
+        const job = await fetchJobById(routeJobId, routeSource || 'linkedin');
+        if (!isMounted) return;
+        const normalized = normalizeSearchJob(job, 0);
+        setJobSearchResults([]);
+        setSelectedJobResultId(normalized.id);
+        setSelectedJobPosting(normalized);
+        setSearchQuery('');
+      } catch (_error) {
+        if (isMounted) {
+          setJobSearchError('Could not fetch selected job details. You can still paste the description manually.');
+        }
+      }
+    };
+
+    loadRouteJob();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [params?.jobId, params?.source]);
+
+  const handleSearchJobs = async () => {
+    const query = searchQuery.trim();
+    if (!query) {
+      setJobSearchError('Enter a role or keyword to search job postings.');
+      setJobSearchResults([]);
+      return;
+    }
+
+    setSearchingJobs(true);
+    setJobSearchError('');
+
+    try {
+      const response = await fetchLinkedInJobs({
+        keywords: [query],
+        location: '',
+        page: 1,
+        limit: 8,
+        includeDetails: true,
+      });
+
+      const jobs = toJobArray(response)
+        .map((job, index) => normalizeSearchJob(job, index))
+        .filter((job) => Boolean(job.description));
+
+      setJobSearchResults(jobs);
+      if (!jobs.length) {
+        setJobSearchError('No matching jobs were found for that keyword.');
+      }
+    } catch (_error) {
+      setJobSearchResults([]);
+      setJobSearchError('Unable to search jobs right now. Please try again.');
+    } finally {
+      setSearchingJobs(false);
+    }
+  };
+
+  const handleSelectJobResult = (job) => {
+    setSelectedJobResultId(job.id);
+    setSelectedJobPosting(job);
+    setJobSearchResults([]);
+    setSearchQuery('');
+    setJobSearchError('');
+  };
+
+  React.useEffect(() => {
+    const query = searchQuery.trim();
+    if (!query) {
+      setJobSearchResults([]);
+      setJobSearchError('');
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      handleSearchJobs();
+    }, 320);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const pickDocument = async (forTemplateResume = false) => {
     try {
@@ -195,12 +327,15 @@ const CoverLetterTemplatePage = () => {
   };
 
   const handleGenerateCoverLetter = async () => {
+    const activeTemplateJobDescription = selectedJobResultId ? (selectedJobPosting?.description || '') : templateJobDescription;
+    const activeOptimizeJobDescription = selectedJobResultId ? (selectedJobPosting?.description || '') : optimizeJobDescription;
+
     if (templateMode === 'optimize') {
       if (!selectedFile?.uri) {
         setError('Upload your cover letter here to optimize.');
         return;
       }
-      if (!optimizeJobDescription.trim()) {
+      if (!activeOptimizeJobDescription.trim()) {
         setError('Please enter a job description.');
         return;
       }
@@ -211,13 +346,13 @@ const CoverLetterTemplatePage = () => {
       setProgressStep('Starting optimization...');
       
       // Extract keywords from job description
-      const extractedKeywords = extractKeywords(optimizeJobDescription);
+      const extractedKeywords = extractKeywords(activeOptimizeJobDescription);
       setKeywords(extractedKeywords);
 
       try {
         const result = await generateCoverLetter(
           selectedFile,
-          optimizeJobDescription,
+          activeOptimizeJobDescription,
           (update) => {
             if (typeof update?.progress === 'number') {
               setProgress(update.progress);
@@ -237,7 +372,7 @@ const CoverLetterTemplatePage = () => {
     }
 
     const activeResume = getActiveTemplateResume();
-    if (!templateJobDescription.trim()) {
+    if (!activeTemplateJobDescription.trim()) {
       setError('Please enter a job description.');
       return;
     }
@@ -252,13 +387,13 @@ const CoverLetterTemplatePage = () => {
     setProgress(0);
     setProgressStep('Starting generation...');
 
-    const extractedKeywords = extractKeywords(templateJobDescription);
+    const extractedKeywords = extractKeywords(activeTemplateJobDescription);
     setKeywords(extractedKeywords);
 
     try {
       const result = await generateCoverLetter(
         activeResume,
-        templateJobDescription,
+        activeTemplateJobDescription,
         (update) => {
           if (typeof update?.progress === 'number') {
             setProgress(update.progress);
@@ -284,6 +419,9 @@ const CoverLetterTemplatePage = () => {
   };
 
   const canDownload = !!generatedCoverLetter?.pdf_base64;
+  const selectedJobPostingActive = Boolean(selectedJobResultId);
+  const templateManualSelected = !selectedJobResultId && templateJobDescription.trim().length > 0;
+  const optimizeManualSelected = !selectedJobResultId && optimizeJobDescription.trim().length > 0;
 
   return (
     <View style={styles.container}>
@@ -353,16 +491,139 @@ const CoverLetterTemplatePage = () => {
                 {templateMode === 'template' ? (
                   <>
                     <View style={styles.section}>
-                      <Text style={styles.sectionTitle}>Enter Job Description</Text>
+                      <Text style={styles.sectionTitle}>Job Posting</Text>
+                      <View style={[styles.searchBar, { marginBottom: 10 }]}>
+                        <View style={styles.searchIcon}>
+                          <View style={styles.searchIconCircle} />
+                          <View style={styles.searchIconLine} />
+                        </View>
+                        <TextInput
+                          style={styles.searchInput}
+                          placeholder="Search role or keyword"
+                          placeholderTextColor="#9CA3AF"
+                          value={searchQuery}
+                          onChangeText={setSearchQuery}
+                        />
+                      </View>
+
+                      {searchingJobs && (
+                        <Text style={{ color: '#C4B5FD', marginTop: 10, fontSize: 13 }}>Searching...</Text>
+                      )}
+
+                      {!!jobSearchError && (
+                        <Text style={{ color: '#FCA5A5', marginTop: 10, fontSize: 13 }}>{jobSearchError}</Text>
+                      )}
+
+                      {jobSearchResults.length > 0 && (
+                        <ScrollView
+                          style={{ marginTop: 12, maxHeight: 240, backgroundColor: '#141421', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}
+                          contentContainerStyle={{ gap: 8, padding: 12 }}
+                          nestedScrollEnabled
+                        >
+                          {jobSearchResults.map((job) => (
+                            <Pressable
+                              key={job.id}
+                              style={[
+                                styles.resumeSourceCard,
+                                { backgroundColor: '#1A1A28', borderColor: 'rgba(255,255,255,0.08)' },
+                                selectedJobResultId === job.id && styles.resumeSourceCardActive,
+                              ]}
+                              onPress={() => handleSelectJobResult(job)}
+                            >
+                              <View style={styles.resumeSourceHeader}>
+                                <Text style={styles.resumeSourceTitle}>{job.title}</Text>
+                                {selectedJobResultId === job.id && (
+                                  <Text style={styles.resumeSourceBadge}>SELECTED</Text>
+                                )}
+                              </View>
+                              <Text style={styles.resumeSourceMeta}>{job.company}</Text>
+                              <Text style={styles.resumeSourceMeta}>{job.compensation}</Text>
+                              <Text style={styles.resumeSourceMeta}>{job.location}</Text>
+                            </Pressable>
+                          ))}
+                        </ScrollView>
+                      )}
+
+                      {selectedJobPosting && (
+                        <Pressable
+                          style={[
+                            styles.resumeSourceCard,
+                            {
+                              backgroundColor: selectedJobPostingActive ? '#1A1A28' : 'rgba(255,255,255,0.02)',
+                              borderColor: selectedJobPostingActive ? 'rgba(167, 139, 250, 0.45)' : 'rgba(255,255,255,0.08)',
+                            },
+                          ]}
+                          onPress={() => {
+                            setSelectedJobResultId(String(selectedJobPosting.id || 'route-job'));
+                            setJobSearchResults([]);
+                            setJobSearchError('');
+                          }}
+                        >
+                          <View style={styles.resumeSourceHeader}>
+                            <Text style={styles.resumeSourceTitle}>{selectedJobPosting.title}</Text>
+                            {selectedJobPostingActive && (
+                              <Text style={styles.resumeSourceBadge}>SELECTED</Text>
+                            )}
+                          </View>
+                          <Text style={styles.resumeSourceMeta}>{selectedJobPosting.company}</Text>
+                          <Text style={styles.resumeSourceMeta}>{selectedJobPosting.compensation}</Text>
+                          <Text style={styles.resumeSourceMeta}>{selectedJobPosting.location}</Text>
+                        </Pressable>
+                      )}
+
+                      <View style={styles.resumeSourceDividerRow}>
+                        <View style={styles.resumeSourceDividerLine} />
+                        <Text style={styles.resumeSourceDividerText}>OR</Text>
+                        <View style={styles.resumeSourceDividerLine} />
+                      </View>
+
                       <TextInput
-                        style={styles.jobDescriptionInput}
-                        placeholder="Paste the full job description here"
+                        style={[
+                          styles.jobDescriptionInput,
+                          templateManualSelected && {
+                            backgroundColor: 'rgba(167, 139, 250, 0.12)',
+                            borderColor: '#A78BFA',
+                            borderWidth: 1.5,
+                          },
+                        ]}
+                        placeholder="Paste the full job description here. Include requirements, responsibilities, and qualifications"
                         placeholderTextColor="#9CA3AF"
                         value={templateJobDescription}
-                        onChangeText={setTemplateJobDescription}
+                        onChangeText={(text) => {
+                          setTemplateJobDescription(text);
+                          if (text.trim().length === 0) {
+                            if (selectedJobPosting?.id) {
+                              setSelectedJobResultId(String(selectedJobPosting.id));
+                            }
+                          } else if (selectedJobResultId) {
+                            setSelectedJobResultId('');
+                          }
+                        }}
                         multiline
                         textAlignVertical="top"
                       />
+                      {templateJobDescription.trim().length > 0 && (
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+                          <Pressable
+                            onPress={() => {
+                              setTemplateJobDescription('');
+                              if (selectedJobPosting?.id) {
+                                setSelectedJobResultId(String(selectedJobPosting.id));
+                              }
+                            }}
+                            style={{
+                              borderRadius: 999,
+                              paddingHorizontal: 10,
+                              paddingVertical: 5,
+                              borderWidth: 1,
+                              borderColor: 'rgba(255,255,255,0.22)',
+                              backgroundColor: 'rgba(255,255,255,0.06)',
+                            }}
+                          >
+                            <Text style={{ color: '#D1D5DB', fontSize: 11, fontWeight: '700' }}>Clear</Text>
+                          </Pressable>
+                        </View>
+                      )}
                     </View>
 
                     <View style={styles.section}>
@@ -475,16 +736,139 @@ const CoverLetterTemplatePage = () => {
                 ) : (
                   <>
                     <View style={styles.section}>
-                      <Text style={styles.sectionTitle}>Enter Job Description</Text>
+                      <Text style={styles.sectionTitle}>Job Posting</Text>
+                      <View style={[styles.searchBar, { marginBottom: 10 }]}>
+                        <View style={styles.searchIcon}>
+                          <View style={styles.searchIconCircle} />
+                          <View style={styles.searchIconLine} />
+                        </View>
+                        <TextInput
+                          style={styles.searchInput}
+                          placeholder="Search role or keyword"
+                          placeholderTextColor="#9CA3AF"
+                          value={searchQuery}
+                          onChangeText={setSearchQuery}
+                        />
+                      </View>
+
+                      {searchingJobs && (
+                        <Text style={{ color: '#C4B5FD', marginTop: 10, fontSize: 13 }}>Searching...</Text>
+                      )}
+
+                      {!!jobSearchError && (
+                        <Text style={{ color: '#FCA5A5', marginTop: 10, fontSize: 13 }}>{jobSearchError}</Text>
+                      )}
+
+                      {jobSearchResults.length > 0 && (
+                        <ScrollView
+                          style={{ marginTop: 12, maxHeight: 240, backgroundColor: '#141421', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}
+                          contentContainerStyle={{ gap: 8, padding: 12 }}
+                          nestedScrollEnabled
+                        >
+                          {jobSearchResults.map((job) => (
+                            <Pressable
+                              key={job.id}
+                              style={[
+                                styles.resumeSourceCard,
+                                { backgroundColor: '#1A1A28', borderColor: 'rgba(255,255,255,0.08)' },
+                                selectedJobResultId === job.id && styles.resumeSourceCardActive,
+                              ]}
+                              onPress={() => handleSelectJobResult(job)}
+                            >
+                              <View style={styles.resumeSourceHeader}>
+                                <Text style={styles.resumeSourceTitle}>{job.title}</Text>
+                                {selectedJobResultId === job.id && (
+                                  <Text style={styles.resumeSourceBadge}>SELECTED</Text>
+                                )}
+                              </View>
+                              <Text style={styles.resumeSourceMeta}>{job.company}</Text>
+                              <Text style={styles.resumeSourceMeta}>{job.compensation}</Text>
+                              <Text style={styles.resumeSourceMeta}>{job.location}</Text>
+                            </Pressable>
+                          ))}
+                        </ScrollView>
+                      )}
+
+                      {selectedJobPosting && (
+                        <Pressable
+                          style={[
+                            styles.resumeSourceCard,
+                            {
+                              backgroundColor: selectedJobPostingActive ? '#1A1A28' : 'rgba(255,255,255,0.02)',
+                              borderColor: selectedJobPostingActive ? 'rgba(167, 139, 250, 0.45)' : 'rgba(255,255,255,0.08)',
+                            },
+                          ]}
+                          onPress={() => {
+                            setSelectedJobResultId(String(selectedJobPosting.id || 'route-job'));
+                            setJobSearchResults([]);
+                            setJobSearchError('');
+                          }}
+                        >
+                          <View style={styles.resumeSourceHeader}>
+                            <Text style={styles.resumeSourceTitle}>{selectedJobPosting.title}</Text>
+                            {selectedJobPostingActive && (
+                              <Text style={styles.resumeSourceBadge}>SELECTED</Text>
+                            )}
+                          </View>
+                          <Text style={styles.resumeSourceMeta}>{selectedJobPosting.company}</Text>
+                          <Text style={styles.resumeSourceMeta}>{selectedJobPosting.compensation}</Text>
+                          <Text style={styles.resumeSourceMeta}>{selectedJobPosting.location}</Text>
+                        </Pressable>
+                      )}
+
+                      <View style={styles.resumeSourceDividerRow}>
+                        <View style={styles.resumeSourceDividerLine} />
+                        <Text style={styles.resumeSourceDividerText}>OR</Text>
+                        <View style={styles.resumeSourceDividerLine} />
+                      </View>
+
                       <TextInput
-                        style={styles.jobDescriptionInput}
-                        placeholder="Paste the full job description here"
+                        style={[
+                          styles.jobDescriptionInput,
+                          optimizeManualSelected && {
+                            backgroundColor: 'rgba(167, 139, 250, 0.12)',
+                            borderColor: '#A78BFA',
+                            borderWidth: 1.5,
+                          },
+                        ]}
+                        placeholder="Paste the full job description here. Include requirements, responsibilities, and qualifications"
                         placeholderTextColor="#9CA3AF"
                         value={optimizeJobDescription}
-                        onChangeText={setOptimizeJobDescription}
+                        onChangeText={(text) => {
+                          setOptimizeJobDescription(text);
+                          if (text.trim().length === 0) {
+                            if (selectedJobPosting?.id) {
+                              setSelectedJobResultId(String(selectedJobPosting.id));
+                            }
+                          } else if (selectedJobResultId) {
+                            setSelectedJobResultId('');
+                          }
+                        }}
                         multiline
                         textAlignVertical="top"
                       />
+                      {optimizeJobDescription.trim().length > 0 && (
+                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+                          <Pressable
+                            onPress={() => {
+                              setOptimizeJobDescription('');
+                              if (selectedJobPosting?.id) {
+                                setSelectedJobResultId(String(selectedJobPosting.id));
+                              }
+                            }}
+                            style={{
+                              borderRadius: 999,
+                              paddingHorizontal: 10,
+                              paddingVertical: 5,
+                              borderWidth: 1,
+                              borderColor: 'rgba(255,255,255,0.22)',
+                              backgroundColor: 'rgba(255,255,255,0.06)',
+                            }}
+                          >
+                            <Text style={{ color: '#D1D5DB', fontSize: 11, fontWeight: '700' }}>Clear</Text>
+                          </Pressable>
+                        </View>
+                      )}
                     </View>
 
                     {/* Upload Cover Letter Section */}

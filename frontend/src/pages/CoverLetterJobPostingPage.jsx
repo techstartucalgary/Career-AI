@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, ScrollView, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import Header from '../components/Header';
 import styles from './CoverLetterJobPostingPage.styles';
 import './JobPages.css';
 import { generateCoverLetter, downloadPDFFromBase64 } from '../services/aiService';
 import PDFViewer from '../components/PDFViewer';
-import { API_BASE_URL, apiFetch, getAuthToken, getUserProfile } from '../services/api';
+import { API_BASE_URL, apiFetch, fetchJobById, fetchLinkedInJobs, getAuthToken, getUserProfile } from '../services/api';
 import { getGithubStatus, openGithubConnect, fetchGithubContext } from '../services/githubService';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
@@ -126,14 +126,38 @@ const extractKeywords = (jobDescription) => {
   return commonKeywords.filter(keyword => lowerDesc.includes(keyword));
 };
 
+const toJobArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.jobs)) return value.jobs;
+  if (Array.isArray(value?.value)) return value.value;
+  if (Array.isArray(value?.data)) return value.data;
+  if (Array.isArray(value?.data?.jobs)) return value.data.jobs;
+  return [];
+};
+
+const normalizeSearchJob = (job, index = 0) => ({
+  id: String(job?.id || job?.job_id || job?.job_urn || `job-${index}`),
+  source: String(job?.source || 'linkedin').toLowerCase(),
+  title: String(job?.title || job?.job_title || 'Untitled role'),
+  company: String(job?.company || job?.company_name || 'Company'),
+  location: String(job?.location || job?.job_location || 'Location not listed'),
+  compensation: String(job?.salary || job?.rate || job?.compensation || job?.base_pay || 'Compensation not listed'),
+  description: String(job?.description || job?.job_description || job?.snippet || '').trim(),
+});
+
 const CoverLetterJobPostingPage = () => {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { isDesktop } = useBreakpoints();
   const [searchQuery, setSearchQuery] = useState('');
   const [jobDescription, setJobDescription] = useState('');
+  const [jobSearchResults, setJobSearchResults] = useState([]);
+  const [selectedJobResultId, setSelectedJobResultId] = useState('');
+  const [selectedJobPosting, setSelectedJobPosting] = useState(null);
+  const [searchingJobs, setSearchingJobs] = useState(false);
+  const [jobSearchError, setJobSearchError] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [resumeSource, setResumeSource] = useState('profile');
-  const [selectedTags, setSelectedTags] = useState(['Student', 'AI', 'Software Development', 'Calgary']);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredAts, setHoveredAts] = useState(false);
   const [generatedCoverLetter, setGeneratedCoverLetter] = useState(null);
@@ -193,9 +217,111 @@ const CoverLetterJobPostingPage = () => {
     loadDefaultResume();
   }, []);
 
-  const removeTag = (tagToRemove) => {
-    setSelectedTags(selectedTags.filter(tag => tag !== tagToRemove));
+  React.useEffect(() => {
+    const routeDescription = String(params?.jobDescription || '').trim();
+    if (routeDescription) {
+      setSelectedJobPosting({
+        id: String(params?.jobId || 'route-job'),
+        title: String(params?.jobTitle || 'Selected job'),
+        company: String(params?.company || 'Company'),
+        location: String(params?.location || 'Location not listed'),
+        compensation: 'Compensation not listed',
+        description: routeDescription,
+      });
+      setSelectedJobResultId(String(params?.jobId || 'route-job'));
+    }
+  }, [params?.jobDescription]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const routeJobId = String(params?.jobId || '').trim();
+    const routeSource = String(params?.source || 'linkedin').trim();
+
+    if (!routeJobId) return undefined;
+
+    const loadRouteJob = async () => {
+      try {
+        const job = await fetchJobById(routeJobId, routeSource || 'linkedin');
+        if (!isMounted) return;
+        const normalized = normalizeSearchJob(job, 0);
+        setJobSearchResults([]);
+        setSelectedJobResultId(normalized.id);
+        setSelectedJobPosting(normalized);
+        setSearchQuery('');
+      } catch (_error) {
+        if (isMounted) {
+          setJobSearchError('Could not fetch selected job details. You can still paste the description manually.');
+        }
+      }
+    };
+
+    loadRouteJob();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [params?.jobId, params?.source]);
+
+  const handleSearchJobs = async () => {
+    const query = searchQuery.trim();
+    if (!query) {
+      setJobSearchError('Enter a role or keyword to search job postings.');
+      setJobSearchResults([]);
+      return;
+    }
+
+    setSearchingJobs(true);
+    setJobSearchError('');
+
+    try {
+      const response = await fetchLinkedInJobs({
+        keywords: [query],
+        location: '',
+        page: 1,
+        limit: 8,
+        includeDetails: true,
+      });
+
+      const jobs = toJobArray(response)
+        .map((job, index) => normalizeSearchJob(job, index))
+        .filter((job) => Boolean(job.description));
+
+      setJobSearchResults(jobs);
+      if (!jobs.length) {
+        setJobSearchError('No matching jobs were found for that keyword.');
+      }
+    } catch (_error) {
+      setJobSearchResults([]);
+      setJobSearchError('Unable to search jobs right now. Please try again.');
+    } finally {
+      setSearchingJobs(false);
+    }
   };
+
+  const handleSelectJobResult = (job) => {
+    setSelectedJobResultId(job.id);
+    setSelectedJobPosting(job);
+    setJobSearchResults([]);
+    setSearchQuery('');
+    setJobSearchError('');
+  };
+
+  React.useEffect(() => {
+    const query = searchQuery.trim();
+    if (!query) {
+      setJobSearchResults([]);
+      setJobSearchError('');
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      handleSearchJobs();
+    }, 320);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const activeJobDescription = selectedJobResultId ? (selectedJobPosting?.description || '') : jobDescription;
 
   const pickDocument = async () => {
     try {
@@ -307,13 +433,13 @@ const CoverLetterJobPostingPage = () => {
       setAtsError('Add a resume source to calculate ATS score.');
       return null;
     }
-    if (!jobDescription.trim()) {
+    if (!activeJobDescription.trim()) {
       setAtsError('Paste a job description to calculate ATS score.');
       return null;
     }
 
     try {
-      const formData = await buildAtsFormData(resumeFile, jobDescription);
+      const formData = await buildAtsFormData(resumeFile, activeJobDescription);
 
       const response = await fetch(`${API_BASE_URL}/api/ats-score`, {
         method: 'POST',
@@ -335,12 +461,12 @@ const CoverLetterJobPostingPage = () => {
   };
 
   const calculateAtsScoreForBase64 = async (pdfBase64, filename) => {
-    if (!pdfBase64 || !jobDescription.trim()) {
+    if (!pdfBase64 || !activeJobDescription.trim()) {
       return null;
     }
 
     try {
-      const formData = await buildAtsFormDataFromBase64(pdfBase64, filename, jobDescription);
+      const formData = await buildAtsFormDataFromBase64(pdfBase64, filename, activeJobDescription);
 
       const response = await fetch(`${API_BASE_URL}/api/ats-score`, {
         method: 'POST',
@@ -366,7 +492,7 @@ const CoverLetterJobPostingPage = () => {
       ? selectedFile
       : profileResumeFile;
 
-    if (!jobDescription.trim()) {
+    if (!activeJobDescription.trim()) {
       setError('Please enter a job description');
       return;
     }
@@ -381,7 +507,7 @@ const CoverLetterJobPostingPage = () => {
     setProgressStep('Starting...');
     
     // Extract keywords from job description
-    const extractedKeywords = extractKeywords(jobDescription);
+    const extractedKeywords = extractKeywords(activeJobDescription);
     setKeywords(extractedKeywords);
     
     try {
@@ -389,7 +515,7 @@ const CoverLetterJobPostingPage = () => {
       setAtsError('');
 
       const [result, originalScore] = await Promise.all([
-        generateCoverLetter(activeResumeFile, jobDescription, (data) => {
+        generateCoverLetter(activeResumeFile, activeJobDescription, (data) => {
           setProgressStep(data.step);
           setProgress(data.progress);
         }, selectedTemplate),
@@ -429,6 +555,9 @@ const CoverLetterJobPostingPage = () => {
   };
 
   const canDownload = Boolean(generatedCoverLetter?.pdf_base64);
+  const hasManualJobDescription = jobDescription.trim().length > 0;
+  const manualJobDescriptionSelected = !selectedJobResultId && hasManualJobDescription;
+  const selectedJobPostingActive = Boolean(selectedJobResultId);
 
   return (
     <View style={styles.container}>
@@ -461,7 +590,7 @@ const CoverLetterJobPostingPage = () => {
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Job Posting</Text>
 
-                  <View style={styles.searchBar}>
+                  <View style={[styles.searchBar, { marginBottom: 10 }]}> 
                     <View style={styles.searchIcon}>
                       <View style={styles.searchIconCircle} />
                       <View style={styles.searchIconLine} />
@@ -486,37 +615,124 @@ const CoverLetterJobPostingPage = () => {
                     )}
                   </View>
 
-                  {/* Selected Tags */}
-                  {selectedTags.length > 0 && (
-                    <View style={styles.tagsContainer}>
-                      {selectedTags.map((tag, index) => (
-                        <View key={index} style={styles.tag}>
-                          <Text style={styles.tagText}>{tag}</Text>
-                          <Pressable
-                            style={styles.tagClose}
-                            onPress={() => removeTag(tag)}
-                          >
-                            <View style={styles.tagCloseLine1} />
-                            <View style={styles.tagCloseLine2} />
-                          </Pressable>
-                        </View>
-                      ))}
-                    </View>
+                  {searchingJobs && (
+                    <Text style={{ color: '#C4B5FD', marginTop: 10, fontSize: 13 }}>Searching...</Text>
                   )}
-                </View>
 
-                {/* Enter Job Description Section */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Enter Job Description</Text>
+                  {!!jobSearchError && (
+                    <Text style={{ color: '#FCA5A5', marginTop: 10, fontSize: 13 }}>{jobSearchError}</Text>
+                  )}
+
+                  {jobSearchResults.length > 0 && (
+                    <ScrollView
+                      style={{ marginTop: 12, maxHeight: 240, backgroundColor: '#141421', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' }}
+                      contentContainerStyle={{ gap: 8, padding: 12 }}
+                      nestedScrollEnabled
+                    >
+                      {jobSearchResults.map((job) => (
+                        <Pressable
+                          key={job.id}
+                          style={[
+                            styles.resumeSourceCard,
+                            { backgroundColor: '#1A1A28', borderColor: 'rgba(255,255,255,0.08)' },
+                            selectedJobResultId === job.id && styles.resumeSourceCardActive,
+                          ]}
+                          onPress={() => handleSelectJobResult(job)}
+                        >
+                          <View style={styles.resumeSourceHeader}>
+                            <Text style={styles.resumeSourceTitle}>{job.title}</Text>
+                            {selectedJobResultId === job.id && (
+                              <Text style={styles.resumeSourceBadge}>SELECTED</Text>
+                            )}
+                          </View>
+                          <Text style={styles.resumeSourceMeta}>{job.company}</Text>
+                          <Text style={styles.resumeSourceMeta}>{job.compensation}</Text>
+                          <Text style={styles.resumeSourceMeta}>{job.location}</Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  )}
+
+                  {selectedJobPosting && (
+                    <Pressable
+                      style={[
+                        styles.resumeSourceCard,
+                        {
+                          backgroundColor: selectedJobPostingActive ? '#1A1A28' : 'rgba(255,255,255,0.02)',
+                          borderColor: selectedJobPostingActive ? 'rgba(167, 139, 250, 0.45)' : 'rgba(255,255,255,0.08)',
+                        },
+                      ]}
+                      onPress={() => {
+                        setSelectedJobResultId(String(selectedJobPosting.id || 'route-job'));
+                        setJobSearchResults([]);
+                        setJobSearchError('');
+                      }}
+                    >
+                      <View style={styles.resumeSourceHeader}>
+                        <Text style={styles.resumeSourceTitle}>{selectedJobPosting.title}</Text>
+                        {selectedJobPostingActive && (
+                          <Text style={styles.resumeSourceBadge}>SELECTED</Text>
+                        )}
+                      </View>
+                      <Text style={styles.resumeSourceMeta}>{selectedJobPosting.company}</Text>
+                      <Text style={styles.resumeSourceMeta}>{selectedJobPosting.compensation}</Text>
+                      <Text style={styles.resumeSourceMeta}>{selectedJobPosting.location}</Text>
+                    </Pressable>
+                  )}
+
+                  <View style={styles.resumeSourceDividerRow}>
+                    <View style={styles.resumeSourceDividerLine} />
+                    <Text style={styles.resumeSourceDividerText}>OR</Text>
+                    <View style={styles.resumeSourceDividerLine} />
+                  </View>
+
                   <TextInput
-                    style={styles.jobDescriptionInput}
+                    style={[
+                      styles.jobDescriptionInput,
+                      manualJobDescriptionSelected && {
+                        backgroundColor: 'rgba(167, 139, 250, 0.12)',
+                        borderColor: '#A78BFA',
+                        borderWidth: 1.5,
+                      },
+                    ]}
                     placeholder="Paste the full job description here. Include requirements, responsibilities, and qualifications"
                     placeholderTextColor="#9CA3AF"
                     value={jobDescription}
-                    onChangeText={setJobDescription}
+                    onChangeText={(text) => {
+                      setJobDescription(text);
+                      if (text.trim().length === 0) {
+                        if (selectedJobPosting?.id) {
+                          setSelectedJobResultId(String(selectedJobPosting.id));
+                        }
+                      } else if (selectedJobResultId) {
+                        setSelectedJobResultId('');
+                      }
+                    }}
                     multiline
                     textAlignVertical="top"
                   />
+                  {jobDescription.trim().length > 0 && (
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+                      <Pressable
+                        onPress={() => {
+                          setJobDescription('');
+                          if (selectedJobPosting?.id) {
+                            setSelectedJobResultId(String(selectedJobPosting.id));
+                          }
+                        }}
+                        style={{
+                          borderRadius: 999,
+                          paddingHorizontal: 10,
+                          paddingVertical: 5,
+                          borderWidth: 1,
+                          borderColor: 'rgba(255,255,255,0.22)',
+                          backgroundColor: 'rgba(255,255,255,0.06)',
+                        }}
+                      >
+                        <Text style={{ color: '#D1D5DB', fontSize: 11, fontWeight: '700' }}>Clear</Text>
+                      </Pressable>
+                    </View>
+                  )}
                 </View>
 
               {/* Resume Upload Section */}

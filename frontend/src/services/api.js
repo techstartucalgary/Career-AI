@@ -117,7 +117,7 @@ export const apiFetch = async (path, options = {}) => {
 
 export const fetchLinkedInJobs = async ({
   keywords = [],
-  location = 'Calgary',
+  location = '',
   page = 1,
   limit = 10,
   sources = ['linkedin', 'indeed'],
@@ -126,6 +126,8 @@ export const fetchLinkedInJobs = async ({
   preferredPositions = [],
   preferredLocations = [],
   minFitScore = 0,
+  fitMode = 'broad',
+  sortBy = 'match',
 } = {}) => {
   const params = new URLSearchParams();
 
@@ -136,9 +138,7 @@ export const fetchLinkedInJobs = async ({
       .forEach((keyword) => params.append('keywords', keyword));
   }
 
-  if (typeof location === 'string' && location.trim()) {
-    params.set('location', location.trim());
-  }
+  params.set('location', typeof location === 'string' ? location.trim() : '');
 
   params.set('page', String(Math.max(1, Number(page) || 1)));
   params.set('limit', String(Math.max(1, Number(limit) || 1)));
@@ -173,11 +173,46 @@ export const fetchLinkedInJobs = async ({
   }
 
   params.set('min_fit_score', String(Math.max(0, Number(minFitScore) || 0)));
+  const mode = String(fitMode || 'broad').toLowerCase();
+  params.set('fit_mode', mode === 'strict' ? 'strict' : 'broad');
+  const sort = String(sortBy || 'match').toLowerCase();
+  const allowed = ['match', 'posted_newest', 'posted_oldest'];
+  params.set('sort_by', allowed.includes(sort) ? sort : 'match');
 
   const query = params.toString();
   const path = query ? `/api/jobs?${query}` : '/api/jobs';
   return apiFetch(path, { method: 'GET' });
 };
+
+export const fetchAppliedJobs = async () => apiFetch('/applied-jobs', { method: 'GET' });
+
+export const fetchSavedJobs = async () => apiFetch('/saved-jobs', { method: 'GET' });
+
+export const recordAppliedJob = async (payload) =>
+  apiFetch('/applied-jobs', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const recordSavedJob = async (payload) =>
+  apiFetch('/saved-jobs', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const removeSavedJob = async (jobId, source = 'linkedin') => {
+  const params = new URLSearchParams();
+  params.set('source', String(source || 'linkedin').toLowerCase());
+  return apiFetch(`/saved-jobs/${encodeURIComponent(String(jobId || '').trim())}?${params.toString()}`, {
+    method: 'DELETE',
+  });
+};
+
+export const recordJobSearchSignals = async ({ keywords = [], locations = [] }) =>
+  apiFetch('/job-search-signals', {
+    method: 'POST',
+    body: JSON.stringify({ keywords, locations }),
+  });
 
 const readProfileCache = () => {
   try {
