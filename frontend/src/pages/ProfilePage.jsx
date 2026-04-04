@@ -9,6 +9,7 @@ import { THEME } from '../styles/theme';
 import { API_BASE_URL, apiFetch, apiUrl, clearAuthToken, getAuthToken, getUserProfile, clearUserProfileCache } from '../services/api';
 import { Redirect } from 'expo-router';
 import { useBreakpoints } from '../hooks/useBreakpoints';
+import { JOB_LOCATION_OPTIONS, JOB_ROLE_OPTIONS, getOptionSuggestions } from '../data/jobPreferencesOptions';
 
 const PROFILE_NAV_SECTIONS = [
   { id: 'overview', label: 'Overview' },
@@ -777,6 +778,13 @@ export default function ProfilePage() {
     setPreferredPositions((prev) => prev.filter((item) => item !== position));
   };
 
+  const handleSelectPositionSuggestion = (value) => {
+    const trimmed = String(value || '').trim();
+    if (!trimmed || preferredPositions.includes(trimmed)) return;
+    setPreferredPositions((prev) => [...prev, trimmed]);
+    setPositionInput('');
+  };
+
   const handleAddLocation = () => {
     const trimmed = locationInput.trim();
     if (!trimmed || preferredLocations.includes(trimmed)) return;
@@ -787,6 +795,35 @@ export default function ProfilePage() {
   const handleRemoveLocation = (place) => {
     setPreferredLocations((prev) => prev.filter((item) => item !== place));
   };
+
+  const handleSelectLocationSuggestion = (value) => {
+    const trimmed = String(value || '').trim();
+    if (!trimmed || preferredLocations.includes(trimmed)) return;
+    setPreferredLocations((prev) => [...prev, trimmed]);
+    setLocationInput('');
+  };
+
+  const positionSuggestions = useMemo(
+    () => getOptionSuggestions({
+      query: positionInput,
+      selected: preferredPositions,
+      optionsList: JOB_ROLE_OPTIONS,
+      limit: 10,
+      minChars: 2,
+    }),
+    [positionInput, preferredPositions]
+  );
+
+  const locationSuggestions = useMemo(
+    () => getOptionSuggestions({
+      query: locationInput,
+      selected: preferredLocations,
+      optionsList: JOB_LOCATION_OPTIONS,
+      limit: 10,
+      minChars: 2,
+    }),
+    [locationInput, preferredLocations]
+  );
 
   const updateIdentification = (field, value) => {
     setIdentification((prev) => ({ ...prev, [field]: value }));
@@ -1116,6 +1153,19 @@ export default function ProfilePage() {
                       </View>
                     </Pressable>
                   </View>
+                  {positionInput.trim().length >= 2 && positionSuggestions.length > 0 && (
+                    <ScrollView style={styles.suggestionsContainer} nestedScrollEnabled>
+                      {positionSuggestions.map((item) => (
+                        <Pressable
+                          key={item}
+                          style={styles.suggestionItem}
+                          onPress={() => handleSelectPositionSuggestion(item)}
+                        >
+                          <Text style={styles.suggestionText}>{item}</Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  )}
                   {preferredPositions.length > 0 && (
                     <View style={styles.tagsContainer}>
                       {preferredPositions.map((position, index) => (
@@ -1156,6 +1206,19 @@ export default function ProfilePage() {
                       </View>
                     </Pressable>
                   </View>
+                  {locationInput.trim().length >= 2 && locationSuggestions.length > 0 && (
+                    <ScrollView style={styles.suggestionsContainer} nestedScrollEnabled>
+                      {locationSuggestions.map((item) => (
+                        <Pressable
+                          key={item}
+                          style={styles.suggestionItem}
+                          onPress={() => handleSelectLocationSuggestion(item)}
+                        >
+                          <Text style={styles.suggestionText}>{item}</Text>
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  )}
                   {preferredLocations.length > 0 && (
                     <View style={styles.tagsContainer}>
                       {preferredLocations.map((place, index) => (

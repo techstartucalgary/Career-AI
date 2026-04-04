@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, Platform } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, TextInput, Pressable, Platform, ScrollView } from 'react-native';
 import styles from './OnboardingStep3.styles';
+import { JOB_LOCATION_OPTIONS, JOB_ROLE_OPTIONS, getOptionSuggestions } from '../../data/jobPreferencesOptions';
 
 const OnboardingStep3 = ({ formData, onNext, onBack }) => {
   const [localData, setLocalData] = useState({
@@ -13,6 +14,28 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
   const [focusedInput, setFocusedInput] = useState(null);
   const [hoveredButton, setHoveredButton] = useState(null);
   const [errors, setErrors] = useState({});
+
+  const positionSuggestions = useMemo(
+    () => getOptionSuggestions({
+      query: positionInput,
+      selected: localData.positions,
+      optionsList: JOB_ROLE_OPTIONS,
+      limit: 10,
+      minChars: 2,
+    }),
+    [localData.positions, positionInput]
+  );
+
+  const locationSuggestions = useMemo(
+    () => getOptionSuggestions({
+      query: locationInput,
+      selected: localData.locations,
+      optionsList: JOB_LOCATION_OPTIONS,
+      limit: 10,
+      minChars: 2,
+    }),
+    [localData.locations, locationInput]
+  );
 
   const handleAddPosition = () => {
     if (positionInput.trim() && !localData.positions.includes(positionInput.trim())) {
@@ -34,6 +57,19 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
     }));
   };
 
+  const handleSelectPositionSuggestion = (value) => {
+    const trimmed = String(value || '').trim();
+    if (!trimmed || localData.positions.includes(trimmed)) return;
+    setLocalData((prev) => ({
+      ...prev,
+      positions: [...prev.positions, trimmed],
+    }));
+    setPositionInput('');
+    if (errors.positions) {
+      setErrors((prev) => ({ ...prev, positions: undefined }));
+    }
+  };
+
   const handleAddLocation = () => {
     if (locationInput.trim() && !localData.locations.includes(locationInput.trim())) {
       setLocalData(prev => ({
@@ -52,6 +88,19 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
       ...prev,
       locations: prev.locations.filter(l => l !== location)
     }));
+  };
+
+  const handleSelectLocationSuggestion = (value) => {
+    const trimmed = String(value || '').trim();
+    if (!trimmed || localData.locations.includes(trimmed)) return;
+    setLocalData((prev) => ({
+      ...prev,
+      locations: [...prev.locations, trimmed],
+    }));
+    setLocationInput('');
+    if (errors.locations) {
+      setErrors((prev) => ({ ...prev, locations: undefined }));
+    }
   };
 
   const handleWorkArrangementChange = (arrangement) => {
@@ -120,6 +169,19 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
                   <Text style={styles.addButtonText}>+</Text>
                 </Pressable>
               </View>
+              {positionInput.trim().length >= 2 && positionSuggestions.length > 0 && (
+                <ScrollView style={styles.suggestionsContainer} nestedScrollEnabled>
+                  {positionSuggestions.map((item) => (
+                    <Pressable
+                      key={item}
+                      style={styles.suggestionItem}
+                      onPress={() => handleSelectPositionSuggestion(item)}
+                    >
+                      <Text style={styles.suggestionText}>{item}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              )}
               {localData.positions.length > 0 && (
                 <View style={styles.tagsContainer}>
                   {localData.positions.map((position, index) => (
@@ -166,6 +228,19 @@ const OnboardingStep3 = ({ formData, onNext, onBack }) => {
                   <Text style={styles.addButtonText}>+</Text>
                 </Pressable>
               </View>
+              {locationInput.trim().length >= 2 && locationSuggestions.length > 0 && (
+                <ScrollView style={styles.suggestionsContainer} nestedScrollEnabled>
+                  {locationSuggestions.map((item) => (
+                    <Pressable
+                      key={item}
+                      style={styles.suggestionItem}
+                      onPress={() => handleSelectLocationSuggestion(item)}
+                    >
+                      <Text style={styles.suggestionText}>{item}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              )}
               {localData.locations.length > 0 && (
                 <View style={styles.tagsContainer}>
                   {localData.locations.map((location, index) => (
