@@ -111,10 +111,14 @@ def serialize_user(user: dict) -> dict:
         jp = {}
     pos = jp.get("positions")
     loc = jp.get("locations")
+    lk = jp.get("learned_keywords")
+    ll = jp.get("learned_locations")
     user["job_preferences"] = {
         "positions": pos if isinstance(pos, list) else [],
         "locations": loc if isinstance(loc, list) else [],
         "work_arrangement": jp.get("work_arrangement") or "any",
+        "learned_keywords": lk if isinstance(lk, list) else [],
+        "learned_locations": ll if isinstance(ll, list) else [],
     }
 
     return user

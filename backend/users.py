@@ -7,13 +7,47 @@ from datetime import datetime
 from fastapi import APIRouter, File, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
-from models import ProfileUpdateRequest, PreferencesUpdateRequest, OnboardingCompleteRequest, DemographicsUpdateRequest
+from models import (
+    ProfileUpdateRequest,
+    PreferencesUpdateRequest,
+    OnboardingCompleteRequest,
+    DemographicsUpdateRequest,
+    AppliedJobRecord,
+    SavedJobRecord,
+    JobSearchSignalsRequest,
+)
 from database import col
 from dependencies import get_current_user, serialize_user
 
 router = APIRouter()
 
 AVATAR_MAX_BYTES = 2 * 1024 * 1024
+APPLIED_JOBS_CAP = 150
+SAVED_JOBS_CAP = 250
+
+
+def _merge_string_signals(existing, additions, cap: int) -> list[str]:
+    base = [str(x).strip() for x in (existing or []) if str(x).strip()]
+    seen = {x.lower() for x in base}
+    for x in additions or []:
+        s = str(x).strip()
+        if not s or len(s) > 160 or s.lower() in seen:
+            continue
+        base.append(s)
+        seen.add(s.lower())
+    return base[-cap:] if len(base) > cap else base
+
+
+def _applied_job_key(entry: dict) -> str:
+    src = str(entry.get("source") or "linkedin").strip().lower()
+    jid = str(entry.get("id") or "").strip()
+    return f"{src}::{jid}"
+
+
+def _saved_job_key(entry: dict) -> str:
+    src = str(entry.get("source") or "linkedin").strip().lower()
+    jid = str(entry.get("id") or "").strip()
+    return f"{src}::{jid}"
 
 
 def _detect_image_mime(data: bytes):
@@ -453,3 +487,208 @@ def update_demographics(payload: DemographicsUpdateRequest, authorization: str =
                 "message": "Server side error!"
             }
         )
+
+
+@router.get("/applied-jobs")
+def list_applied_jobs(authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    user = col.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    jobs = user.get("applied_jobs") if isinstance(user.get("applied_jobs"), list) else []
+    return JSONResponse(
+        status_code=200,
+        content={
+            "success": True,
+            "jobs": jobs,
+            "total_count": len(jobs),
+        },
+    )
+
+
+@router.post("/applied-jobs")
+def record_applied_job(payload: AppliedJobRecord, authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    jid = str(payload.id or "").strip()
+    if not jid:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "Job id is required."},
+        )
+
+    user = col.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    existing = [dict(x) for x in (user.get("applied_jobs") or []) if isinstance(x, dict)]
+    record = {k: v for k, v in payload.dict().items() if v is not None}
+    record["id"] = jid
+    record["source"] = str(record.get("source") or "linkedin").strip().lower()
+    record["applied_at"] = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+    nk = _applied_job_key(record)
+    filtered = [x for x in existing if _applied_job_key(x) != nk]
+    filtered.insert(0, record)
+    filtered = filtered[:APPLIED_JOBS_CAP]
+
+    col.update_one({"_id": user_id}, {"$set": {"applied_jobs": filtered}})
+    return JSONResponse(
+        status_code=200,
+        content={"success": True, "message": "Application recorded."},
+    )
+
+
+@router.get("/saved-jobs")
+def list_saved_jobs(authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    user = col.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    jobs = user.get("saved_jobs") if isinstance(user.get("saved_jobs"), list) else []
+    return JSONResponse(
+        status_code=200,
+        content={
+            "success": True,
+            "jobs": jobs,
+            "total_count": len(jobs),
+        },
+    )
+
+
+@router.post("/saved-jobs")
+def record_saved_job(payload: SavedJobRecord, authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    jid = str(payload.id or "").strip()
+    if not jid:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "Job id is required."},
+        )
+
+    user = col.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    existing = [dict(x) for x in (user.get("saved_jobs") or []) if isinstance(x, dict)]
+    record = {k: v for k, v in payload.dict().items() if v is not None}
+    record["id"] = jid
+    record["source"] = str(record.get("source") or "linkedin").strip().lower()
+    record["saved_at"] = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+    nk = _saved_job_key(record)
+    filtered = [x for x in existing if _saved_job_key(x) != nk]
+    filtered.insert(0, record)
+    filtered = filtered[:SAVED_JOBS_CAP]
+
+    col.update_one({"_id": user_id}, {"$set": {"saved_jobs": filtered}})
+    return JSONResponse(
+        status_code=200,
+        content={"success": True, "message": "Job saved."},
+    )
+
+
+@router.delete("/saved-jobs/{job_id}")
+def remove_saved_job(job_id: str, source: str = "linkedin", authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    user = col.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    target_key = f"{str(source or 'linkedin').strip().lower()}::{str(job_id or '').strip()}"
+    existing = [dict(x) for x in (user.get("saved_jobs") or []) if isinstance(x, dict)]
+    filtered = [x for x in existing if _saved_job_key(x) != target_key]
+
+    col.update_one({"_id": user_id}, {"$set": {"saved_jobs": filtered}})
+    return JSONResponse(
+        status_code=200,
+        content={"success": True, "message": "Saved job removed."},
+    )
+
+
+@router.post("/job-search-signals")
+def record_job_search_signals(payload: JobSearchSignalsRequest, authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    kw_in = [str(x).strip() for x in (payload.keywords or []) if str(x).strip()]
+    loc_in = [str(x).strip() for x in (payload.locations or []) if str(x).strip()]
+    if not kw_in and not loc_in:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "No keywords or locations provided."},
+        )
+
+    user = col.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    jp = user.get("job_preferences") if isinstance(user.get("job_preferences"), dict) else {}
+    merged_kw = _merge_string_signals(jp.get("learned_keywords"), kw_in, 36)
+    merged_loc = _merge_string_signals(jp.get("learned_locations"), loc_in, 36)
+
+    col.update_one(
+        {"_id": user_id},
+        {
+            "$set": {
+                "job_preferences.learned_keywords": merged_kw,
+                "job_preferences.learned_locations": merged_loc,
+            }
+        },
+    )
+    return JSONResponse(
+        status_code=200,
+        content={
+            "success": True,
+            "message": "Search signals saved.",
+            "learned_keywords": merged_kw,
+            "learned_locations": merged_loc,
+        },
+    )

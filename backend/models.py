@@ -76,3 +76,40 @@ class DemographicsUpdateRequest(BaseModel):
     gender: Optional[str] = None
     disability: Optional[str] = None
     race: Optional[str] = None
+
+
+class AppliedJobRecord(BaseModel):
+    id: str
+    source: str = "linkedin"
+    title: Optional[str] = None
+    company: Optional[str] = None
+    location: Optional[str] = None
+    apply_url: Optional[str] = None
+    description: Optional[str] = None
+    posted: Optional[str] = None
+    salary: Optional[str] = None
+    types: Optional[List[str]] = None
+    employment_type: Optional[str] = None
+    company_logo_url: Optional[str] = None
+    match_score: Optional[float] = None
+
+
+class SavedJobRecord(BaseModel):
+    id: str
+    source: str = "linkedin"
+    title: Optional[str] = None
+    company: Optional[str] = None
+    location: Optional[str] = None
+    apply_url: Optional[str] = None
+    description: Optional[str] = None
+    posted: Optional[str] = None
+    salary: Optional[str] = None
+    types: Optional[List[str]] = None
+    employment_type: Optional[str] = None
+    company_logo_url: Optional[str] = None
+    match_score: Optional[float] = None
+
+
+class JobSearchSignalsRequest(BaseModel):
+    keywords: Optional[List[str]] = None
+    locations: Optional[List[str]] = None

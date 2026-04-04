@@ -60,6 +60,63 @@ APIFY_TOKEN = os.getenv("APIFY_TOKEN")
 APIFY_DATASET_ID = "T8ZwQlSic6k084UlR"
 APIFY_DATASET_URL = f"https://api.apify.com/v2/datasets/{APIFY_DATASET_ID}/items"
 
+# When the client sends no location, use this for LinkedIn/ScrapingDog (Indeed is filtered separately).
+DEFAULT_LINKEDIN_JOBS_LOCATION = os.getenv("DEFAULT_LINKEDIN_JOBS_LOCATION", "United States")
+# Set DISABLE_LINKEDIN_JOBS=1 when ScrapingDog quota is exhausted (Indeed-only until quota resets).
+# Other providers (Bright Data, Oxylabs, Apify LinkedIn actors, etc.) need a separate integration + API key.
+DISABLE_LINKEDIN_JOBS = os.getenv("DISABLE_LINKEDIN_JOBS", "").strip().lower() in ("1", "true", "yes", "on")
+
+_US_ABBR_TO_NAME: Dict[str, str] = {
+    "al": "alabama", "ak": "alaska", "az": "arizona", "ar": "arkansas", "ca": "california",
+    "co": "colorado", "ct": "connecticut", "de": "delaware", "fl": "florida", "ga": "georgia",
+    "hi": "hawaii", "id": "idaho", "il": "illinois", "in": "indiana", "ia": "iowa",
+    "ks": "kansas", "ky": "kentucky", "la": "louisiana", "me": "maine", "md": "maryland",
+    "ma": "massachusetts", "mi": "michigan", "mn": "minnesota", "ms": "mississippi", "mo": "missouri",
+    "mt": "montana", "ne": "nebraska", "nv": "nevada", "nh": "new hampshire", "nj": "new jersey",
+    "nm": "new mexico", "ny": "new york", "nc": "north carolina", "nd": "north dakota", "oh": "ohio",
+    "ok": "oklahoma", "or": "oregon", "pa": "pennsylvania", "ri": "rhode island", "sc": "south carolina",
+    "sd": "south dakota", "tn": "tennessee", "tx": "texas", "ut": "utah", "vt": "vermont",
+    "va": "virginia", "wa": "washington", "wv": "west virginia", "wi": "wisconsin", "wy": "wyoming",
+    "dc": "district of columbia",
+}
+
+_CA_ABBR_TO_NAME: Dict[str, str] = {
+    "ab": "alberta", "bc": "british columbia", "mb": "manitoba", "nb": "new brunswick",
+    "nl": "newfoundland", "ns": "nova scotia", "nt": "northwest territories", "nu": "nunavut",
+    "on": "ontario", "pe": "prince edward island", "qc": "quebec", "sk": "saskatchewan", "yt": "yukon",
+}
+
+
+def _geo_synonyms(token: str) -> set[str]:
+    t = str(token or "").strip().lower()
+    out: set[str] = set()
+    if not t:
+        return out
+    out.add(t)
+    if t in _US_ABBR_TO_NAME:
+        out.add(_US_ABBR_TO_NAME[t])
+    for abbr, name in _US_ABBR_TO_NAME.items():
+        if name == t:
+            out.add(abbr)
+            break
+    if t in _CA_ABBR_TO_NAME:
+        out.add(_CA_ABBR_TO_NAME[t])
+    for abbr, name in _CA_ABBR_TO_NAME.items():
+        if name == t:
+            out.add(abbr)
+            break
+    return out
+
+
+def _resolve_scrape_location(primary: str, fallbacks: List[str]) -> str:
+    p = str(primary or "").strip()
+    if p:
+        return p
+    for x in fallbacks:
+        if str(x).strip():
+            return str(x).strip()
+    return DEFAULT_LINKEDIN_JOBS_LOCATION
+
 
 def _safe_float(value: Any, default: float = 82.0) -> float:
     try:
@@ -83,9 +140,42 @@ def _clean_text(value: Any) -> str:
     text = str(value or "").strip()
     if not text:
         return ""
-    text = re.sub(r"\*+", "", text)
-    text = re.sub(r"\s+", " ", text)
-    return text.strip("-:| ")
+    # Normalize common scraper noise (bullets, markdown-ish markers)
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"\*+", " ", text)
+    text = re.sub(r"\\+/", "/", text)
+    text = re.sub(r"(?<![:/])\s*/\s*(?![:/])", " ", text)
+    text = re.sub(r"[•·▪▸►◆◇■□]+\s*", "\n", text)
+    text = re.sub(r"[\t\f\v]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"[ \t]{2,}", " ", text)
+    text = re.sub(r"\n ", "\n", text)
+    return text.strip("-:| ").strip()
+
+
+def _strip_title_noise(title: str) -> str:
+    if not title:
+        return ""
+    t = str(title).strip()
+    t = re.sub(
+        r"\s*[-–—,:]\s*(?:co-?op|internship).*(?:term|placement|duration).*$",
+        "",
+        t,
+        flags=re.I,
+    )
+    t = re.sub(
+        r"\s*[-–—]\s*(?:term|duration|placement|contract)\s+.*$",
+        "",
+        t,
+        flags=re.I,
+    )
+    t = re.sub(r"\s*\(\s*\d+\s*[-–]\s*\d+\s*(?:month|week|day)s?\s*(?:term|contract)?\s*\)\s*$", "", t, flags=re.I)
+    t = re.sub(r"\s*\(\s*\d+\s*(?:month|week|day|year)s?\s*(?:term|contract|internship)?\s*\)\s*$", "", t, flags=re.I)
+    t = re.sub(r",\s*\d+\s*(?:month|week)s?\s*(?:term|internship|placement)\s*$", "", t, flags=re.I)
+    t = re.sub(r"\s{2,}", " ", t).strip(" -–—:|")
+    if len(t) > 90:
+        t = " ".join(t.split()[:12])
+    return t
 
 
 def _extract_title_from_description(description: str) -> str:
@@ -100,7 +190,7 @@ def _extract_title_from_description(description: str) -> str:
         flags=re.I | re.S,
     )
     if label_match:
-        inline_title = _sanitize_job_title(label_match.group("title"))
+        inline_title = _strip_title_noise(_sanitize_job_title(label_match.group("title")))
         if inline_title and len(inline_title.split()) <= 12:
             return inline_title
 
@@ -110,7 +200,7 @@ def _extract_title_from_description(description: str) -> str:
         flags=re.I,
     )
     if role_phrase_match:
-        role_phrase = _sanitize_job_title(role_phrase_match.group(1))
+        role_phrase = _strip_title_noise(_sanitize_job_title(role_phrase_match.group(1)))
         if role_phrase:
             return role_phrase
 
@@ -142,7 +232,7 @@ def _extract_title_from_description(description: str) -> str:
 
         # Prefer lines that look like actual roles.
         if re.search(r"\b(engineer|developer|analyst|manager|intern|co-op|specialist|designer|consultant)\b", lower):
-            return line
+            return _strip_title_noise(line)
 
     return ""
 
@@ -194,12 +284,12 @@ def _sanitize_job_title(value: Any) -> str:
             continue
 
         if len(candidate.split()) <= 12:
-            return candidate
+            return _strip_title_noise(candidate)
 
     fallback = fragments[0]
     if len(fallback) > 90:
         fallback = " ".join(fallback.split()[:12])
-    return fallback
+    return _strip_title_noise(fallback)
 
 
 def _extract_total_from_payload(payload: Any) -> int | None:
@@ -313,6 +403,16 @@ def _extract_job_datetime(job: Dict[str, Any], keys: List[str]) -> datetime | No
     return None
 
 
+def _posted_sort_timestamp(job: Dict[str, Any]) -> float | None:
+    dt = _extract_job_datetime(
+        job,
+        ["posted", "postedAt", "posted_at", "job_posting_date", "job_posting_time", "date"],
+    )
+    if dt:
+        return dt.timestamp()
+    return None
+
+
 def _job_is_recent_enough(job: Dict[str, Any], max_age_days: int = 21) -> bool:
     posted_at = _extract_job_datetime(
         job,
@@ -406,6 +506,23 @@ def _tokenize(text: str) -> List[str]:
     return [token for token in re.split(r"[^a-z0-9]+", text.lower()) if len(token) > 1]
 
 
+def _location_term_matches_job(job_loc_lower: str, term: str) -> bool:
+    t = str(term or "").strip().lower()
+    if not t:
+        return False
+    if t in job_loc_lower:
+        return True
+    for syn in _geo_synonyms(t):
+        if syn and syn in job_loc_lower:
+            return True
+    pref_tokens = set(_tokenize(t))
+    loc_tokens = set(_tokenize(job_loc_lower))
+    if not pref_tokens or not loc_tokens:
+        return False
+    overlap = len(pref_tokens & loc_tokens)
+    return overlap >= max(1, int(0.45 * len(pref_tokens)))
+
+
 def _role_match_score(job: Dict[str, Any], preferred_positions: List[str]) -> float:
     if not preferred_positions:
         return 100.0
@@ -441,7 +558,12 @@ def _location_match_score(job: Dict[str, Any], preferred_locations: List[str]) -
         return 100.0
 
     job_location = str(job.get("location") or "").lower()
-    if not job_location:
+    hay = " ".join([
+        job_location,
+        str(job.get("title") or "").lower(),
+        str(job.get("description") or "")[:800].lower(),
+    ])
+    if not hay.strip():
         return 0.0
 
     best = 0.0
@@ -449,7 +571,7 @@ def _location_match_score(job: Dict[str, Any], preferred_locations: List[str]) -
         pref_clean = str(pref or "").strip().lower()
         if not pref_clean:
             continue
-        if pref_clean in job_location:
+        if _location_term_matches_job(job_location, pref_clean):
             best = max(best, 100.0)
             continue
 
@@ -461,23 +583,80 @@ def _location_match_score(job: Dict[str, Any], preferred_locations: List[str]) -
         token_score = (overlap / len(pref_tokens)) * 100.0
         best = max(best, token_score)
 
+        for syn in _geo_synonyms(pref_clean):
+            if syn and syn in hay:
+                best = max(best, 88.0)
+                break
+
+    if best < 58.0 and any(
+        r in hay for r in ("remote", "work from home", "wfh", "anywhere in", "worldwide", "hybrid")
+    ):
+        best = max(best, 58.0)
+
     return best
 
 
-def _calculate_fit_score(job: Dict[str, Any], preferred_positions: List[str], preferred_locations: List[str]) -> float:
-    role_score = _role_match_score(job, preferred_positions)
-    location_score = _location_match_score(job, preferred_locations)
+def _job_type_match_score(job: Dict[str, Any], selected_job_types: List[str]) -> float:
+    if not selected_job_types:
+        return 100.0
+    return 100.0 if _job_matches_job_types(job, selected_job_types) else 28.0
 
-    if preferred_positions and preferred_locations:
-        score = max(role_score, location_score)
-    elif preferred_positions:
-        score = role_score
-    elif preferred_locations:
-        score = location_score
+
+def _annotate_job_fit(
+    job: Dict[str, Any],
+    preferred_positions: List[str],
+    preferred_locations: List[str],
+    selected_job_types: List[str],
+    fit_mode: str,
+) -> Dict[str, Any]:
+    role = round(max(0.0, min(100.0, _role_match_score(job, preferred_positions))), 1)
+    loc = round(max(0.0, min(100.0, _location_match_score(job, preferred_locations))), 1)
+    jt = round(max(0.0, min(100.0, _job_type_match_score(job, selected_job_types))), 1)
+
+    has_pos = bool(preferred_positions)
+    has_loc = bool(preferred_locations)
+    mode = (fit_mode or "broad").strip().lower()
+    if mode not in ("strict", "broad"):
+        mode = "broad"
+
+    if has_pos and has_loc:
+        if mode == "strict":
+            composite = round(min(100.0, 0.38 * role + 0.38 * loc + 0.14 * jt + 0.1 * min(role, loc)), 1)
+        else:
+            composite = round(min(100.0, 0.52 * max(role, loc) + 0.28 * min(role, loc) + 0.2 * jt), 1)
+        # Recommended: strong dual match OR clear primary + acceptable secondary
+        strict_gate = (
+            (role >= 38.0 and loc >= 38.0)
+            or (role >= 58.0 and loc >= 22.0)
+            or (role >= 22.0 and loc >= 58.0)
+        )
+        broad_key = max(role, loc)
+    elif has_pos:
+        composite = round(min(100.0, 0.82 * role + 0.18 * jt), 1)
+        strict_gate = role >= 36.0
+        broad_key = role
+    elif has_loc:
+        composite = round(min(100.0, 0.82 * loc + 0.18 * jt), 1)
+        strict_gate = loc >= 36.0
+        broad_key = loc
     else:
-        score = _safe_float(job.get("match_score"), 80.0)
+        desc_n = len(str(job.get("description") or ""))
+        title_n = len(str(job.get("title") or ""))
+        base = 34.0 + min(38.0, desc_n / 100.0) + min(18.0, title_n / 6.0)
+        provider = _safe_float(job.get("match_score"), 50.0)
+        composite = round(max(18.0, min(96.0, 0.55 * base + 0.45 * min(provider, 95.0))), 1)
+        strict_gate = True
+        broad_key = composite
 
-    return round(max(0.0, min(100.0, score)), 1)
+    enriched = {
+        **job,
+        "role_fit": role,
+        "location_fit": loc,
+        "type_fit": jt,
+        "fit_score": composite,
+        "match_score": composite,
+    }
+    return enriched, strict_gate, broad_key
 
 
 def _scrapedog_get(params: Dict[str, Any]) -> Any:
@@ -602,8 +781,9 @@ def _fetch_linkedin_jobs(
 
     payload = _scrapedog_get(params)
     list_items = _as_list(payload)
-    filtered_items = _filter_jobs(list_items, keywords, location, job_types)
-    total_count = len(filtered_items)
+    reported_total = _extract_total_from_payload(payload)
+    filtered_items = _filter_jobs(list_items, keywords, location, job_types, None)
+    total_count = reported_total if reported_total is not None else len(filtered_items)
     start = (page - 1) * limit
     end = start + limit
     page_items = filtered_items[start:end]
@@ -656,8 +836,9 @@ def _apply_filters_and_paginate(
     location: str,
     page: int,
     limit: int,
+    or_location_terms: List[str] | None = None,
 ) -> List[Dict[str, Any]]:
-    filtered = _filter_jobs(jobs, keywords, location)
+    filtered = _filter_jobs(jobs, keywords, location, None, or_location_terms)
     start = (page - 1) * limit
     end = start + limit
     return filtered[start:end]
@@ -668,10 +849,18 @@ def _filter_jobs(
     keywords: List[str],
     location: str,
     job_types: List[str] | None = None,
+    or_location_terms: List[str] | None = None,
 ) -> List[Dict[str, Any]]:
     selected_job_types = [str(value).strip() for value in (job_types or []) if str(value).strip()]
     keyword_tokens = [token.lower() for token in keywords if token.strip()]
-    location_token = location.strip().lower()
+
+    loc_terms: List[str] = []
+    if str(location or "").strip():
+        loc_terms.append(str(location).strip())
+    elif or_location_terms:
+        for x in or_location_terms:
+            if str(x).strip():
+                loc_terms.append(str(x).strip())
 
     filtered = jobs
 
@@ -687,16 +876,17 @@ def _filter_jobs(
                 str(job.get("company") or ""),
                 str(job.get("description") or ""),
             ]).lower()
-            return all(token in haystack for token in keyword_tokens)
+            # OR across terms — matches typical job-board search behavior
+            return any(token in haystack for token in keyword_tokens)
 
         filtered = [job for job in filtered if has_keywords(job)]
 
-    if location_token:
-        location_filtered = [
-            job for job in filtered
-            if location_token in str(job.get("location") or "").lower()
-        ]
-        # If a strict location filter wipes out the source, keep keyword-matched results.
+    if loc_terms:
+        def matches_any_region(job: Dict[str, Any]) -> bool:
+            jl = str(job.get("location") or "").lower()
+            return any(_location_term_matches_job(jl, term) for term in loc_terms)
+
+        location_filtered = [job for job in filtered if matches_any_region(job)]
         if location_filtered:
             filtered = location_filtered
 
@@ -727,10 +917,27 @@ def _to_int(value: Any, fallback: int) -> int:
         return fallback
 
 
+def _unique_cap(items: List[str], cap: int = 18) -> List[str]:
+    out: List[str] = []
+    seen: set[str] = set()
+    for raw in items:
+        x = str(raw or "").strip()
+        if not x:
+            continue
+        key = x.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(x)
+        if len(out) >= cap:
+            break
+    return out
+
+
 @app.get("/api/jobs")
 async def get_jobs(
     keywords: List[str] = Query(default=[]),
-    location: str = Query(default="Calgary"),
+    location: str = Query(default=""),
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=50),
     sources: List[str] = Query(default=["linkedin", "indeed"]),
@@ -739,14 +946,22 @@ async def get_jobs(
     preferred_positions: List[str] = Query(default=[]),
     preferred_locations: List[str] = Query(default=[]),
     min_fit_score: float = Query(default=0.0, ge=0.0, le=100.0),
+    fit_mode: str = Query(default="broad"),
+    sort_by: str = Query(default="match"),
     authorization: str = Header(default=None),
 ):
     selected_sources = [source.strip().lower() for source in sources if source.strip()]
     if not selected_sources:
         selected_sources = ["linkedin", "indeed"]
 
+    mode_norm = (fit_mode or "broad").strip().lower()
+    if mode_norm not in ("strict", "broad"):
+        mode_norm = "broad"
+
     profile_positions: List[str] = []
     profile_locations: List[str] = []
+    learned_pos: List[str] = []
+    learned_loc: List[str] = []
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ", 1)[1]
         try:
@@ -760,45 +975,74 @@ async def get_jobs(
                     profile_positions = [str(v).strip() for v in raw_positions if str(v).strip()]
                 if isinstance(raw_locations, list):
                     profile_locations = [str(v).strip() for v in raw_locations if str(v).strip()]
+                lk = job_preferences.get("learned_keywords")
+                ll = job_preferences.get("learned_locations")
+                if isinstance(lk, list):
+                    learned_pos = [str(v).strip() for v in lk if str(v).strip()][:24]
+                if isinstance(ll, list):
+                    learned_loc = [str(v).strip() for v in ll if str(v).strip()][:24]
         except Exception:
-            # Recommendation filtering should not fail if auth/profile lookup fails.
             profile_positions = []
             profile_locations = []
+            learned_pos = []
+            learned_loc = []
 
-    effective_positions = [str(v).strip() for v in preferred_positions if str(v).strip()] or profile_positions
-    effective_locations = [str(v).strip() for v in preferred_locations if str(v).strip()] or profile_locations
+    req_positions = [str(v).strip() for v in preferred_positions if str(v).strip()]
+    req_locations = [str(v).strip() for v in preferred_locations if str(v).strip()]
+    base_pos = req_positions if req_positions else profile_positions
+    base_loc = req_locations if req_locations else profile_locations
+    effective_positions = _unique_cap(base_pos + learned_pos)
+    effective_locations = _unique_cap(base_loc + learned_loc)
     effective_job_types = [str(v).strip() for v in job_types if str(v).strip()]
+
+    primary_loc = str(location or "").strip()
+    scrape_loc = _resolve_scrape_location(primary_loc, effective_locations)
+    indeed_or_locations = effective_locations if not primary_loc else None
+
+    sort_key = (sort_by or "match").strip().lower()
+    if sort_key not in ("match", "posted_newest", "posted_oldest"):
+        sort_key = "match"
 
     source_job_lists: List[List[Dict[str, Any]]] = []
     source_errors: Dict[str, str] = {}
-    total_count = 0
+    linkedin_meta_total: int | None = None
 
     if "linkedin" in selected_sources:
-        try:
-            linkedin_jobs, linkedin_total_count = _fetch_linkedin_jobs(keywords, location, page, limit, include_details, effective_job_types)
-            source_job_lists.append(linkedin_jobs)
-            total_count += linkedin_total_count if linkedin_total_count is not None else len(linkedin_jobs)
-        except HTTPException as exc:
-            source_errors["linkedin"] = str(exc.detail)
+        if DISABLE_LINKEDIN_JOBS:
+            source_errors["linkedin"] = "LinkedIn jobs disabled (DISABLE_LINKEDIN_JOBS). Using Indeed only."
+        elif not SCRAPEDOG_JOBS_KEY:
+            source_errors["linkedin"] = "SCRAPEDOG_JOBS not configured."
+        else:
+            try:
+                linkedin_jobs, linkedin_total_count = _fetch_linkedin_jobs(
+                    keywords, scrape_loc, page, limit, include_details, effective_job_types
+                )
+                source_job_lists.append(linkedin_jobs)
+                linkedin_meta_total = linkedin_total_count
+            except HTTPException as exc:
+                source_errors["linkedin"] = str(exc.detail)
 
+    indeed_filtered: List[Dict[str, Any]] = []
     if "indeed" in selected_sources:
         try:
             indeed_jobs = _fetch_indeed_jobs()
-            indeed_filtered = _filter_jobs(indeed_jobs, keywords, location, effective_job_types)
-            total_count += len(indeed_filtered)
-
-            start = (page - 1) * limit
-            end = start + limit
-            source_job_lists.append(indeed_filtered[start:end])
+            indeed_filtered = _filter_jobs(
+                indeed_jobs,
+                keywords,
+                primary_loc,
+                effective_job_types,
+                indeed_or_locations,
+            )
+            source_job_lists.append(indeed_filtered)
         except HTTPException as exc:
             source_errors["indeed"] = str(exc.detail)
 
     if not source_job_lists and source_errors:
         raise HTTPException(status_code=502, detail=source_errors)
 
-    all_jobs = _interleave(source_job_lists, limit * max(1, len(source_job_lists)))
+    merge_cap = sum(len(lst) for lst in source_job_lists)
+    all_jobs = _interleave(source_job_lists, max(merge_cap, 1))
 
-    # Keep order stable and avoid duplicates across providers.
     deduped: List[Dict[str, Any]] = []
     seen = set()
     for job in all_jobs:
@@ -806,13 +1050,36 @@ async def get_jobs(
         if dedupe_key in seen:
             continue
         seen.add(dedupe_key)
-        fit_score = _calculate_fit_score(job, effective_positions, effective_locations)
-        job_with_fit = {**job, "fit_score": fit_score}
-        deduped.append(job_with_fit)
+        enriched, strict_gate, broad_key = _annotate_job_fit(
+            job, effective_positions, effective_locations, effective_job_types, mode_norm
+        )
+        enriched["_strict_gate"] = strict_gate
+        enriched["_broad_key"] = broad_key
+        deduped.append(enriched)
 
-    if effective_positions or effective_locations or min_fit_score > 0:
+    if mode_norm == "strict" and (effective_positions or effective_locations):
+        deduped = [j for j in deduped if j.get("_strict_gate", True)]
+
+    if sort_key == "posted_newest":
         deduped.sort(
             key=lambda job: (
+                -(_posted_sort_timestamp(job) or 0.0),
+                -_safe_float(job.get("fit_score"), 0.0),
+                str(job.get("title") or ""),
+            )
+        )
+    elif sort_key == "posted_oldest":
+        deduped.sort(
+            key=lambda job: (
+                (_posted_sort_timestamp(job) if _posted_sort_timestamp(job) is not None else float("inf")),
+                -_safe_float(job.get("fit_score"), 0.0),
+                str(job.get("title") or ""),
+            )
+        )
+    else:
+        deduped.sort(
+            key=lambda job: (
+                -_safe_float(job.get("_broad_key"), _safe_float(job.get("fit_score"), 0.0)),
                 -_safe_float(job.get("fit_score"), 0.0),
                 str(job.get("posted") or ""),
                 str(job.get("title") or ""),
@@ -822,8 +1089,14 @@ async def get_jobs(
     if min_fit_score > 0:
         deduped = [job for job in deduped if _safe_float(job.get("fit_score"), 0.0) >= min_fit_score]
 
+    for job in deduped:
+        job.pop("_strict_gate", None)
+        job.pop("_broad_key", None)
+
     filtered_total_count = len(deduped)
-    page_jobs = deduped[:limit]
+    start = (page - 1) * limit
+    end = start + limit
+    page_jobs = deduped[start:end]
 
     return {
         "jobs": page_jobs,
@@ -838,6 +1111,11 @@ async def get_jobs(
         "preferred_locations": effective_locations,
         "job_types": effective_job_types,
         "min_fit_score": min_fit_score,
+        "fit_mode": mode_norm,
+        "sort_by": sort_key,
+        "linkedin_reported_total": linkedin_meta_total,
+        "indeed_pool_count": len(indeed_filtered),
+        "scrape_location_used": scrape_loc,
     }
 
 
