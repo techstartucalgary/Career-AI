@@ -266,17 +266,8 @@ export default function AuthenticationPage() {
           if (!notification) return;
 
           const isDisplayed = typeof notification.isDisplayed === 'function' && notification.isDisplayed();
-          const isNotDisplayed = typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed();
-          const isSkipped = typeof notification.isSkippedMoment === 'function' && notification.isSkippedMoment();
 
-          if (isDisplayed) {
-            setShowGoogleFallbackButton(false);
-            return;
-          }
-
-          if (isNotDisplayed || isSkipped) {
-            setShowGoogleFallbackButton(true);
-          }
+          setShowGoogleFallbackButton(true);
         });
       } catch {
         oneTapPromptedForClientId.current = '';
