@@ -40,6 +40,25 @@ router = APIRouter(prefix="/api", tags=["AI Services"])
 ai_service = ResumeTailoringService(enable_semantic_matching=False)
 
 
+def _extract_keywords_fast(resume, job_description: str, limit: int = 7) -> list[str]:
+    """
+    Extract highlight keywords from already-parsed resume data.
+    No LLM call needed — skills are already structured in the resume object.
+    """
+    candidates = []
+    if resume.skills:
+        candidates += (resume.skills.languages or [])[:3]
+        candidates += (resume.skills.frameworks or [])[:3]
+        candidates += (resume.skills.tools or [])[:2]
+    # If job description available, surface any candidate that appears in the JD
+    if job_description and candidates:
+        jd_lower = job_description.lower()
+        in_jd = [k for k in candidates if k.lower() in jd_lower]
+        not_in_jd = [k for k in candidates if k.lower() not in jd_lower]
+        candidates = in_jd + not_in_jd
+    return candidates[:limit]
+
+
 @router.post("/resume/analyze")
 async def analyze_resume(
     resume_file: UploadFile = File(...),
@@ -194,17 +213,7 @@ async def generate_resume_from_template(
         with open(output_path, "rb") as f:
             pdf_b64 = base64.b64encode(f.read()).decode("utf-8")
 
-        try:
-            input_path.unlink()
-            output_path.unlink()
-        except Exception:
-            pass
-
-        keywords = ai_service.extract_highlight_keywords(
-            job_description="",
-            resume_text=resume.to_text(),
-            limit=7
-        )
+        keywords = _extract_keywords_fast(resume, "", limit=7)
 
         return {
             "success": True,
@@ -291,12 +300,7 @@ async def tailor_resume(
             total_time = time.time() - start_time
             print(f"⏱️  API /resume/tailor completed in {total_time:.1f}s")
 
-            # Final result
-            keywords = ai_service.extract_highlight_keywords(
-                job_description=job_description,
-                resume_text=tailored_resume.to_text(),
-                limit=7
-            )
+            keywords = _extract_keywords_fast(tailored_resume, job_description, limit=7)
 
             result = {
                 "success": True,
