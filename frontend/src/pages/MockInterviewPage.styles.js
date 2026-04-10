@@ -261,25 +261,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
     alignSelf: 'center',
     minWidth: 250,
     ...Platform.select({
       web: {
         transition: 'all 0.3s ease',
         cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(167, 139, 250, 0.4)',
+      },
+      default: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 8,
       },
     }),
   },
   startButtonHover: {
     transform: [{ translateY: -2 }],
     backgroundColor: COLORS.primaryDark,
-    shadowOpacity: 0.6,
-    shadowRadius: 16,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 6px 16px rgba(167, 139, 250, 0.6)',
+      },
+      default: {
+        shadowOpacity: 0.6,
+        shadowRadius: 16,
+      },
+    }),
   },
   startButtonText: {
     color: COLORS.white,
@@ -319,11 +329,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderLight,
     marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 8,
+      },
+    }),
   },
   questionIcon: {
     width: 48,
@@ -412,15 +429,18 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 6,
     ...Platform.select({
       web: {
         transition: 'all 0.3s ease',
         cursor: 'pointer',
+        boxShadow: '0 3px 10px rgba(167, 139, 250, 0.4)',
+      },
+      default: {
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        elevation: 6,
       },
     }),
   },
@@ -436,8 +456,15 @@ const styles = StyleSheet.create({
   primaryButtonHover: {
     transform: [{ translateY: -2 }],
     backgroundColor: COLORS.primaryDark,
-    shadowOpacity: 0.6,
-    shadowRadius: 14,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 5px 14px rgba(167, 139, 250, 0.6)',
+      },
+      default: {
+        shadowOpacity: 0.6,
+        shadowRadius: 14,
+      },
+    }),
   },
   primaryButtonText: {
     color: COLORS.white,

@@ -280,6 +280,8 @@ export default function AuthenticationPage() {
     }
 
     try {
+      googleAccounts.prompt();
+
       const buttonHost = googleButtonHostRef.current;
       const renderedButton = buttonHost
         ? buttonHost.querySelector('button, div[role="button"], iframe')
@@ -287,10 +289,7 @@ export default function AuthenticationPage() {
 
       if (renderedButton && typeof renderedButton.click === 'function') {
         renderedButton.click();
-        return;
       }
-
-      googleAccounts.prompt();
     } catch {
       setErrors({ general: 'Unable to open Google sign-in prompt.' });
     }

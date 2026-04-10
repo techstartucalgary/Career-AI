@@ -58,9 +58,16 @@ const styles = StyleSheet.create({
       web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       default: 'sans-serif',
     }),
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 15,
+    ...Platform.select({
+      web: {
+        textShadow: '0 2px 15px rgba(0, 0, 0, 0.15)',
+      },
+      default: {
+        textShadowColor: 'rgba(0, 0, 0, 0.15)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 15,
+      },
+    }),
   },
   subtitle: {
     fontSize: isDesktop ? 18 : 16,
