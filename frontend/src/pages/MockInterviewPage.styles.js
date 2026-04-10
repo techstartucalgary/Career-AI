@@ -469,6 +469,357 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+
+  // Loading (shared)
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+
+  // ── Quick Feedback (per-question, compact) ──────────────────────
+  qfCard: {
+    marginBottom: 24,
+    gap: 16,
+  },
+  qfGradient: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(167,139,250,0.15)',
+    overflow: 'hidden',
+    ...Platform.select({
+      web: {
+        backdropFilter: 'blur(24px)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+      },
+      default: {
+        backgroundColor: COLORS.surface,
+      },
+    }),
+  },
+  qfInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    gap: 18,
+  },
+  qfScoreWrap: {
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 0,
+  },
+  qfScore: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -1,
+  },
+  qfScoreBar: {
+    width: 28,
+    height: 3,
+    borderRadius: 2,
+  },
+  qfContent: {
+    flex: 1,
+    gap: 6,
+  },
+  qfText: {
+    fontSize: 15,
+    color: COLORS.textPrimary,
+    lineHeight: 22,
+  },
+  qfTipWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  qfTipDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: COLORS.primary,
+  },
+  qfTip: {
+    fontSize: 13,
+    color: COLORS.primary,
+    lineHeight: 18,
+    fontWeight: '500',
+  },
+
+  // ── Results / Full Review ───────────────────────────────────────
+  rvContainer: {
+    gap: 24,
+  },
+
+  // Loading card
+  rvLoadingCard: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  rvLoadingGradient: {
+    alignItems: 'center',
+    paddingVertical: 64,
+    gap: 16,
+  },
+  rvLoadingTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.white,
+    letterSpacing: -0.5,
+  },
+  rvLoadingSubtitle: {
+    fontSize: 14,
+    color: COLORS.textMuted,
+  },
+
+  // Hero score area
+  rvHero: {
+    alignItems: 'center',
+    gap: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  rvEyebrow: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.primary,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  rvScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 12,
+  },
+  rvBigScore: {
+    fontSize: isDesktop ? 72 : 56,
+    fontWeight: '800',
+    letterSpacing: -3,
+    lineHeight: isDesktop ? 72 : 56,
+  },
+  rvScoreMeta: {
+    paddingBottom: isDesktop ? 10 : 6,
+    gap: 2,
+  },
+  rvScoreWord: {
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  rvScoreOutOf: {
+    fontSize: 13,
+    color: COLORS.textMuted,
+  },
+  rvSummary: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    lineHeight: 24,
+    textAlign: 'center',
+    maxWidth: 520,
+    marginTop: 4,
+  },
+
+  // Section divider
+  rvDivider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginVertical: 4,
+  },
+  rvSectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.primary,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+
+  // Question card
+  rvCard: {
+    borderRadius: 20,
+    padding: isDesktop ? 28 : 22,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+    gap: 14,
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+        transition: 'all 0.3s ease',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 6,
+      },
+    }),
+  },
+  rvCardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+  },
+  rvCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  rvCardNum: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: 'rgba(167,139,250,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rvCardNumText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
+  rvCardScorePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 100,
+    gap: 6,
+  },
+  rvCardScoreDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  rvCardScoreVal: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  rvCardSkipPill: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  rvCardSkipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.textMuted,
+  },
+  rvCardQuestion: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    lineHeight: 24,
+  },
+
+  // Your answer (left-bar quote style)
+  rvYourAnswer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  rvYourAnswerBar: {
+    width: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    flexShrink: 0,
+  },
+  rvYourAnswerText: {
+    flex: 1,
+    fontSize: 13,
+    color: COLORS.textMuted,
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
+
+  // Detailed feedback
+  rvDetailedText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    lineHeight: 22,
+  },
+
+  // Strengths / Improvements columns
+  rvColumns: {
+    flexDirection: isDesktop ? 'row' : 'column',
+    gap: isDesktop ? 24 : 14,
+  },
+  rvCol: {
+    flex: 1,
+    gap: 8,
+  },
+  rvColLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  rvBulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  rvBulletDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginTop: 6,
+    flexShrink: 0,
+  },
+  rvBulletText: {
+    flex: 1,
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    lineHeight: 19,
+  },
+
+  // Sample answer
+  rvSample: {
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(167,139,250,0.15)',
+    gap: 6,
+    ...Platform.select({
+      web: {
+        backgroundImage: 'linear-gradient(135deg, rgba(167,139,250,0.06) 0%, rgba(99,102,241,0.04) 100%)',
+        backdropFilter: 'blur(12px)',
+      },
+      default: {
+        backgroundColor: 'rgba(167,139,250,0.06)',
+      },
+    }),
+  },
+  rvSampleLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  rvSampleText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
+  },
+
+  rvActions: {
+    marginTop: 12,
+    paddingBottom: 8,
+    alignItems: 'center',
+  },
 });
 
 export default styles;

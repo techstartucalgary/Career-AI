@@ -67,3 +67,18 @@ export const getLiveFeedback = async (sessionId, question, answer) => {
     answer: answer,
   });
 };
+
+export const getQuickFeedback = async (question, answer, category = 'General') => {
+  return jsonFetch('/interview/quick-feedback', {
+    question,
+    answer,
+    category,
+  });
+};
+
+export const getFullReview = async (category, responses) => {
+  return jsonFetch('/interview/full-review', {
+    category,
+    responses,
+  });
+};
