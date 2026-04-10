@@ -1097,14 +1097,14 @@ const styles = StyleSheet.create({
   },
   accountActionButton: {
     flex: 1,
-    minHeight: 92,
+    minHeight: 72,
     borderRadius: 16,
     borderWidth: 1.5,
-    paddingVertical: 16,
+    paddingVertical: 10,
     paddingHorizontal: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
     ...Platform.select({
       web: {
         cursor: 'pointer',

@@ -7,7 +7,7 @@ import Header from '../components/Header';
 import styles from './ProfilePage.styles';
 import { THEME } from '../styles/theme';
 import { API_BASE_URL, apiFetch, apiUrl, clearAuthToken, getAuthToken, getUserProfile, clearUserProfileCache } from '../services/api';
-import { disconnectGithub, getGithubStatus } from '../services/githubService';
+import { disconnectGithub, getGithubStatus, openGithubConnect } from '../services/githubService';
 import { Redirect } from 'expo-router';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 import { JOB_LOCATION_OPTIONS, JOB_ROLE_OPTIONS, getOptionSuggestions } from '../data/jobPreferencesOptions';
@@ -505,6 +505,45 @@ export default function ProfilePage() {
     void loadGithubStatus();
   }, [loadGithubStatus]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handleGithubConnected = (payload) => {
+      const username = payload?.username || '';
+      if (username) {
+        setGithubConnected(true);
+        setGithubUsername(username);
+      }
+      void loadGithubStatus();
+      setSaveError('');
+      setSaveSuccess(username ? `GitHub connected as @${username}.` : 'GitHub connected.');
+    };
+
+    const messageListener = (event) => {
+      if (event.data?.type === 'github-connected') {
+        handleGithubConnected(event.data);
+      }
+    };
+
+    const storageListener = (event) => {
+      if (event.key && event.key.includes('github-connected')) {
+        void loadGithubStatus();
+      }
+    };
+
+    window.addEventListener('github-connected', handleGithubConnected);
+    window.addEventListener('message', messageListener);
+    window.addEventListener('storage', storageListener);
+
+    return () => {
+      window.removeEventListener('github-connected', handleGithubConnected);
+      window.removeEventListener('message', messageListener);
+      window.removeEventListener('storage', storageListener);
+    };
+  }, [loadGithubStatus]);
+
   const onSectionLayout = useCallback((id) => (e) => {
     sectionYs.current[id] = e.nativeEvent.layout.y;
   }, []);
@@ -886,6 +925,24 @@ export default function ProfilePage() {
     );
   }, [deletingProfile, disconnectingGithub, githubConnected, githubUsername, loadingGithubStatus, openConfirmation]);
 
+  const handleConnectGithub = useCallback(() => {
+    if (disconnectingGithub || deletingProfile || loadingGithubStatus || githubConnected) {
+      return;
+    }
+
+    setSaveError('');
+    openGithubConnect();
+    setSaveSuccess('GitHub connect window opened. Complete sign-in to finish linking.');
+  }, [deletingProfile, disconnectingGithub, githubConnected, loadingGithubStatus]);
+
+  const handleGithubAccountAction = useCallback(() => {
+    if (githubConnected) {
+      handleDisconnectGithub();
+      return;
+    }
+    handleConnectGithub();
+  }, [githubConnected, handleConnectGithub, handleDisconnectGithub]);
+
   const handleDeleteProfile = useCallback(() => {
     if (deletingProfile) {
       return;
@@ -1024,26 +1081,24 @@ export default function ProfilePage() {
     <View style={styles.card}>
       <Text style={styles.cardTitle}>Account actions</Text>
       <Text style={styles.accountActionsDescription}>
-        Disconnect GitHub or delete your account. Deleted accounts stay recoverable for 7 days.
+        Manage GitHub and account deletion.
       </Text>
 
       <View style={styles.accountActionsRow}>
         <Pressable
-          disabled={loadingGithubStatus || disconnectingGithub || deletingProfile || !githubConnected}
+          disabled={loadingGithubStatus || disconnectingGithub || deletingProfile}
           style={({ pressed }) => [
             styles.accountActionButton,
             styles.accountActionButtonSecondary,
             pressed && styles.accountActionButtonPressed,
-            (loadingGithubStatus || disconnectingGithub || deletingProfile || !githubConnected) && styles.accountActionButtonDisabled,
+            (loadingGithubStatus || disconnectingGithub || deletingProfile) && styles.accountActionButtonDisabled,
           ]}
-          onPress={handleDisconnectGithub}
+          onPress={handleGithubAccountAction}
         >
           <Text style={styles.accountActionButtonText}>
-            {disconnectingGithub ? 'Disconnecting...' : loadingGithubStatus ? 'Checking GitHub...' : githubConnected ? 'Disconnect GitHub' : 'GitHub not connected'}
+            {disconnectingGithub ? 'Disconnecting...' : loadingGithubStatus ? 'Checking GitHub...' : githubConnected ? 'Disconnect GitHub' : 'Connect GitHub'}
           </Text>
-          {githubConnected && githubUsername ? (
-            <Text style={styles.accountActionButtonSubtext}>@{githubUsername}</Text>
-          ) : null}
+          {githubConnected && githubUsername ? <Text style={styles.accountActionButtonSubtext}>@{githubUsername}</Text> : null}
         </Pressable>
 
         <Pressable
@@ -1060,7 +1115,7 @@ export default function ProfilePage() {
             {deletingProfile ? 'Deleting profile...' : 'Delete profile'}
           </Text>
           <Text style={[styles.accountActionButtonSubtext, styles.accountActionButtonSubtextDanger]}>
-            Moves your data to recovery storage for 7 days
+            Recoverable for 7 days
           </Text>
         </Pressable>
       </View>
