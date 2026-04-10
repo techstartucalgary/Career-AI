@@ -8,12 +8,21 @@ const authHeaders = () => {
 /** Check if current user has GitHub connected. Returns { connected, username } */
 export const getGithubStatus = async () => {
   try {
+    console.log('📡 Fetching GitHub status from API...');
+    const headers = authHeaders();
+    console.log('📡 Auth headers:', Object.keys(headers));
     const res = await fetch(`${API_BASE_URL}/api/github/status`, {
-      headers: authHeaders(),
+      headers,
     });
-    if (!res.ok) return { connected: false, username: null };
-    return res.json();
-  } catch {
+    if (!res.ok) {
+      console.error('📡 API returned status code:', res.status);
+      return { connected: false, username: null };
+    }
+    const data = await res.json();
+    console.log('📡 API Response:', data);
+    return data;
+  } catch (err) {
+    console.error('📡 API Error:', err);
     return { connected: false, username: null };
   }
 };

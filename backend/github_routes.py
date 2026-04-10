@@ -305,14 +305,30 @@ def _success_page(username: str, frontend_url: str) -> str:
     .username {{ color: #3fb950; font-weight: bold; }}
   </style>
   <script>
-    // Reload the opener (the CareerCompanion page) so it picks up the new connection,
+    // Emit a custom event to the parent window so it can refresh GitHub status,
     // then close this popup after a short delay.
+    console.log('📡 Success page loaded, attempting to notify parent window...');
     try {{
       if (window.opener && !window.opener.closed) {{
-        window.opener.location.reload();
+        console.log('✅ window.opener exists, dispatching event');
+                window.opener.postMessage({{
+                    type: 'github-connected',
+                    username: '{username}',
+                }}, '*');
+        window.opener.dispatchEvent(new Event('github-connected'));
+        // Also set localStorage as fallback in case event doesn't work
+        window.opener.localStorage.setItem('github-connected-{username}', Date.now().toString());
+        console.log('✅ Event dispatched and localStorage set');
+      }} else {{
+        console.log('❌ window.opener is closed or unavailable');
       }}
-    }} catch(e) {{}}
-    setTimeout(() => window.close(), 2000);
+    }} catch(e) {{
+      console.error('❌ Error dispatching event:', e);
+    }}
+    setTimeout(() => {{
+      console.log('🔒 Closing popup...');
+      window.close();
+    }}, 2000);
   </script>
 </head>
 <body>

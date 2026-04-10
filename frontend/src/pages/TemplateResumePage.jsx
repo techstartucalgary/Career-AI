@@ -104,12 +104,58 @@ const TemplateResumePage = () => {
   const [saveProfileResumeMessage, setSaveProfileResumeMessage] = useState('');
   const [saveProfileResumeError, setSaveProfileResumeError] = useState('');
 
-  useEffect(() => {
+  // Refresh GitHub status
+  const refreshGithubStatus = () => {
+    console.log('🔄 Refreshing GitHub status...');
     getGithubStatus().then(({ connected, username }) => {
+      console.log('✅ GitHub status updated:', { connected, username });
       setGithubConnected(connected);
       setGithubUsername(username);
+    }).catch(err => {
+      console.error('❌ Failed to refresh GitHub status:', err);
     });
+  };
 
+  const handleGithubConnected = (payload) => {
+    const username = payload?.username || null;
+    console.log('📡 Received github-connected event!', payload);
+    if (username) {
+      setGithubConnected(true);
+      setGithubUsername(username);
+    }
+    setTimeout(() => refreshGithubStatus(), 1000);
+  };
+
+  useEffect(() => {
+    console.log('🎯 TemplateResumePage: Setting up GitHub status listener');
+    refreshGithubStatus();
+
+    // Listen for GitHub connection event from OAuth popup
+    window.addEventListener('github-connected', handleGithubConnected);
+    const messageListener = (event) => {
+      if (event.data?.type === 'github-connected') {
+        handleGithubConnected(event.data);
+      }
+    };
+    window.addEventListener('message', messageListener);
+    
+    // Also check localStorage as fallback
+    const checkStorageListener = (e) => {
+      if (e.key && e.key.includes('github-connected')) {
+        console.log('📡 Detected localStorage change, refreshing...');
+        refreshGithubStatus();
+      }
+    };
+    window.addEventListener('storage', checkStorageListener);
+    
+    return () => {
+      window.removeEventListener('github-connected', handleGithubConnected);
+      window.removeEventListener('message', messageListener);
+      window.removeEventListener('storage', checkStorageListener);
+    };
+  }, []);
+
+  useEffect(() => {
     const loadDefaultResume = async () => {
       try {
         setProfileResumeLoading(true);
