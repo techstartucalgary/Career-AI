@@ -3,6 +3,7 @@ Database connection and configuration
 """
 import pymongo
 import os
+import certifi
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -14,7 +15,7 @@ db_info = os.environ.get("DATABASE_INFO")
 
 # Initialize MongoDB connection
 try:
-    clientdb = pymongo.MongoClient(f"{database}")
+    clientdb = pymongo.MongoClient(f"{database}", tlsCAFile=certifi.where())
     print(f"MongoDB connected: {clientdb.server_info()}")
 except Exception as e:
     print(f"MongoDB connection failed: {e}")

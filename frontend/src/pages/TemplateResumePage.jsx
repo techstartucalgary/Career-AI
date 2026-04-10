@@ -104,6 +104,7 @@ const TemplateResumePage = () => {
   const [saveProfileResumeMessage, setSaveProfileResumeMessage] = useState('');
   const [saveProfileResumeError, setSaveProfileResumeError] = useState('');
 
+
   useEffect(() => {
     getGithubStatus().then(({ connected, username }) => {
       setGithubConnected(connected);

@@ -234,3 +234,23 @@ export const downloadPDF = (pdfPath) => {
   const filename = pdfPath.split('/').pop();
   window.open(`${API_URL}/api/download/${filename}`, '_blank');
 };
+
+export const fetchAtsScore = async (resumeFile, jobDescription = '') => {
+  const formData = new FormData();
+  const { fileBlob, fileName } = await resumeFileToBlob(resumeFile);
+  formData.append('document_file', fileBlob, fileName);
+  if (jobDescription) {
+    formData.append('job_description', jobDescription);
+  }
+
+  const response = await fetch(`${API_URL}/api/ats-score`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`ATS score failed: ${errorText}`);
+  }
+  return response.json();
+};

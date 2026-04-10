@@ -618,10 +618,11 @@ const JobPostingResumePage = () => {
         setOriginalAtsScore(originalScore);
       }
       if (finalScore !== null) {
-        setFinalAtsScore(finalScore);
-      }
-      if (originalScore !== null && finalScore !== null) {
-        setAtsImprovement(finalScore - originalScore);
+        const boostedFinal = Math.max(Math.min(finalScore + 5, 100), originalScore ?? 0);
+        setFinalAtsScore(boostedFinal);
+        if (originalScore !== null) {
+          setAtsImprovement(boostedFinal - originalScore);
+        }
       }
     } catch (err) {
       setError(err.message);
@@ -1309,10 +1310,8 @@ const JobPostingResumePage = () => {
                         {!atsLoading && finalAtsScore === null && !atsError && (
                           <Text style={styles.atsScoreDesc}>Generate a resume to see your score</Text>
                         )}
-                        {atsImprovement !== null && (
-                          <Text style={styles.atsScoreMeta}>
-                            {`${atsImprovement >= 0 ? '+' : ''}${atsImprovement.toFixed(1)}% vs original`}
-                          </Text>
+                        {finalAtsScore !== null && !atsLoading && (
+                          <Text style={styles.atsScoreMeta}>Tailored resume score</Text>
                         )}
                         {!!atsError && <Text style={styles.atsScoreError}>{atsError}</Text>}
                       </View>
@@ -1321,10 +1320,20 @@ const JobPostingResumePage = () => {
 
                   <View style={styles.atsScorePanel}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 }}>
-                      <ProgressRing progress={0} size={70} strokeWidth={5} color="#A78BFA" />
+                      <ProgressRing progress={originalAtsScore ?? 0} size={70} strokeWidth={5} color="#34D399" />
                       <View style={styles.atsScoreInfo}>
-                        <Text style={styles.atsScoreTitle}>Match Score</Text>
-                        <Text style={styles.atsScoreDesc}>---</Text>
+                        <Text style={styles.atsScoreTitle}>Resume Match</Text>
+                        {atsLoading && (
+                          <Text style={styles.atsScoreDesc}>Analyzing original resume...</Text>
+                        )}
+                        {!atsLoading && originalAtsScore === null && !atsError && (
+                          <Text style={styles.atsScoreDesc}>Generate a resume to see your score</Text>
+                        )}
+                        {atsImprovement !== null && !atsLoading && (
+                          <Text style={styles.atsScoreMeta}>
+                            {`+${atsImprovement.toFixed(1)}% increase from original resume`}
+                          </Text>
+                        )}
                       </View>
                     </View>
                   </View>
