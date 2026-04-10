@@ -35,6 +35,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 300,
     justifyContent: 'center',
+    width: '100%',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 20px 56px rgba(0, 0, 0, 0.45)',
+      },
+      default: {
+        boxShadow: '0 20px 56px rgba(0, 0, 0, 0.45)',
+      },
+    }),
   },
   heroVisualContainer: {
     position: 'absolute',
@@ -161,24 +170,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minWidth: isTablet ? 200 : '100%',
     maxWidth: isDesktop ? 280 : '100%',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 6,
     ...Platform.select({
       web: {
+        boxShadow: '0 4px 16px rgba(139, 122, 184, 0.15)',
         transition: 'all 0.3s ease',
         cursor: 'default',
+      },
+      default: {
+        boxShadow: '0 4px 16px rgba(139, 122, 184, 0.15)',
       },
     }),
   },
   statCardHover: {
     transform: [{ translateY: -4 }, { scale: 1.02 }],
     borderColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.3,
-    shadowRadius: 24,
     backgroundColor: '#3D2B4D',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 24px rgba(139, 122, 184, 0.3)',
+      },
+      default: {
+        boxShadow: '0 8px 24px rgba(139, 122, 184, 0.3)',
+      },
+    }),
   },
   statIconContainer: {
     width: 64,
@@ -278,11 +292,14 @@ const styles = StyleSheet.create({
   tabActive: {
     backgroundColor: LIGHT_PURPLE,
     borderColor: LIGHT_PURPLE,
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 10,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 6px 16px rgba(139, 122, 184, 0.4)',
+      },
+      default: {
+        boxShadow: '0 6px 16px rgba(139, 122, 184, 0.4)',
+      },
+    }),
   },
   tabText: {
     color: TEXT_LIGHT,
@@ -349,24 +366,24 @@ const styles = StyleSheet.create({
     width: '100%',
     borderWidth: 2,
     borderColor: 'rgba(139, 122, 184, 0.2)',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 12,
     ...Platform.select({
       web: {
+        boxShadow: '0 8px 24px rgba(139, 122, 184, 0.15)',
         transition: 'all 0.3s ease',
+      },
+      default: {
+        boxShadow: '0 8px 24px rgba(139, 122, 184, 0.15)',
       },
     }),
   },
   searchBarFocused: {
     borderColor: BRIGHT_PURPLE,
-    shadowOpacity: 0.3,
-    shadowRadius: 32,
     ...Platform.select({
       web: {
-        boxShadow: `0 12px 40px rgba(167, 139, 250, 0.4)`,
+        boxShadow: '0 12px 40px rgba(167, 139, 250, 0.4)',
+      },
+      default: {
+        boxShadow: '0 12px 40px rgba(167, 139, 250, 0.4)',
       },
     }),
   },
@@ -574,11 +591,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(139, 122, 184, 0.2)',
     minWidth: isTablet ? 280 : '100%',
     maxWidth: isDesktop ? 400 : '100%',
-    shadowColor: LIGHT_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 6,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 16px rgba(139, 122, 184, 0.1)',
+      },
+      default: {
+        boxShadow: '0 4px 16px rgba(139, 122, 184, 0.1)',
+      },
+    }),
   },
   featuredCardHeader: {
     flexDirection: 'row',

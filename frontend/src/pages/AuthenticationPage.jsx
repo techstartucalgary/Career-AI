@@ -36,8 +36,11 @@ export default function AuthenticationPage() {
   const [googleClientId, setGoogleClientId] = useState('');
   const [googleOriginAllowed, setGoogleOriginAllowed] = useState(false);
   const [isGoogleReady, setIsGoogleReady] = useState(false);
+  const [showGoogleFallbackButton, setShowGoogleFallbackButton] = useState(false);
   const googleInitialized = useRef(false);
   const googleInitializedForClientId = useRef('');
+  const oneTapPromptedForClientId = useRef('');
+  const googleButtonHostRef = useRef(null);
   const hasGoogleClientId = googleClientId.trim().length > 0;
   const canUseGoogleGsi = hasGoogleClientId && googleOriginAllowed;
 
@@ -163,11 +166,13 @@ export default function AuthenticationPage() {
 
   useEffect(() => {
     if (Platform.OS !== 'web' || !isGoogleScriptLoaded || typeof window === 'undefined' || !canUseGoogleGsi) {
+      setShowGoogleFallbackButton(false);
       return;
     }
 
     const googleAccounts = window.google && window.google.accounts && window.google.accounts.id;
     if (!googleAccounts) {
+      setShowGoogleFallbackButton(true);
       return;
     }
 
@@ -230,6 +235,55 @@ export default function AuthenticationPage() {
       googleWindow.__careerAiGoogleClientId = googleClientId;
     }
 
+    const buttonHost = googleButtonHostRef.current;
+    if (!buttonHost) {
+      setIsGoogleReady(true);
+      setShowGoogleFallbackButton(true);
+      return;
+    }
+
+    buttonHost.innerHTML = '';
+
+    try {
+      googleAccounts.renderButton(buttonHost, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width: Math.max(280, Math.min(400, (window.innerWidth || 400) - 48)),
+        ux_mode: 'popup',
+      });
+    } catch {
+      buttonHost.innerHTML = '';
+    }
+
+    if (oneTapPromptedForClientId.current !== googleClientId) {
+      oneTapPromptedForClientId.current = googleClientId;
+      try {
+        googleAccounts.prompt((notification) => {
+          if (!notification) return;
+
+          const isDisplayed = typeof notification.isDisplayed === 'function' && notification.isDisplayed();
+          const isNotDisplayed = typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed();
+          const isSkipped = typeof notification.isSkippedMoment === 'function' && notification.isSkippedMoment();
+
+          if (isDisplayed) {
+            setShowGoogleFallbackButton(false);
+            return;
+          }
+
+          if (isNotDisplayed || isSkipped) {
+            setShowGoogleFallbackButton(true);
+          }
+        });
+      } catch {
+        oneTapPromptedForClientId.current = '';
+        setShowGoogleFallbackButton(true);
+      }
+    }
+
     setIsGoogleReady(true);
   }, [canUseGoogleGsi, googleClientId, isGoogleScriptLoaded, router, isSignUp, email]);
 
@@ -246,6 +300,16 @@ export default function AuthenticationPage() {
     }
 
     try {
+      const buttonHost = googleButtonHostRef.current;
+      const renderedButton = buttonHost
+        ? buttonHost.querySelector('button, div[role="button"], iframe')
+        : null;
+
+      if (renderedButton && typeof renderedButton.click === 'function') {
+        renderedButton.click();
+        return;
+      }
+
       googleAccounts.prompt();
     } catch {
       setErrors({ general: 'Unable to open Google sign-in prompt.' });
@@ -571,18 +635,38 @@ export default function AuthenticationPage() {
                 </View>
 
                 <View style={styles.googleSection}>
-                  <Pressable
-                    style={styles.googleFallbackButton}
-                    onPress={handleGoogleContinue}
-                    disabled={Platform.OS === 'web' && canUseGoogleGsi && !isGoogleReady}
-                  >
-                    <View style={styles.googleButtonInner}>
-                      <View style={styles.googleIconBadge}>
-                        <FontAwesome name="google" size={16} color="#ffffff" />
-                      </View>
-                      <Text style={styles.googleFallbackButtonText}>Continue with Google</Text>
+                  {Platform.OS === 'web' && canUseGoogleGsi && (
+                    <View style={styles.googleButtonContainer}>
+                      <View ref={googleButtonHostRef} style={styles.googleButtonHost} />
+                      {showGoogleFallbackButton && (
+                        <Pressable
+                          style={styles.googleFallbackButton}
+                          onPress={handleGoogleContinue}
+                          disabled={!isGoogleReady}
+                        >
+                          <View style={styles.googleButtonInner}>
+                            <View style={styles.googleIconBadge}>
+                              <FontAwesome name="google" size={16} color="#ffffff" />
+                            </View>
+                            <Text style={styles.googleFallbackButtonText}>Continue with Google</Text>
+                          </View>
+                        </Pressable>
+                      )}
                     </View>
-                  </Pressable>
+                  )}
+                  {!(Platform.OS === 'web' && canUseGoogleGsi) && (
+                    <Pressable
+                      style={styles.googleFallbackButton}
+                      onPress={handleGoogleContinue}
+                    >
+                      <View style={styles.googleButtonInner}>
+                        <View style={styles.googleIconBadge}>
+                          <FontAwesome name="google" size={16} color="#ffffff" />
+                        </View>
+                        <Text style={styles.googleFallbackButtonText}>Continue with Google</Text>
+                      </View>
+                    </Pressable>
+                  )}
                   {googleLoading && (
                     <View style={styles.googleLoadingRow}>
                       <ActivityIndicator size="small" color={THEME.colors.textSecondary} />

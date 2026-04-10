@@ -356,6 +356,15 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
   },
+  googleButtonHost: {
+    position: 'absolute',
+    left: -9999,
+    top: 0,
+    width: 1,
+    height: 1,
+    opacity: 0,
+    overflow: 'hidden',
+  },
   googleLoadingRow: {
     marginTop: 10,
     alignItems: 'center',

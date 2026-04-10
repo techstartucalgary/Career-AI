@@ -115,9 +115,7 @@ const styles = StyleSheet.create({
       web: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       default: 'sans-serif',
     }),
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 20,
+    textShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
   },
   heroSubtitle: {
     fontSize: isDesktop ? 19 : 17,
