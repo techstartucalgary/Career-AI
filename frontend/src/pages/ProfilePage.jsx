@@ -228,7 +228,9 @@ function normalizeIdentificationFromApi(raw) {
 export default function ProfilePage() {
   const { isWideLayout, isDesktop } = useBreakpoints();
   const scrollRef = useRef(null);
+  const sectionRefs = useRef({});
   const sectionYs = useRef({});
+  const currentScrollY = useRef(0);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -507,8 +509,28 @@ export default function ProfilePage() {
     sectionYs.current[id] = e.nativeEvent.layout.y;
   }, []);
 
+  const setSectionRef = useCallback((id) => (node) => {
+    sectionRefs.current[id] = node;
+  }, []);
+
   /** Align section top (title) with top of scroll area beside the sidebar */
   const scrollToSection = useCallback((id) => {
+    const sectionNode = sectionRefs.current[id];
+    if (
+      sectionNode &&
+      scrollRef.current &&
+      typeof sectionNode.measureInWindow === 'function' &&
+      typeof scrollRef.current.measureInWindow === 'function'
+    ) {
+      sectionNode.measureInWindow((_sectionX, sectionY) => {
+        scrollRef.current.measureInWindow((_scrollX, scrollY) => {
+          const nextY = Math.max(0, currentScrollY.current + (sectionY - scrollY) - 8);
+          scrollRef.current.scrollTo({ y: nextY, animated: true });
+        });
+      });
+      return;
+    }
+
     const y = sectionYs.current[id];
     if (y == null || !scrollRef.current) return;
     scrollRef.current.scrollTo({ y: Math.max(0, y), animated: true });
@@ -1209,6 +1231,10 @@ export default function ProfilePage() {
             <ScrollView
               ref={scrollRef}
               style={isDesktop ? styles.mainScroll : styles.scrollView}
+              onScroll={(e) => {
+                currentScrollY.current = e.nativeEvent.contentOffset?.y || 0;
+              }}
+              scrollEventThrottle={16}
               contentContainerStyle={
                 isDesktop
                   ? styles.mainScrollContent
@@ -1226,7 +1252,7 @@ export default function ProfilePage() {
               }
             >
               <View collapsable={false}>
-                  <View onLayout={onSectionLayout('overview')}>
+                  <View ref={setSectionRef('overview')} onLayout={onSectionLayout('overview')}>
                     <View style={styles.headerSection}>
                       <View style={styles.titleContainer}>
                         <View style={styles.heroBadge}>
@@ -1305,7 +1331,7 @@ export default function ProfilePage() {
                   </View>
 
                   <View style={styles.cardsContainer}>
-                    <View onLayout={onSectionLayout('personal')}>
+                    <View ref={setSectionRef('personal')} onLayout={onSectionLayout('personal')}>
                       <View style={styles.card}>
                 <Text style={styles.cardTitle}>Personal Information</Text>
                 
@@ -1400,7 +1426,7 @@ export default function ProfilePage() {
               </View>
                     </View>
 
-                    <View onLayout={onSectionLayout('preferences')}>
+                    <View ref={setSectionRef('preferences')} onLayout={onSectionLayout('preferences')}>
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>Job Preferences</Text>
 
@@ -1537,7 +1563,7 @@ export default function ProfilePage() {
               </View>
                     </View>
 
-                      <View onLayout={onSectionLayout('identification')} style={styles.identificationSection}>
+                      <View ref={setSectionRef('identification')} onLayout={onSectionLayout('identification')} style={styles.identificationSection}>
                     <View style={[styles.card, styles.identificationCard]}>
                 <Text style={styles.cardTitle}>Identification</Text>
                   <View style={styles.identificationGrid}>
@@ -1616,7 +1642,7 @@ export default function ProfilePage() {
               </View>
                     </View>
 
-                    <View onLayout={onSectionLayout('resume')}>
+                    <View ref={setSectionRef('resume')} onLayout={onSectionLayout('resume')}>
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>Resume</Text>
                 
@@ -1660,12 +1686,12 @@ export default function ProfilePage() {
               </View>
                     </View>
 
-                    <View onLayout={onSectionLayout('account')}>
+                    <View ref={setSectionRef('account')} onLayout={onSectionLayout('account')}>
                       {renderAccountActionsCard()}
                     </View>
 
                     {!isDesktop ? (
-                      <View onLayout={onSectionLayout('stats')}>{renderProfileStatsCard(false)}</View>
+                      <View ref={setSectionRef('stats')} onLayout={onSectionLayout('stats')}>{renderProfileStatsCard(false)}</View>
                     ) : null}
                   </View>
               </View>
