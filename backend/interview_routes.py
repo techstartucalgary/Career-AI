@@ -440,3 +440,196 @@ Respond ONLY in this JSON format:
     except Exception as e:
         print(f"Live feedback error: {e}")
         return {"feedback": None, "tips": []}
+
+
+class QuickFeedbackRequest(BaseModel):
+    question: str
+    answer: str
+    category: Optional[str] = "General"
+
+
+@router.post("/quick-feedback")
+async def quick_feedback(request: QuickFeedbackRequest):
+    """
+    Lightweight per-question feedback: score, a short comment, and one tip.
+    Designed to be fast so users aren't waiting long between questions.
+    """
+    import requests
+    import json
+
+    gemini_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+
+    if not gemini_api_key:
+        raise HTTPException(status_code=503, detail="AI evaluation is not configured")
+
+    if not request.answer or len(request.answer.strip()) < 10:
+        return {
+            "score": 0,
+            "feedback": "Your answer is too short. Try to elaborate more.",
+            "tip": "Aim for at least 3-4 sentences with a specific example.",
+        }
+
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}"
+
+        prompt = f"""You are an interview coach giving quick feedback on a {request.category} interview answer.
+
+Question: {request.question}
+Answer: {request.answer}
+
+Respond ONLY with valid JSON (no markdown, no extra text):
+{{"score": <0-100>, "feedback": "<one sentence overall impression>", "tip": "<one actionable tip to improve>"}}
+
+Score 90-100 = exceptional, 70-89 = strong, 50-69 = average, 30-49 = weak, 0-29 = poor.
+Be encouraging but honest. Keep feedback and tip concise (under 20 words each)."""
+
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.3,
+                "maxOutputTokens": 150,
+            },
+        }
+
+        response = requests.post(url, json=payload, timeout=8)
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=502, detail="AI service unavailable")
+
+        result = response.json()
+        text = (
+            result.get("candidates", [{}])[0]
+            .get("content", {})
+            .get("parts", [{}])[0]
+            .get("text", "")
+        )
+
+        import re
+        json_match = re.search(r"\{[^{}]*\}", text)
+        if json_match:
+            data = json.loads(json_match.group())
+            return {
+                "score": max(0, min(100, int(data.get("score", 50)))),
+                "feedback": data.get("feedback", ""),
+                "tip": data.get("tip", ""),
+            }
+
+        raise HTTPException(status_code=502, detail="Could not parse AI response")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Quick feedback error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get feedback")
+
+
+class QAPair(BaseModel):
+    question: str
+    answer: str
+
+
+class FullReviewRequest(BaseModel):
+    category: Optional[str] = "General"
+    responses: list[QAPair]
+
+
+@router.post("/full-review")
+async def full_review(request: FullReviewRequest):
+    """
+    Comprehensive end-of-session review of all answers.
+    Returns detailed per-question feedback plus an overall summary.
+    """
+    import requests
+    import json
+
+    gemini_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+
+    if not gemini_api_key:
+        raise HTTPException(status_code=503, detail="AI evaluation is not configured")
+
+    if not request.responses:
+        raise HTTPException(status_code=400, detail="No responses provided")
+
+    qa_block = ""
+    for i, pair in enumerate(request.responses, 1):
+        answer_text = pair.answer.strip() if pair.answer else "(skipped)"
+        qa_block += f"\nQ{i}: {pair.question}\nA{i}: {answer_text}\n"
+
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_api_key}"
+
+        prompt = f"""You are a senior interview coach doing a thorough post-interview review. The candidate just completed {len(request.responses)} {request.category} interview questions.
+
+{qa_block}
+
+Provide a comprehensive review. Respond ONLY with valid JSON (no markdown, no extra text):
+{{
+  "overall_score": <0-100 average quality>,
+  "overall_summary": "<3-4 sentences: overall performance, biggest strengths across all answers, main areas to work on, and encouragement>",
+  "questions": [
+    {{
+      "score": <0-100>,
+      "strengths": ["strength 1", "strength 2"],
+      "improvements": ["improvement 1", "improvement 2"],
+      "sample_answer": "<a strong 2-3 sentence model answer>",
+      "detailed_feedback": "<2-3 sentences of specific, constructive feedback for this answer>"
+    }}
+  ]
+}}
+
+Rules:
+- The "questions" array MUST have exactly {len(request.responses)} entries, one per question in order.
+- For skipped answers, give score 0 and note it was skipped.
+- Score 90-100 = exceptional (specific examples, metrics, STAR structure), 70-89 = strong, 50-69 = average, 30-49 = weak, 0-29 = poor.
+- Provide 2-3 strengths and 2-3 improvements per question.
+- Be encouraging but honest. Give actionable, specific advice."""
+
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.4,
+                "maxOutputTokens": 2048,
+            },
+        }
+
+        response = requests.post(url, json=payload, timeout=30)
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=502, detail="AI service unavailable")
+
+        result = response.json()
+        text = (
+            result.get("candidates", [{}])[0]
+            .get("content", {})
+            .get("parts", [{}])[0]
+            .get("text", "")
+        )
+
+        import re
+        json_match = re.search(r"\{[\s\S]*\}", text)
+        if json_match:
+            data = json.loads(json_match.group())
+
+            questions_fb = []
+            for q in data.get("questions", []):
+                questions_fb.append({
+                    "score": max(0, min(100, int(q.get("score", 50)))),
+                    "strengths": q.get("strengths", [])[:3],
+                    "improvements": q.get("improvements", [])[:3],
+                    "sample_answer": q.get("sample_answer", ""),
+                    "detailed_feedback": q.get("detailed_feedback", ""),
+                })
+
+            return {
+                "overall_score": max(0, min(100, int(data.get("overall_score", 50)))),
+                "overall_summary": data.get("overall_summary", ""),
+                "questions": questions_fb,
+            }
+
+        raise HTTPException(status_code=502, detail="Could not parse AI response")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Full review error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate review")
