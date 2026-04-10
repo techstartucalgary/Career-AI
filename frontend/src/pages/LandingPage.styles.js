@@ -136,16 +136,16 @@ export default StyleSheet.create({
     lineHeight: 36,
     letterSpacing: -0.75,
     marginBottom: 14,
-    textAlign: 'left',
-    alignSelf: 'stretch',
+    textAlign: 'center',
+    alignSelf: 'center',
   },
   heroSubtitleNarrow: {
     fontSize: 15,
     lineHeight: 24,
     marginBottom: 22,
     paddingHorizontal: 4,
-    textAlign: 'left',
-    alignSelf: 'stretch',
+    textAlign: 'center',
+    alignSelf: 'center',
   },
   floatingCard1: {
     position: 'absolute',
@@ -355,7 +355,7 @@ export default StyleSheet.create({
 
   // Hero Content
   heroContent: {
-    alignItems: isDesktop || isTablet ? 'center' : 'flex-start',
+    alignItems: 'center',
     zIndex: 10,
     paddingHorizontal: 20,
     width: '100%',
@@ -371,6 +371,7 @@ export default StyleSheet.create({
     borderColor: 'rgba(167, 139, 250, 0.2)',
     marginBottom: 32,
     gap: 8,
+    alignSelf: 'center',
   },
   badgePulse: {
     width: 8,
@@ -478,7 +479,7 @@ export default StyleSheet.create({
   // Social Proof
   socialProof: {
     flexDirection: isTablet ? 'row' : 'column',
-    alignItems: isTablet ? 'center' : 'flex-start',
+    alignItems: 'center',
     gap: 12,
   },
   avatarStack: {

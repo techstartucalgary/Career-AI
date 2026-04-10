@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import styles from './ProfilePage.styles';
 import { THEME } from '../styles/theme';
 import { API_BASE_URL, apiFetch, apiUrl, clearAuthToken, getAuthToken, getUserProfile, clearUserProfileCache } from '../services/api';
+import { disconnectGithub, getGithubStatus } from '../services/githubService';
 import { Redirect } from 'expo-router';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 import { JOB_LOCATION_OPTIONS, JOB_ROLE_OPTIONS, getOptionSuggestions } from '../data/jobPreferencesOptions';
@@ -18,6 +19,7 @@ const PROFILE_NAV_SECTIONS = [
   { id: 'identification', label: 'Identification' },
   { id: 'resume', label: 'Resume' },
   { id: 'stats', label: 'Profile stats' },
+  { id: 'account', label: 'Account' },
 ];
 
 function buildProfileFormSnapshot({
@@ -270,8 +272,51 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [removingAvatar, setRemovingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState('');
+  const [githubConnected, setGithubConnected] = useState(false);
+  const [githubUsername, setGithubUsername] = useState('');
+  const [loadingGithubStatus, setLoadingGithubStatus] = useState(true);
+  const [disconnectingGithub, setDisconnectingGithub] = useState(false);
+  const [deletingProfile, setDeletingProfile] = useState(false);
+  const [confirmationState, setConfirmationState] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    confirmLabel: 'Confirm',
+    confirmStyle: 'default',
+    action: null,
+  });
   /** JSON snapshot of last loaded/saved form fields; null until profile load completes */
   const [savedBaseline, setSavedBaseline] = useState(null);
+
+  const openConfirmation = useCallback((title, message, confirmLabel, action, confirmStyle = 'default') => {
+    setConfirmationState({
+      visible: true,
+      title,
+      message,
+      confirmLabel,
+      confirmStyle,
+      action,
+    });
+  }, []);
+
+  const closeConfirmation = useCallback(() => {
+    setConfirmationState({
+      visible: false,
+      title: '',
+      message: '',
+      confirmLabel: 'Confirm',
+      confirmStyle: 'default',
+      action: null,
+    });
+  }, []);
+
+  const runConfirmationAction = useCallback(async () => {
+    const action = confirmationState.action;
+    closeConfirmation();
+    if (typeof action === 'function') {
+      await action();
+    }
+  }, [closeConfirmation, confirmationState.action]);
 
   const formFingerprint = useMemo(
     () =>
@@ -433,6 +478,31 @@ export default function ProfilePage() {
     };
   }, []);
 
+  const loadGithubStatus = useCallback(async () => {
+    if (!getAuthToken()) {
+      setGithubConnected(false);
+      setGithubUsername('');
+      setLoadingGithubStatus(false);
+      return;
+    }
+
+    setLoadingGithubStatus(true);
+    try {
+      const status = await getGithubStatus();
+      setGithubConnected(!!status.connected);
+      setGithubUsername(status.username || '');
+    } catch (_error) {
+      setGithubConnected(false);
+      setGithubUsername('');
+    } finally {
+      setLoadingGithubStatus(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadGithubStatus();
+  }, [loadGithubStatus]);
+
   const onSectionLayout = useCallback((id) => (e) => {
     sectionYs.current[id] = e.nativeEvent.layout.y;
   }, []);
@@ -443,10 +513,6 @@ export default function ProfilePage() {
     if (y == null || !scrollRef.current) return;
     scrollRef.current.scrollTo({ y: Math.max(0, y), animated: true });
   }, []);
-
-  if (shouldRedirect) {
-    return <Redirect href="/authentication" />;
-  }
 
   const handleSave = async () => {
     if (saving) return;
@@ -761,6 +827,73 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDisconnectGithub = useCallback(() => {
+    if (!githubConnected || disconnectingGithub || deletingProfile || loadingGithubStatus) {
+      return;
+    }
+
+    const disconnectAction = async () => {
+      try {
+        setDisconnectingGithub(true);
+        const disconnected = await disconnectGithub();
+        if (!disconnected) {
+          throw new Error('Unable to disconnect GitHub.');
+        }
+        setGithubConnected(false);
+        setGithubUsername('');
+        clearUserProfileCache();
+        void getUserProfile({ forceRefresh: true }).catch(() => {});
+        notifyProfileUpdated();
+        setSaveSuccess('GitHub disconnected.');
+        setSaveError('');
+      } catch (error) {
+        setSaveError(error.message || 'Unable to disconnect GitHub.');
+      } finally {
+        setDisconnectingGithub(false);
+      }
+    };
+
+    openConfirmation(
+      'Disconnect GitHub?',
+      githubUsername
+        ? `This will disconnect @${githubUsername} and remove cached GitHub data from your account.`
+        : 'This will disconnect GitHub and remove cached GitHub data from your account.',
+      'Disconnect',
+      disconnectAction,
+      'destructive'
+    );
+  }, [deletingProfile, disconnectingGithub, githubConnected, githubUsername, loadingGithubStatus, openConfirmation]);
+
+  const handleDeleteProfile = useCallback(() => {
+    if (deletingProfile) {
+      return;
+    }
+
+    const deleteAction = async () => {
+      try {
+        setDeletingProfile(true);
+        await apiFetch('/profile', {
+          method: 'DELETE',
+        });
+        clearAuthToken();
+        clearUserProfileCache();
+        setShouldRedirect(true);
+      } catch (error) {
+        setSaveError(error.message || 'Unable to delete profile.');
+      } finally {
+        setDeletingProfile(false);
+      }
+    };
+
+    openConfirmation(
+      'Delete profile?',
+      'Your account will be archived for 7 days before permanent deletion. You will be signed out immediately.',
+      'Delete profile',
+      deleteAction,
+      'destructive'
+    );
+  }, [deletingProfile, openConfirmation]);
+
   const workArrangementOptions = [
     { value: 'any', label: 'Any (Remote, Hybrid, On-Site)' },
     { value: 'remote', label: 'Remote Only' },
@@ -865,6 +998,53 @@ export default function ProfilePage() {
     </View>
   );
 
+  const renderAccountActionsCard = () => (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Account actions</Text>
+      <Text style={styles.accountActionsDescription}>
+        Disconnect GitHub or delete your account. Deleted accounts stay recoverable for 7 days.
+      </Text>
+
+      <View style={styles.accountActionsRow}>
+        <Pressable
+          disabled={loadingGithubStatus || disconnectingGithub || deletingProfile || !githubConnected}
+          style={({ pressed }) => [
+            styles.accountActionButton,
+            styles.accountActionButtonSecondary,
+            pressed && styles.accountActionButtonPressed,
+            (loadingGithubStatus || disconnectingGithub || deletingProfile || !githubConnected) && styles.accountActionButtonDisabled,
+          ]}
+          onPress={handleDisconnectGithub}
+        >
+          <Text style={styles.accountActionButtonText}>
+            {disconnectingGithub ? 'Disconnecting...' : loadingGithubStatus ? 'Checking GitHub...' : githubConnected ? 'Disconnect GitHub' : 'GitHub not connected'}
+          </Text>
+          {githubConnected && githubUsername ? (
+            <Text style={styles.accountActionButtonSubtext}>@{githubUsername}</Text>
+          ) : null}
+        </Pressable>
+
+        <Pressable
+          disabled={deletingProfile || disconnectingGithub}
+          style={({ pressed }) => [
+            styles.accountActionButton,
+            styles.accountActionButtonDanger,
+            pressed && styles.accountActionButtonPressed,
+            (deletingProfile || disconnectingGithub) && styles.accountActionButtonDisabled,
+          ]}
+          onPress={handleDeleteProfile}
+        >
+          <Text style={[styles.accountActionButtonText, styles.accountActionButtonTextDanger]}>
+            {deletingProfile ? 'Deleting profile...' : 'Delete profile'}
+          </Text>
+          <Text style={[styles.accountActionButtonSubtext, styles.accountActionButtonSubtextDanger]}>
+            Moves your data to recovery storage for 7 days
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+
   const renderSaveControls = (variant) => (
     <View style={variant === 'sidebar' ? styles.sidebarSaveBlock : styles.mobileSaveBarInner}>
       <Pressable
@@ -898,8 +1078,102 @@ export default function ProfilePage() {
     </View>
   );
 
+  if (shouldRedirect) {
+    return <Redirect href="/authentication" />;
+  }
+
   return (
     <View style={styles.container}>
+      <Modal
+        transparent
+        visible={confirmationState.visible}
+        animationType="fade"
+        onRequestClose={closeConfirmation}
+      >
+        <View style={styles.selectModalRoot}>
+          <Pressable style={styles.selectModalOverlay} onPress={closeConfirmation} />
+          <View
+            style={{
+              ...Platform.select({
+                web: {
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                },
+                default: {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                },
+              }),
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: 16,
+            }}
+          >
+          <View
+            style={{
+              width: '100%',
+              maxWidth: 440,
+              padding: 22,
+              borderRadius: 20,
+              backgroundColor: THEME.colors.surface,
+              borderWidth: 1,
+              borderColor: THEME.colors.borderLight,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 16 },
+              shadowOpacity: 0.35,
+              shadowRadius: 24,
+              elevation: 20,
+            }}
+          >
+            <Text style={[styles.cardTitle, { marginBottom: 12 }]}>{confirmationState.title}</Text>
+            <Text style={[styles.subtitle, { textAlign: 'left', marginBottom: 22 }]}>
+              {confirmationState.message}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <Pressable
+                onPress={closeConfirmation}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: THEME.colors.borderLight,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  backgroundColor: pressed ? 'rgba(255,255,255,0.04)' : 'transparent',
+                })}
+              >
+                <Text style={[styles.accountActionButtonText, { color: THEME.colors.textLight }]}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => void runConfirmationAction()}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  borderRadius: 14,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  backgroundColor:
+                    confirmationState.confirmStyle === 'destructive'
+                      ? pressed
+                        ? 'rgba(239, 68, 68, 0.75)'
+                        : 'rgba(239, 68, 68, 0.9)'
+                      : pressed
+                        ? 'rgba(167, 139, 250, 0.75)'
+                        : 'rgba(167, 139, 250, 0.92)',
+                })}
+              >
+                <Text style={styles.accountActionButtonText}>{confirmationState.confirmLabel}</Text>
+              </Pressable>
+            </View>
+          </View>
+          </View>
+        </View>
+      </Modal>
       <Header />
       <LinearGradient colors={THEME.gradients.page} style={styles.gradient}>
         <View style={isDesktop ? styles.layoutWithSidebar : styles.profileLayoutWithMobileSave}>
@@ -1384,6 +1658,10 @@ export default function ProfilePage() {
                 
                 {!!resumeError && <Text style={styles.errorText}>{resumeError}</Text>}
               </View>
+                    </View>
+
+                    <View onLayout={onSectionLayout('account')}>
+                      {renderAccountActionsCard()}
                     </View>
 
                     {!isDesktop ? (

@@ -22,3 +22,9 @@ except Exception as e:
 # Get database and collection
 db = clientdb[f'{db_info}']
 col = db["users"]
+deleted_users_col = db["deleted_users"]
+
+try:
+    deleted_users_col.create_index("purge_at", expireAfterSeconds=0)
+except Exception as e:
+    print(f"Deleted users TTL index setup failed: {e}")

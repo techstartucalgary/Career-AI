@@ -1,8 +1,9 @@
 """
 User profile and preferences routes
 """
+import copy
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, File, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
@@ -16,7 +17,7 @@ from models import (
     SavedJobRecord,
     JobSearchSignalsRequest,
 )
-from database import col
+from database import col, deleted_users_col
 from dependencies import get_current_user, serialize_user
 
 router = APIRouter()
@@ -59,6 +60,23 @@ def _detect_image_mime(data: bytes):
     if len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP":
         return "image/webp"
     return None
+
+
+def _build_deleted_user_archive(user: dict, user_id) -> dict:
+    archive = copy.deepcopy(user)
+    archive.pop("_id", None)
+
+    github_doc = archive.get("github")
+    if isinstance(github_doc, dict):
+        github_doc.pop("access_token", None)
+
+    deleted_at = datetime.utcnow()
+    archive["source_user_id"] = str(user_id)
+    archive["deleted_at"] = deleted_at
+    archive["purge_at"] = deleted_at + timedelta(days=7)
+    archive["deletion_reason"] = "user_requested"
+    archive["retention_days"] = 7
+    return archive
 
 
 @router.get("/profile")
@@ -308,6 +326,80 @@ def delete_profile_avatar(authorization: str = Header(None)):
 def delete_profile_avatar_api_alias(authorization: str = Header(None)):
     """Same as DELETE /profile/avatar."""
     return _delete_profile_avatar_impl(authorization)
+
+
+@router.delete("/profile")
+def delete_profile(authorization: str = Header(None)):
+    """Archive the current user for 7 days, then delete the live account."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        user_id = get_current_user(token)
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        user = col.find_one({"_id": user_id})
+        if not user:
+            archived = deleted_users_col.find_one({"source_user_id": str(user_id)})
+            if archived:
+                return JSONResponse(
+                    status_code=200,
+                    content={
+                        "success": True,
+                        "message": "Profile already deleted.",
+                    },
+                )
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "success": False,
+                    "message": "User not found.",
+                },
+            )
+
+        archive = _build_deleted_user_archive(user, user_id)
+        archive_result = deleted_users_col.insert_one(archive)
+
+        delete_result = col.delete_one({"_id": user_id})
+        if delete_result.deleted_count != 1:
+            deleted_users_col.delete_one({"_id": archive_result.inserted_id})
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "success": False,
+                    "message": "User not found.",
+                },
+            )
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "Profile deleted. Your data will remain in the recovery archive for 7 days.",
+                "purge_at": archive["purge_at"].isoformat(),
+            },
+        )
+    except Exception as e:
+        print(f"Profile delete error: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=400,
+            content={
+                "success": False,
+                "message": "Could not delete profile.",
+            },
+        )
+
+
+@router.delete("/api/profile")
+def delete_profile_api_alias(authorization: str = Header(None)):
+    """Same as DELETE /profile (alias for proxies that only forward /api/*)."""
+    return delete_profile(authorization)
 
 
 @router.put("/preferences")

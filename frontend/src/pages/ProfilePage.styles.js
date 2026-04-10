@@ -1085,6 +1085,65 @@ const styles = StyleSheet.create({
   saveButtonTextSidebar: {
     fontSize: 15,
   },
+  accountActionsDescription: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: TEXT_MUTED,
+    marginBottom: 18,
+  },
+  accountActionsRow: {
+    flexDirection: isTablet ? 'row' : 'column',
+    gap: 12,
+  },
+  accountActionButton: {
+    flex: 1,
+    minHeight: 92,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        transition: 'transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease',
+      },
+    }),
+  },
+  accountActionButtonSecondary: {
+    backgroundColor: 'rgba(167, 139, 250, 0.08)',
+    borderColor: 'rgba(167, 139, 250, 0.28)',
+  },
+  accountActionButtonDanger: {
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderColor: 'rgba(239, 68, 68, 0.28)',
+  },
+  accountActionButtonPressed: {
+    transform: [{ scale: 0.985 }],
+  },
+  accountActionButtonDisabled: {
+    opacity: 0.55,
+  },
+  accountActionButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: WHITE,
+    textAlign: 'center',
+  },
+  accountActionButtonTextDanger: {
+    color: '#FCA5A5',
+  },
+  accountActionButtonSubtext: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: TEXT_MUTED,
+    textAlign: 'center',
+  },
+  accountActionButtonSubtextDanger: {
+    color: 'rgba(252, 165, 165, 0.9)',
+  },
 });
 
 export default styles;

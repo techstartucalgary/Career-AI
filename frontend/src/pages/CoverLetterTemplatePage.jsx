@@ -81,19 +81,14 @@ const CoverLetterTemplatePage = () => {
 
   // Refresh GitHub status
   const refreshGithubStatus = () => {
-    console.log('🔄 Refreshing GitHub status...');
     getGithubStatus().then(({ connected, username }) => {
-      console.log('✅ GitHub status updated:', { connected, username });
       setGithubConnected(connected);
       setGithubUsername(username);
-    }).catch(err => {
-      console.error('❌ Failed to refresh GitHub status:', err);
-    });
+    }).catch(() => {});
   };
 
   const handleGithubConnected = (payload) => {
     const username = payload?.username || null;
-    console.log('📡 Received github-connected event!', payload);
     if (username) {
       setGithubConnected(true);
       setGithubUsername(username);
@@ -102,7 +97,6 @@ const CoverLetterTemplatePage = () => {
   };
 
   React.useEffect(() => {
-    console.log('🧠 CoverLetterTemplatePage: Setting up GitHub status listener');
     refreshGithubStatus();
 
     // Listen for GitHub connection event from OAuth popup
@@ -117,7 +111,6 @@ const CoverLetterTemplatePage = () => {
     // Also check localStorage as fallback
     const checkStorageListener = (e) => {
       if (e.key && e.key.includes('github-connected')) {
-        console.log('📡 Detected localStorage change, refreshing...');
         refreshGithubStatus();
       }
     };

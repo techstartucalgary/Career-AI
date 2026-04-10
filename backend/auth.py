@@ -3,6 +3,7 @@ Authentication routes using Google OAuth + profile completion
 """
 
 import os
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import JSONResponse
@@ -13,13 +14,36 @@ from dotenv import load_dotenv
 from bson import ObjectId
 from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 
-from database import col
+from database import col, deleted_users_col
 from dependencies import create_access_token, get_current_user, hash_, verify_hash, serialize_user
 from models import SignupRequest, LoginRequest
 
 load_dotenv()
 
 router = APIRouter()
+
+
+def _restore_deleted_user(email: str) -> Optional[dict]:
+    """Restore the latest archived user for this email, if one exists."""
+    archived = deleted_users_col.find_one(
+        {"email": email},
+        sort=[("deleted_at", -1)],
+    )
+    if not archived:
+        return None
+
+    restored = dict(archived)
+    archived_id = restored.pop("_id", None)
+    restored.pop("source_user_id", None)
+    restored.pop("deleted_at", None)
+    restored.pop("purge_at", None)
+    restored.pop("deletion_reason", None)
+    restored.pop("retention_days", None)
+
+    result = col.insert_one(restored)
+    deleted_users_col.delete_one({"_id": archived_id})
+    restored["_id"] = result.inserted_id
+    return restored
 
 
 def _get_google_client_id() -> str:
@@ -103,6 +127,8 @@ async def login(payload: LoginRequest):
     try:
         user = col.find_one({"email": email})
         if not user:
+            user = _restore_deleted_user(email)
+        if not user:
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         stored_password = user.get("password")
@@ -182,6 +208,8 @@ async def google_auth(payload: dict):
         # Check if user exists; if persistence is unavailable, still complete auth so the button works.
         try:
             user = col.find_one({"email": email})
+            if not user:
+                user = _restore_deleted_user(email)
 
             if not user:
                 # Create new user (minimal)

@@ -307,10 +307,8 @@ def _success_page(username: str, frontend_url: str) -> str:
   <script>
     // Emit a custom event to the parent window so it can refresh GitHub status,
     // then close this popup after a short delay.
-    console.log('📡 Success page loaded, attempting to notify parent window...');
     try {{
       if (window.opener && !window.opener.closed) {{
-        console.log('✅ window.opener exists, dispatching event');
                 window.opener.postMessage({{
                     type: 'github-connected',
                     username: '{username}',
@@ -318,15 +316,10 @@ def _success_page(username: str, frontend_url: str) -> str:
         window.opener.dispatchEvent(new Event('github-connected'));
         // Also set localStorage as fallback in case event doesn't work
         window.opener.localStorage.setItem('github-connected-{username}', Date.now().toString());
-        console.log('✅ Event dispatched and localStorage set');
-      }} else {{
-        console.log('❌ window.opener is closed or unavailable');
       }}
-    }} catch(e) {{
-      console.error('❌ Error dispatching event:', e);
+        }} catch(e) {{
     }}
     setTimeout(() => {{
-      console.log('🔒 Closing popup...');
       window.close();
     }}, 2000);
   </script>
