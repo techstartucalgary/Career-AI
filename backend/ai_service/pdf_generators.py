@@ -340,13 +340,21 @@ class PDFGenerator:
 
     @staticmethod
     def _create_resume_styles():
-        """Create all paragraph styles for resume - classic (Jake's Resume Template) style"""
+        """Classic template styles, calibrated against the reference resume.
+
+        Sizing rules:
+        - Name: 20pt (only element above 11pt)
+        - Section headings: 11pt with 1pt rule beneath
+        - Entry titles (job/project/school): 10.5pt bold
+        - Body / company / location: 10pt (italic for dates and locations)
+        - Bullets: 9.5pt
+        """
         return {
             'name': ParagraphStyle(
                 'Name',
                 fontName='Helvetica-Bold',
                 fontSize=20,
-                leading=24,
+                leading=23,
                 alignment=TA_CENTER,
                 spaceAfter=2,
                 spaceBefore=0
@@ -363,25 +371,25 @@ class PDFGenerator:
             'section': ParagraphStyle(
                 'Section',
                 fontName='Helvetica-Bold',
-                fontSize=10,
-                leading=12,
-                spaceAfter=2,
-                spaceBefore=8,
+                fontSize=11,
+                leading=13,
+                spaceAfter=1,
+                spaceBefore=6,
                 alignment=TA_LEFT
             ),
             'title_bold': ParagraphStyle(
                 'TitleBold',
                 fontName='Helvetica-Bold',
-                fontSize=10,
-                leading=12,
+                fontSize=10.5,
+                leading=12.5,
                 spaceAfter=0,
                 spaceBefore=0
             ),
             'title_bold_right': ParagraphStyle(
                 'TitleBoldRight',
                 fontName='Helvetica-Bold',
-                fontSize=10,
-                leading=12,
+                fontSize=10.5,
+                leading=12.5,
                 alignment=TA_RIGHT
             ),
             'body': ParagraphStyle(
@@ -417,9 +425,10 @@ class PDFGenerator:
             'bullet': ParagraphStyle(
                 'Bullet',
                 fontName='Helvetica',
-                fontSize=10,
-                leading=12,
-                leftIndent=12,
+                fontSize=9.5,
+                leading=11.5,
+                leftIndent=14,
+                bulletIndent=2,
                 spaceAfter=1,
                 spaceBefore=0
             ),
@@ -427,7 +436,7 @@ class PDFGenerator:
                 'SkillsLabel',
                 fontName='Helvetica-Bold',
                 fontSize=10,
-                leading=12,
+                leading=12.5,
                 spaceAfter=0,
                 spaceBefore=0
             )
@@ -731,19 +740,19 @@ class PDFGenerator:
         PDFGenerator._emit_section_header(story, "EDUCATION", styles, template, use_hr)
 
         for edu in education:
-            # School (bold) | Location (italic) - first row
+            # Degree (bold) | Grad date (italic) - first row
             row = [[
-                Paragraph(edu.school, styles['title_bold']),
-                Paragraph(edu.location or '', styles['body_italic_right'])
+                Paragraph(edu.degree, styles['title_bold']),
+                Paragraph(edu.graduation_date, styles['body_italic_right'])
             ]]
             table = Table(row, colWidths=[col_wide, col_narrow])
             table.setStyle(PDFGenerator._table_style())
             story.append(table)
 
-            # Degree (italic) | Grad Date - second row
+            # School | Location (italic) - second row
             row = [[
-                Paragraph(edu.degree, styles['body_italic']),
-                Paragraph(edu.graduation_date, styles['body_right'])
+                Paragraph(edu.school, styles['body']),
+                Paragraph(edu.location or '', styles['body_italic_right'])
             ]]
             table = Table(row, colWidths=[col_wide, col_narrow])
             table.setStyle(PDFGenerator._table_style())
@@ -762,21 +771,21 @@ class PDFGenerator:
         col_wide = col_widths['wide'] if col_widths else 5.5 * inch
         col_narrow = col_widths['narrow'] if col_widths else 2.0 * inch
 
-        PDFGenerator._emit_section_header(story, "EXPERIENCE", styles, template, use_hr)
+        PDFGenerator._emit_section_header(story, "WORK EXPERIENCE", styles, template, use_hr)
 
         for exp in experience:
-            # Title (bold) | Dates - first row
+            # Title (bold) | Dates (italic) - first row
             row = [[
                 Paragraph(exp.title, styles['title_bold']),
-                Paragraph(f"{exp.start_date} - {exp.end_date}", styles['body_right'])
+                Paragraph(f"{exp.start_date} – {exp.end_date}", styles['body_italic_right'])
             ]]
             table = Table(row, colWidths=[col_wide, col_narrow])
             table.setStyle(PDFGenerator._table_style())
             story.append(table)
 
-            # Company (italic) | Location (italic) - second row
+            # Company (plain) | Location (italic) - second row
             row = [[
-                Paragraph(exp.company, styles['body_italic']),
+                Paragraph(exp.company, styles['body']),
                 Paragraph(exp.location or '', styles['body_italic_right'])
             ]]
             table = Table(row, colWidths=[col_wide, col_narrow])
@@ -802,16 +811,16 @@ class PDFGenerator:
         for proj in projects:
             tech_str = ", ".join(proj.technologies) if proj.technologies else ""
 
-            # Project name (bold) | Technologies (italic) - using table for alignment
+            # Project name (bold) --- Technologies (italic) - using table for alignment
             if tech_str:
                 row = [[
-                    Paragraph(f"<b>{proj.name}</b> | <i>{tech_str}</i>", styles['body']),
-                    Paragraph(proj.dates or '', styles['body_right'])
+                    Paragraph(f"<b>{proj.name}</b> --- <i>{tech_str}</i>", styles['body']),
+                    Paragraph(proj.dates or '', styles['body_italic_right'])
                 ]]
             else:
                 row = [[
                     Paragraph(f"<b>{proj.name}</b>", styles['body']),
-                    Paragraph(proj.dates or '', styles['body_right'])
+                    Paragraph(proj.dates or '', styles['body_italic_right'])
                 ]]
             table = Table(row, colWidths=[proj_wide, proj_narrow])
             table.setStyle(PDFGenerator._table_style())
@@ -827,7 +836,7 @@ class PDFGenerator:
     @staticmethod
     def _add_skills(story, skills, styles, template='classic', col_widths=None, use_hr=True):
         """Add skills section - supports classic, modern, and compact templates"""
-        PDFGenerator._emit_section_header(story, "TECHNICAL SKILLS", styles, template, use_hr)
+        PDFGenerator._emit_section_header(story, "SKILLS", styles, template, use_hr)
 
         if skills.languages:
             story.append(Paragraph(
