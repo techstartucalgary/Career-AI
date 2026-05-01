@@ -113,3 +113,22 @@ class SavedJobRecord(BaseModel):
 class JobSearchSignalsRequest(BaseModel):
     keywords: Optional[List[str]] = None
     locations: Optional[List[str]] = None
+
+
+# Auto Apply models
+class AutoApplySettingsUpdate(BaseModel):
+    positions: Optional[List[str]] = None
+    locations: Optional[List[str]] = None
+    work_arrangement: Optional[str] = None
+    match_threshold: Optional[int] = None
+    auto_generate_cover_letter: Optional[bool] = None
+    daily_apply_limit: Optional[int] = None
+    agent_enabled: Optional[bool] = None
+    auto_apply_enabled: Optional[bool] = None
+    search_interval_hours: Optional[int] = None
+    excluded_companies: Optional[List[str]] = None
+    follow_up_days: Optional[int] = None
+
+
+class JobApplicationUpdate(BaseModel):
+    status: str  # saved, applied, interviewing, offered, rejected

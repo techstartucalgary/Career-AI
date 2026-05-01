@@ -1,6 +1,8 @@
 import { getAuthToken } from './api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL =
+  (typeof process !== 'undefined' && process.env && process.env.EXPO_PUBLIC_API_BASE_URL) ||
+  'http://localhost:8000';
 
 // Helper function to convert file URI to Blob for web
 const uriToBlob = async (uri) => {

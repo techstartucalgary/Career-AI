@@ -1,0 +1,119 @@
+{
+  "name": "Ada",
+  "url": "https://job-boards.greenhouse.io/ada18/jobs/5107794007",
+  "job_title": "Senior Software Engineer, Solutions",
+  "form_rendered": true,
+  "fields_total": 11,
+  "fields_filled": 10,
+  "fields_skipped": [
+    "Cover Letter"
+  ],
+  "required_empty": [],
+  "select_tests": [
+    {
+      "label": "Are you legally authorized to work in Canada? ",
+      "value": "Yes",
+      "success": true,
+      "name_attr": "question_11789190007"
+    },
+    {
+      "label": "Will you now or in the future require Visa Sponsorship? ",
+      "value": "No",
+      "success": true,
+      "name_attr": "question_11789191007"
+    },
+    {
+      "label": "Do you have a LinkedIn profile?",
+      "value": "Yes",
+      "success": true,
+      "name_attr": "question_11866632007"
+    }
+  ],
+  "file_uploads": [
+    {
+      "label": "Resume/CV",
+      "status": "set_files_ok"
+    }
+  ],
+  "fill_details": [
+    {
+      "label": "First Name",
+      "value": "Divakar",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.99
+    },
+    {
+      "label": "Last Name",
+      "value": "Gaba",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.99
+    },
+    {
+      "label": "Email",
+      "value": "divakar.gaba@ucalgary.ca",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.99
+    },
+    {
+      "label": "Phone",
+      "value": "403-973-3139",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.97
+    },
+    {
+      "label": "Resume/CV",
+      "value": "JVBERi0xLjUKJb/3ov4KMyAwIG9iago8PCAvTGluZWFyaXplZCAxIC9MIDEwNjYwNSAvSCBbIDExMzcgMTcwIF0gL08gNyAvRSAx...",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.9
+    },
+    {
+      "label": "Cover Letter",
+      "value": null,
+      "status": "EMPTY",
+      "reason": "needs_user_input"
+    },
+    {
+      "label": "Are you legally authorized to work in Canada? ",
+      "value": "Yes",
+      "status": "FILLED",
+      "source": "derived",
+      "confidence": 0.95
+    },
+    {
+      "label": "Will you now or in the future require Visa Sponsorship? ",
+      "value": "No",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.8
+    },
+    {
+      "label": "Do you have a LinkedIn profile?",
+      "value": "Yes",
+      "status": "FILLED",
+      "source": "derived",
+      "confidence": 0.95
+    },
+    {
+      "label": "LinkedIn Profile Link",
+      "value": "https://www.linkedin.com/in/divakar-gaba2/",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.98
+    },
+    {
+      "label": "In a few sentences, tell us what makes you a strong fit for this role and for Ada.",
+      "value": "I bring hands-on experience building production AI systems \u2014 as Product Manager at TechStart UCalgar...",
+      "status": "FILLED",
+      "source": "generated",
+      "confidence": 0.85
+    }
+  ],
+  "screenshot": "tests/screenshots/ada_before_submit.png",
+  "errors": [],
+  "duration_s": 33.7
+}

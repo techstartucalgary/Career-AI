@@ -17,8 +17,17 @@ import requests
 backend_dir = Path(__file__).parent
 sys.path.insert(0, str(backend_dir))
 
-# Import routers from modular files
-from ai_routes import router as ai_router
+# Import routers from modular files (graceful fallback for missing API keys/services)
+_routers = {}
+
+def _try_import(name, fromlist):
+    try:
+        mod = __import__(name, fromlist=fromlist)
+        return getattr(mod, 'router')
+    except Exception as e:
+        print(f"⚠ Skipping {name}: {e}")
+        return None
+
 from auth import router as auth_router
 from users import router as users_router
 from resume import router as resume_router
@@ -29,6 +38,13 @@ from github_routes import router as github_router
 from linkedin.linkedin_routes import router as linkedin_router
 from dependencies import get_current_user
 from database import col
+
+ai_router = _try_import('ai_routes', ['router'])
+auto_apply_router = _try_import('auto_apply_routes', ['router'])
+application_router = _try_import('application_routes', ['router'])
+agent_router = _try_import('agent_routes', ['router'])
+activity_router = _try_import('activity_routes', ['router'])
+showcase_router = _try_import('showcase_routes', ['router'])
 
 # Create a FastAPI instance
 app = FastAPI()
@@ -43,7 +59,8 @@ app.add_middleware(
 )
 
 # Include all routers
-app.include_router(ai_router)
+if ai_router:
+    app.include_router(ai_router)
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(resume_router)
@@ -52,6 +69,16 @@ app.include_router(mock_interview_router)
 app.include_router(speech_router)
 app.include_router(github_router)
 app.include_router(linkedin_router)
+if auto_apply_router:
+    app.include_router(auto_apply_router)
+if application_router:
+    app.include_router(application_router)
+if agent_router:
+    app.include_router(agent_router)
+if activity_router:
+    app.include_router(activity_router)
+if showcase_router:
+    app.include_router(showcase_router)
 
 SCRAPEDOG_JOBS_KEY = os.getenv("SCRAPEDOG_JOBS")
 SCRAPEDOG_JOBS_URL = "https://api.scrapingdog.com/jobs"

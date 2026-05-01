@@ -1,0 +1,197 @@
+{
+  "id": 4012345,
+  "title": "Software Engineer, Backend",
+  "updated_at": "2024-08-15T18:30:00-04:00",
+  "location": {
+    "name": "San Francisco, CA"
+  },
+  "content": "<p>We're looking for a Backend Engineer...</p>",
+  "departments": [
+    {"id": 100, "name": "Engineering"}
+  ],
+  "offices": [
+    {"id": 200, "name": "San Francisco", "location": "San Francisco, CA"}
+  ],
+  "questions": [
+    {
+      "id": 10001,
+      "label": "First Name",
+      "required": true,
+      "fields": [
+        {"name": "first_name", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 10002,
+      "label": "Last Name",
+      "required": true,
+      "fields": [
+        {"name": "last_name", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 10003,
+      "label": "Email",
+      "required": true,
+      "fields": [
+        {"name": "email", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 10004,
+      "label": "Phone",
+      "required": false,
+      "fields": [
+        {"name": "phone", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 10005,
+      "label": "Resume/CV",
+      "required": true,
+      "fields": [
+        {"name": "resume", "type": "input_file", "values": []}
+      ]
+    },
+    {
+      "id": 10006,
+      "label": "Cover Letter",
+      "required": false,
+      "fields": [
+        {"name": "cover_letter", "type": "input_file", "values": []}
+      ]
+    },
+    {
+      "id": 10007,
+      "label": "LinkedIn Profile",
+      "required": false,
+      "fields": [
+        {"name": "linkedin_profile", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 10008,
+      "label": "Website",
+      "required": false,
+      "fields": [
+        {"name": "website", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 10009,
+      "label": "How did you hear about this job?",
+      "required": false,
+      "fields": [
+        {
+          "name": "how_did_you_hear",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "Glassdoor", "value": 1},
+            {"label": "LinkedIn", "value": 2},
+            {"label": "Friend or Colleague", "value": 3},
+            {"label": "Job Board", "value": 4},
+            {"label": "Company Website", "value": 5},
+            {"label": "Other", "value": 6}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 10010,
+      "label": "Are you legally authorized to work in the United States?",
+      "required": true,
+      "fields": [
+        {
+          "name": "work_authorization",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "Yes", "value": 1},
+            {"label": "No", "value": 2}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 10011,
+      "label": "Will you now or in the future require sponsorship for employment visa status?",
+      "required": true,
+      "fields": [
+        {
+          "name": "sponsorship",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "Yes", "value": 1},
+            {"label": "No", "value": 2}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 10012,
+      "label": "Why are you interested in this role?",
+      "required": false,
+      "fields": [
+        {"name": "why_interested", "type": "textarea", "values": []}
+      ]
+    }
+  ],
+  "demographic_questions": [
+    {
+      "id": 20001,
+      "label": "Gender",
+      "required": false,
+      "type": "gender",
+      "fields": [
+        {
+          "name": "demographic_gender",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "Male", "value": 1},
+            {"label": "Female", "value": 2},
+            {"label": "Non-Binary", "value": 3},
+            {"label": "Decline to self-identify", "value": 4}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 20002,
+      "label": "Race / Ethnicity",
+      "required": false,
+      "type": "race",
+      "fields": [
+        {
+          "name": "demographic_race",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "American Indian or Alaskan Native", "value": 1},
+            {"label": "Asian", "value": 2},
+            {"label": "Black or African American", "value": 3},
+            {"label": "Hispanic or Latino", "value": 4},
+            {"label": "Native Hawaiian or Other Pacific Islander", "value": 5},
+            {"label": "White", "value": 6},
+            {"label": "Two or More Races", "value": 7},
+            {"label": "Decline to self-identify", "value": 8}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 20003,
+      "label": "Veteran Status",
+      "required": false,
+      "type": "veteran",
+      "fields": [
+        {
+          "name": "demographic_veteran",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "I am a veteran", "value": 1},
+            {"label": "I am not a veteran", "value": 2},
+            {"label": "Decline to self-identify", "value": 3}
+          ]
+        }
+      ]
+    }
+  ]
+}

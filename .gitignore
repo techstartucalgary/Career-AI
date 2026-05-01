@@ -119,6 +119,8 @@ out
 /.vscode/
 .venv/
 .venv311/
+venv/
+.vite/
 __pycache__/
 *.pyc
 *.pyo

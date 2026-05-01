@@ -1,0 +1,233 @@
+{
+  "id": 6077777,
+  "title": "Data Analyst",
+  "updated_at": "2024-09-01T14:00:00-04:00",
+  "location": {
+    "name": "New York, NY"
+  },
+  "content": "<p>We need a detail-oriented data analyst...</p>",
+  "departments": [
+    {"id": 300, "name": "Data Science"}
+  ],
+  "offices": [
+    {"id": 400, "name": "New York HQ"}
+  ],
+  "questions": [
+    {
+      "id": 40001,
+      "label": "First Name",
+      "required": true,
+      "fields": [
+        {"name": "first_name", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 40002,
+      "label": "Last Name",
+      "required": true,
+      "fields": [
+        {"name": "last_name", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 40003,
+      "label": "Email",
+      "required": true,
+      "fields": [
+        {"name": "email", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 40004,
+      "label": "Phone",
+      "required": true,
+      "fields": [
+        {"name": "phone", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 40005,
+      "label": "Resume/CV",
+      "required": true,
+      "fields": [
+        {"name": "resume", "type": "input_file", "values": []}
+      ]
+    },
+    {
+      "id": 40006,
+      "label": "Cover Letter",
+      "required": false,
+      "fields": [
+        {"name": "cover_letter", "type": "input_file", "values": []}
+      ]
+    },
+    {
+      "id": 40007,
+      "label": "LinkedIn Profile",
+      "required": false,
+      "fields": [
+        {"name": "linkedin_profile", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 40008,
+      "label": "GitHub Profile",
+      "required": false,
+      "fields": [
+        {"name": "github_profile", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 40009,
+      "label": "How many years of experience do you have with SQL?",
+      "required": true,
+      "fields": [
+        {
+          "name": "sql_experience",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "Less than 1 year", "value": 1},
+            {"label": "1-3 years", "value": 2},
+            {"label": "3-5 years", "value": 3},
+            {"label": "5+ years", "value": 4}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 40010,
+      "label": "Which tools have you used? (Select all that apply)",
+      "required": false,
+      "fields": [
+        {
+          "name": "tools_used",
+          "type": "multi_value_multi_select",
+          "values": [
+            {"label": "Python", "value": 1},
+            {"label": "R", "value": 2},
+            {"label": "Tableau", "value": 3},
+            {"label": "Power BI", "value": 4},
+            {"label": "Excel", "value": 5},
+            {"label": "SQL", "value": 6}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 40011,
+      "label": "Tell us about a challenging data project you've worked on",
+      "required": true,
+      "fields": [
+        {"name": "data_project", "type": "textarea", "values": []}
+      ]
+    },
+    {
+      "id": 40012,
+      "label": "Are you authorized to work in the United States?",
+      "required": true,
+      "fields": [
+        {
+          "name": "work_auth",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "Yes", "value": 1},
+            {"label": "No", "value": 2}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 40013,
+      "label": "Will you require visa sponsorship now or in the future?",
+      "required": true,
+      "fields": [
+        {
+          "name": "visa_sponsorship",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "Yes", "value": 1},
+            {"label": "No", "value": 2}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 40014,
+      "label": "What is your expected salary range?",
+      "required": false,
+      "fields": [
+        {"name": "salary_range", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 40015,
+      "label": "Do you agree to our data privacy policy?",
+      "required": true,
+      "fields": [
+        {"name": "agree_privacy", "type": "boolean", "values": []}
+      ]
+    },
+    {
+      "id": 40016,
+      "label": "Additional Information",
+      "required": false,
+      "fields": [
+        {"name": "additional_info", "type": "textarea", "values": []}
+      ]
+    }
+  ],
+  "demographic_questions": [
+    {
+      "id": 50001,
+      "label": "Gender",
+      "required": false,
+      "type": "gender",
+      "fields": [
+        {
+          "name": "demo_gender",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "Male", "value": 1},
+            {"label": "Female", "value": 2},
+            {"label": "Non-Binary", "value": 3},
+            {"label": "Prefer not to say", "value": 4}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 50002,
+      "label": "Are you Hispanic or Latino?",
+      "required": false,
+      "type": "hispanic_latino",
+      "fields": [
+        {
+          "name": "demo_hispanic",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "Yes", "value": 1},
+            {"label": "No", "value": 2},
+            {"label": "Decline to self-identify", "value": 3}
+          ]
+        }
+      ]
+    },
+    {
+      "id": 50003,
+      "label": "Disability Status",
+      "required": false,
+      "type": "disability",
+      "fields": [
+        {
+          "name": "demo_disability",
+          "type": "multi_value_single_select",
+          "values": [
+            {"label": "Yes, I have a disability", "value": 1},
+            {"label": "No, I do not have a disability", "value": 2},
+            {"label": "I do not wish to answer", "value": 3}
+          ]
+        }
+      ]
+    }
+  ]
+}

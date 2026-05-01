@@ -22,6 +22,7 @@ const Header = () => {
 
   const navItems = [
     { label: 'Job Board', route: '/jobs' },
+    { label: 'Auto Apply', route: '/auto-apply' },
     { label: 'AI Resume', route: '/resume' },
     { label: 'AI Cover Letter', route: '/cover-letter' },
     { label: 'Interview Prep', route: '/interview-buddy' },

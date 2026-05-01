@@ -11,6 +11,7 @@ import Header from '../components/Header';
 import styles from './AuthenticationPage.styles';
 import { THEME } from '../styles/theme';
 import { API_BASE_URL, getUserProfile, setAuthToken } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import verexaLogo from '../assets/verexalogo.png';
 import { useBreakpoints } from '../hooks/useBreakpoints';
 
@@ -20,6 +21,7 @@ const ONBOARDING_EMAIL_KEY = 'career_ai_onboarding_email';
 
 export default function AuthenticationPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const { isWideLayout } = useBreakpoints();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -191,7 +193,7 @@ export default function AuthenticationPage() {
         if (res.ok) {
           const data = await res.json();
           if (data && data.data && data.data.token) {
-            setAuthToken(data.data.token);
+            login(data.data.token);
             void getUserProfile({ forceRefresh: true }).catch(() => {});
 
             const isNewGoogleAccount = Boolean(data.data.is_new_user) || data.data.profile_completed === false;
@@ -337,9 +339,9 @@ export default function AuthenticationPage() {
         throw new Error(data.message || 'Authentication failed');
       }
 
-      // Save the authentication token
+      // Save the authentication token and update auth context
       if (data.data && data.data.token) {
-        setAuthToken(data.data.token);
+        login(data.data.token);
         void getUserProfile({ forceRefresh: true }).catch(() => {});
       }
 

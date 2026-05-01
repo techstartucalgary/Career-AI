@@ -1,0 +1,299 @@
+[
+  {
+    "name": "Discord",
+    "url": "https://job-boards.greenhouse.io/discord/jobs/8371252002",
+    "form_rendered": true,
+    "fields_total": 20,
+    "fields_filled": 19,
+    "fields_skipped": [
+      "Cover Letter"
+    ],
+    "required_empty": [],
+    "select_tests": [
+      {
+        "label": "Are you legally authorized to work in the United States for our Company?",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_34859522002"
+      },
+      {
+        "label": "Are you currently located in the US?",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_34859523002"
+      },
+      {
+        "label": "Are you currently based in or willing to relocate to the Bay Area for this position?",
+        "value": "No",
+        "success": true,
+        "name_attr": "question_34859524002"
+      },
+      {
+        "label": "Gender Identity",
+        "value": "I don't wish to answer",
+        "success": true,
+        "name_attr": "demographic_4024307002"
+      },
+      {
+        "label": "Race and Ethnicity",
+        "value": "I don't wish to answer",
+        "success": true,
+        "name_attr": "demographic_4024308002"
+      },
+      {
+        "label": "Disability Status",
+        "value": "I don't wish to answer",
+        "success": true,
+        "name_attr": "demographic_4024309002"
+      },
+      {
+        "label": "I consider myself a member of the LGBTQ+ community",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "demographic_4024310002"
+      },
+      {
+        "label": "Military Veteran Status",
+        "value": "I don't wish to answer",
+        "success": true,
+        "name_attr": "demographic_4024335002"
+      }
+    ],
+    "file_uploads": [
+      {
+        "label": "Resume/CV",
+        "status": "set_files_ok"
+      }
+    ],
+    "eeo_results": [
+      {
+        "label": "Gender Identity",
+        "value": "I don't wish to answer",
+        "filled": true
+      },
+      {
+        "label": "Race and Ethnicity",
+        "value": "I don't wish to answer",
+        "filled": true
+      },
+      {
+        "label": "Disability Status",
+        "value": "I don't wish to answer",
+        "filled": true
+      },
+      {
+        "label": "I consider myself a member of the LGBTQ+ community",
+        "value": "Yes",
+        "filled": true
+      },
+      {
+        "label": "Military Veteran Status",
+        "value": "I don't wish to answer",
+        "filled": true
+      }
+    ],
+    "screenshot": "/Users/divakargaba/Career-AI/backend/tests/screenshots/discord_before_submit.png",
+    "errors": [],
+    "duration_s": 38.3
+  },
+  {
+    "name": "Stripe",
+    "url": "https://boards.greenhouse.io/stripe/jobs/7286376",
+    "form_rendered": false,
+    "fields_total": 19,
+    "fields_filled": 0,
+    "fields_skipped": [],
+    "required_empty": [],
+    "select_tests": [],
+    "file_uploads": [],
+    "eeo_results": [],
+    "screenshot": "/Users/divakargaba/Career-AI/backend/tests/screenshots/stripe_no_form.png",
+    "errors": [
+      "Form not found on page"
+    ],
+    "duration_s": 0
+  },
+  {
+    "name": "Anthropic",
+    "url": "https://boards.greenhouse.io/anthropic/jobs/4502508008",
+    "form_rendered": true,
+    "fields_total": 23,
+    "fields_filled": 22,
+    "fields_skipped": [
+      "Cover Letter"
+    ],
+    "required_empty": [],
+    "select_tests": [
+      {
+        "label": "Are you open to working in-person in one of our offices 25% of the time?",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_8951063008"
+      },
+      {
+        "label": "AI Policy for Application",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_8951066008"
+      },
+      {
+        "label": "Will you now or will you in the future require employment visa sponsorship to work in the country in which the job you're applying for is located? ",
+        "value": "No",
+        "success": true,
+        "name_attr": "question_8951068008"
+      },
+      {
+        "label": "Do you require visa sponsorship?",
+        "value": "No",
+        "success": true,
+        "name_attr": "question_9251024008"
+      },
+      {
+        "label": "Are you open to relocation for this role? ",
+        "value": "No",
+        "success": true,
+        "name_attr": "question_8951072008"
+      },
+      {
+        "label": "Have you ever interviewed at Anthropic before?",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_9019163008"
+      }
+    ],
+    "file_uploads": [
+      {
+        "label": "Resume/CV",
+        "status": "set_files_ok"
+      }
+    ],
+    "eeo_results": [],
+    "screenshot": "/Users/divakargaba/Career-AI/backend/tests/screenshots/anthropic_before_submit.png",
+    "errors": [],
+    "duration_s": 36.4
+  },
+  {
+    "name": "Coinbase",
+    "url": "https://boards.greenhouse.io/coinbase/jobs/7843710",
+    "form_rendered": false,
+    "fields_total": 18,
+    "fields_filled": 0,
+    "fields_skipped": [],
+    "required_empty": [],
+    "select_tests": [],
+    "file_uploads": [],
+    "eeo_results": [],
+    "screenshot": "/Users/divakargaba/Career-AI/backend/tests/screenshots/coinbase_no_form.png",
+    "errors": [
+      "Form not found on page"
+    ],
+    "duration_s": 0
+  },
+  {
+    "name": "Twitch",
+    "url": "https://boards.greenhouse.io/embed/job_app?token=8517748002",
+    "form_rendered": true,
+    "fields_total": 23,
+    "fields_filled": 22,
+    "fields_skipped": [
+      "Cover Letter"
+    ],
+    "required_empty": [],
+    "select_tests": [
+      {
+        "label": "Are you familiar with Twitch? ",
+        "value": "Yes, I'm a Twitch Partner",
+        "success": true,
+        "name_attr": "question_36246266002"
+      },
+      {
+        "label": "Are you currently a Twitch employee?",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_36246267002"
+      },
+      {
+        "label": "Are you open to relocation? ",
+        "value": "No",
+        "success": true,
+        "name_attr": "question_36246268002"
+      },
+      {
+        "label": "Are you a current employee with Amazon or any Amazon subsidiary (outside of Twitch)?",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_36246269002"
+      },
+      {
+        "label": "Have you previously applied to Amazon or any Amazon subsidiary?",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_36246270002"
+      },
+      {
+        "label": "Have you previously been employed by Amazon or any Amazon subsidiary? ",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_36246271002"
+      },
+      {
+        "label": "Are you subject to a non-competition agreement or other agreement that would preclude or restrict your employment at Amazon? ",
+        "value": "True",
+        "success": true,
+        "name_attr": "question_36246272002"
+      },
+      {
+        "label": "If offered employment by Amazon, would you be legally eligible to begin employment immediately?",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_36246273002"
+      },
+      {
+        "label": "Your response is mandatory when applying for a U.S.-based position. Do you need, or will you need in the future, any immigration related support or sponsorship from Amazon in order to begin or continue employment with Amazon? ",
+        "value": "No",
+        "success": true,
+        "name_attr": "question_36246274002"
+      },
+      {
+        "label": "Have you held H-1B status, or had an H-1B petition approved on your behalf, within the preceding 6 years for an employer other than a cap exempt institution? ",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_36246275002"
+      },
+      {
+        "label": "In which country/region do you have citizenship?",
+        "value": "Canada",
+        "success": true,
+        "name_attr": "question_36246276002[]"
+      },
+      {
+        "label": "Since obtaining your most recent citizenship, did you afterwards become a permanent resident in any other country/region? This does not include temporary statuses such as student visas or time-limited work permits.",
+        "value": "No",
+        "success": true,
+        "name_attr": "question_36246277002"
+      },
+      {
+        "label": "For the sole purpose of determining export licensing requirements, please provide your country of citizenship or legal permanent residence, whichever was obtained last. ",
+        "value": "Canada",
+        "success": true,
+        "name_attr": "question_36246278002"
+      },
+      {
+        "label": "Would you like to be considered for future opportunities at Twitch when you apply?",
+        "value": "Yes",
+        "success": true,
+        "name_attr": "question_36246280002"
+      }
+    ],
+    "file_uploads": [
+      {
+        "label": "Resume/CV",
+        "status": "set_files_ok"
+      }
+    ],
+    "eeo_results": [],
+    "screenshot": "/Users/divakargaba/Career-AI/backend/tests/screenshots/twitch_before_submit.png",
+    "errors": [],
+    "duration_s": 47.2
+  }
+]

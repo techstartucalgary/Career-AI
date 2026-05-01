@@ -1,0 +1,128 @@
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "agent_started", "application_id": null, "title": "Showcase cycle started", "description": "Searching Greenhouse job boards...", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:04.391555+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 11 postings at Ada", "description": "", "payload": {"company": "Ada", "count": 11}, "severity": "info", "created_at": "2026-05-01T07:23:04.785577+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 5 postings at Roadie", "description": "", "payload": {"company": "Roadie", "count": 5}, "severity": "info", "created_at": "2026-05-01T07:23:05.317021+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 59 postings at Mercury", "description": "", "payload": {"company": "Mercury", "count": 59}, "severity": "info", "created_at": "2026-05-01T07:23:05.863861+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 19 postings at Pendo", "description": "", "payload": {"company": "Pendo", "count": 19}, "severity": "info", "created_at": "2026-05-01T07:23:06.396072+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 51 postings at Together AI", "description": "", "payload": {"company": "Together AI", "count": 51}, "severity": "info", "created_at": "2026-05-01T07:23:06.932972+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 38 postings at HP IQ", "description": "", "payload": {"company": "HP IQ", "count": 38}, "severity": "info", "created_at": "2026-05-01T07:23:07.474351+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 293 postings at Verkada", "description": "", "payload": {"company": "Verkada", "count": 293}, "severity": "info", "created_at": "2026-05-01T07:23:08.015305+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 160 postings at Glean", "description": "", "payload": {"company": "Glean", "count": 160}, "severity": "info", "created_at": "2026-05-01T07:23:08.554808+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 156 postings at Figma", "description": "", "payload": {"company": "Figma", "count": 156}, "severity": "info", "created_at": "2026-05-01T07:23:09.086317+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 78 postings at Gusto", "description": "", "payload": {"company": "Gusto", "count": 78}, "severity": "info", "created_at": "2026-05-01T07:23:09.618925+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 75 postings at Faire", "description": "", "payload": {"company": "Faire", "count": 75}, "severity": "info", "created_at": "2026-05-01T07:23:10.152230+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 142 postings at Robinhood", "description": "", "payload": {"company": "Robinhood", "count": 142}, "severity": "info", "created_at": "2026-05-01T07:23:10.687194+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 64 postings at Opendoor", "description": "", "payload": {"company": "Opendoor", "count": 64}, "severity": "info", "created_at": "2026-05-01T07:23:11.219036+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 176 postings at Intercom", "description": "", "payload": {"company": "Intercom", "count": 176}, "severity": "info", "created_at": "2026-05-01T07:23:11.755532+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 227 postings at Brex", "description": "", "payload": {"company": "Brex", "count": 227}, "severity": "info", "created_at": "2026-05-01T07:23:12.290166+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 34 postings at Airtable", "description": "", "payload": {"company": "Airtable", "count": 34}, "severity": "info", "created_at": "2026-05-01T07:23:12.830279+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 33 postings at Webflow", "description": "", "payload": {"company": "Webflow", "count": 33}, "severity": "info", "created_at": "2026-05-01T07:23:13.363443+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 86 postings at Vercel", "description": "", "payload": {"company": "Vercel", "count": 86}, "severity": "info", "created_at": "2026-05-01T07:23:13.905539+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 28 postings at DoorDash Canada", "description": "", "payload": {"company": "DoorDash Canada", "count": 28}, "severity": "info", "created_at": "2026-05-01T07:23:14.439119+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 12 postings at Lattice", "description": "", "payload": {"company": "Lattice", "count": 12}, "severity": "info", "created_at": "2026-05-01T07:23:14.974983+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 83 postings at Duolingo", "description": "", "payload": {"company": "Duolingo", "count": 83}, "severity": "info", "created_at": "2026-05-01T07:23:15.515244+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 141 postings at Lyft", "description": "", "payload": {"company": "Lyft", "count": 141}, "severity": "info", "created_at": "2026-05-01T07:23:16.055686+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Found 168 postings at Pinterest", "description": "", "payload": {"company": "Pinterest", "count": 168}, "severity": "info", "created_at": "2026-05-01T07:23:16.597604+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Total: 2139 Greenhouse postings found", "description": "", "payload": {"count": 2139}, "severity": "info", "created_at": "2026-05-01T07:23:17.136410+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Filtered to 1665 recent postings", "description": "", "payload": {"count": 1665}, "severity": "info", "created_at": "2026-05-01T07:23:18.671167+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "job_matched", "application_id": null, "title": "Match: DashMart Team Member - Calgary", "description": "DoorDash Canada \u2014 72% fit", "payload": {"title": "DashMart Team Member - Calgary", "company": "DoorDash Canada", "fit_score": 72.0, "url": "https://job-boards.greenhouse.io/doordashcanada/jobs/6251657"}, "severity": "info", "created_at": "2026-05-01T07:23:22.268241+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "job_matched", "application_id": null, "title": "Match: Operations Manager, DashMart", "description": "DoorDash Canada \u2014 72% fit", "payload": {"title": "Operations Manager, DashMart", "company": "DoorDash Canada", "fit_score": 72.0, "url": "https://job-boards.greenhouse.io/doordashcanada/jobs/7749003"}, "severity": "info", "created_at": "2026-05-01T07:23:22.801488+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "job_matched", "application_id": null, "title": "Match: Senior Software Engineer, Developer Productivity", "description": "Webflow \u2014 71% fit", "payload": {"title": "Senior Software Engineer, Developer Productivity", "company": "Webflow", "fit_score": 70.9, "url": "https://job-boards.greenhouse.io/webflow/jobs/7802966"}, "severity": "info", "created_at": "2026-05-01T07:23:23.336121+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "job_matched", "application_id": null, "title": "Selected: DashMart Team Member - Calgary", "description": "DoorDash Canada \u2014 72% fit", "payload": {"title": "DashMart Team Member - Calgary", "company": "DoorDash Canada", "fit_score": 72.0, "url": "https://job-boards.greenhouse.io/doordashcanada/jobs/6251657"}, "severity": "success", "created_at": "2026-05-01T07:23:23.880827+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_started", "application_id": null, "title": "Analyzing application form...", "description": "Extracting fields for DashMart Team Member - Calgary", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:23.919819+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_completed", "application_id": null, "title": "Found 17 form fields", "description": "", "payload": {"total_fields": 17}, "severity": "info", "created_at": "2026-05-01T07:23:25.187404+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "tailoring_completed", "application_id": null, "title": "Mapped 7 fields from profile", "description": "", "payload": {"auto_filled": 7, "total": 17}, "severity": "info", "created_at": "2026-05-01T07:23:25.587759+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "submission_started", "application_id": null, "title": "Opening browser...", "description": "https://job-boards.greenhouse.io/doordashcanada/jobs/6251657", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:25.618952+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Trying next match...", "description": "Operations Manager, DashMart at DoorDash Canada", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:31.464943+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "job_matched", "application_id": null, "title": "Selected: Operations Manager, DashMart", "description": "DoorDash Canada \u2014 72% fit", "payload": {"title": "Operations Manager, DashMart", "company": "DoorDash Canada", "fit_score": 72.0, "url": "https://job-boards.greenhouse.io/doordashcanada/jobs/7749003"}, "severity": "success", "created_at": "2026-05-01T07:23:31.996386+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_started", "application_id": null, "title": "Analyzing application form...", "description": "Extracting fields for Operations Manager, DashMart", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:32.027272+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_completed", "application_id": null, "title": "Found 16 form fields", "description": "", "payload": {"total_fields": 16}, "severity": "info", "created_at": "2026-05-01T07:23:33.145073+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "tailoring_completed", "application_id": null, "title": "Mapped 6 fields from profile", "description": "", "payload": {"auto_filled": 6, "total": 16}, "severity": "info", "created_at": "2026-05-01T07:23:33.484675+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "submission_started", "application_id": null, "title": "Opening browser...", "description": "https://job-boards.greenhouse.io/doordashcanada/jobs/7749003", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:33.515615+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Trying next match...", "description": "Senior Software Engineer, Developer Productivity at Webflow", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:37.122219+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "job_matched", "application_id": null, "title": "Selected: Senior Software Engineer, Developer Productivity", "description": "Webflow \u2014 71% fit", "payload": {"title": "Senior Software Engineer, Developer Productivity", "company": "Webflow", "fit_score": 70.9, "url": "https://job-boards.greenhouse.io/webflow/jobs/7802966"}, "severity": "success", "created_at": "2026-05-01T07:23:37.654705+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_started", "application_id": null, "title": "Analyzing application form...", "description": "Extracting fields for Senior Software Engineer, Developer Productivity", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:37.685490+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_completed", "application_id": null, "title": "Found 22 form fields", "description": "", "payload": {"total_fields": 22}, "severity": "info", "created_at": "2026-05-01T07:23:42.660252+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "tailoring_completed", "application_id": null, "title": "Mapped 11 fields from profile", "description": "", "payload": {"auto_filled": 11, "total": 22}, "severity": "info", "created_at": "2026-05-01T07:23:42.987599+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "submission_started", "application_id": null, "title": "Opening browser...", "description": "https://job-boards.greenhouse.io/webflow/jobs/7802966", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:43.018840+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Trying next match...", "description": "Senior Software Engineer, Solutions at Ada", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:46.551574+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "job_matched", "application_id": null, "title": "Selected: Senior Software Engineer, Solutions", "description": "Ada \u2014 60% fit", "payload": {"title": "Senior Software Engineer, Solutions", "company": "Ada", "fit_score": 59.5, "url": "https://job-boards.greenhouse.io/ada18/jobs/5107794007"}, "severity": "success", "created_at": "2026-05-01T07:23:47.083325+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_started", "application_id": null, "title": "Analyzing application form...", "description": "Extracting fields for Senior Software Engineer, Solutions", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:47.115914+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_completed", "application_id": null, "title": "Found 11 form fields", "description": "", "payload": {"total_fields": 11}, "severity": "info", "created_at": "2026-05-01T07:23:47.992916+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "tailoring_completed", "application_id": null, "title": "Mapped 4 fields from profile", "description": "", "payload": {"auto_filled": 4, "total": 11}, "severity": "info", "created_at": "2026-05-01T07:23:48.029244+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "submission_started", "application_id": null, "title": "Opening browser...", "description": "https://job-boards.greenhouse.io/ada18/jobs/5107794007", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:48.062366+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Trying next match...", "description": "Salesforce Developer at Mercury", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:51.608990+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "job_matched", "application_id": null, "title": "Selected: Salesforce Developer", "description": "Mercury \u2014 60% fit", "payload": {"title": "Salesforce Developer", "company": "Mercury", "fit_score": 59.5, "url": "https://job-boards.greenhouse.io/mercury/jobs/5857783004"}, "severity": "success", "created_at": "2026-05-01T07:23:52.156011+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_started", "application_id": null, "title": "Analyzing application form...", "description": "Extracting fields for Salesforce Developer", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:52.187295+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_completed", "application_id": null, "title": "Found 12 form fields", "description": "", "payload": {"total_fields": 12}, "severity": "info", "created_at": "2026-05-01T07:23:53.079339+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "tailoring_completed", "application_id": null, "title": "Mapped 4 fields from profile", "description": "", "payload": {"auto_filled": 4, "total": 12}, "severity": "info", "created_at": "2026-05-01T07:23:53.193307+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "submission_started", "application_id": null, "title": "Opening browser...", "description": "https://job-boards.greenhouse.io/mercury/jobs/5857783004", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:23:53.225192+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "submission_failed", "application_id": null, "title": "Showcase cycle encountered an issue", "description": "Could not fill any of the top matches. Last error: CAPTCHA detected on this posting", "payload": {}, "severity": "warning", "created_at": "2026-05-01T07:23:56.753385+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "agent_stopped", "application_id": null, "title": "Showcase cycle complete", "description": "", "payload": {"jobs_found": 2139, "recent_filtered": 1665, "top_match": {"title": "Salesforce Developer", "company": "Mercury", "fit_score": 59.5, "url": "https://job-boards.greenhouse.io/mercury/jobs/5857783004"}, "fields_filled": 0, "total_fields": 12, "status": "error", "error": "Could not fill any of the top matches. Last error: CAPTCHA detected on this posting"}, "severity": "info", "created_at": "2026-05-01T07:23:56.786329+00:00"}
+
+: heartbeat
+
+: heartbeat
+
+: heartbeat
+
+: heartbeat
+

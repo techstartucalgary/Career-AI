@@ -1,0 +1,6 @@
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "agent_started", "application_id": null, "title": "Showcase cycle started", "description": "Searching Greenhouse job boards...", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:14:10.266508+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "submission_failed", "application_id": null, "title": "Showcase cycle encountered an issue", "description": "Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None", "payload": {}, "severity": "warning", "created_at": "2026-05-01T07:14:10.351197+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "agent_stopped", "application_id": null, "title": "Showcase cycle complete", "description": "", "payload": {"jobs_found": 0, "recent_filtered": 0, "top_match": null, "fields_filled": 0, "total_fields": 0, "status": "error", "error": "Collection objects do not implement truth value testing or bool(). Please compare with None instead: collection is not None"}, "severity": "info", "created_at": "2026-05-01T07:14:10.382178+00:00"}
+

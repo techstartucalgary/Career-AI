@@ -1,0 +1,28 @@
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Trying next match...", "description": "Senior Software Engineer, Solutions at Ada", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:18:21.831066+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "job_matched", "application_id": null, "title": "Selected: Senior Software Engineer, Solutions", "description": "Ada \u2014 60% fit", "payload": {"title": "Senior Software Engineer, Solutions", "company": "Ada", "fit_score": 59.5, "url": "https://job-boards.greenhouse.io/ada18/jobs/5107794007"}, "severity": "success", "created_at": "2026-05-01T07:18:22.368036+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_started", "application_id": null, "title": "Analyzing application form...", "description": "Extracting fields for Senior Software Engineer, Solutions", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:18:22.398571+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_completed", "application_id": null, "title": "Found 11 form fields", "description": "", "payload": {"total_fields": 11}, "severity": "info", "created_at": "2026-05-01T07:18:49.422618+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "tailoring_completed", "application_id": null, "title": "Mapped 4 fields from profile", "description": "", "payload": {"auto_filled": 4, "total": 11}, "severity": "info", "created_at": "2026-05-01T07:18:49.452095+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "submission_started", "application_id": null, "title": "Opening browser...", "description": "https://job-boards.greenhouse.io/ada18/jobs/5107794007", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:18:49.480758+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "jobs_discovered", "application_id": null, "title": "Trying next match...", "description": "Salesforce Developer at Mercury", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:18:52.799004+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "job_matched", "application_id": null, "title": "Selected: Salesforce Developer", "description": "Mercury \u2014 60% fit", "payload": {"title": "Salesforce Developer", "company": "Mercury", "fit_score": 59.5, "url": "https://job-boards.greenhouse.io/mercury/jobs/5857783004"}, "severity": "success", "created_at": "2026-05-01T07:18:53.330763+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_started", "application_id": null, "title": "Analyzing application form...", "description": "Extracting fields for Salesforce Developer", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:18:53.363783+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "extraction_completed", "application_id": null, "title": "Found 12 form fields", "description": "", "payload": {"total_fields": 12}, "severity": "info", "created_at": "2026-05-01T07:19:04.791682+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "tailoring_completed", "application_id": null, "title": "Mapped 4 fields from profile", "description": "", "payload": {"auto_filled": 4, "total": 12}, "severity": "info", "created_at": "2026-05-01T07:19:04.927028+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "submission_started", "application_id": null, "title": "Opening browser...", "description": "https://job-boards.greenhouse.io/mercury/jobs/5857783004", "payload": {}, "severity": "info", "created_at": "2026-05-01T07:19:04.966400+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "submission_failed", "application_id": null, "title": "Showcase cycle encountered an issue", "description": "Could not fill any of the top matches. Last error: CAPTCHA detected on this posting", "payload": {}, "severity": "warning", "created_at": "2026-05-01T07:19:08.217127+00:00"}
+
+data: {"user_id": "69ced5c51339c8279450593f", "event_type": "agent_stopped", "application_id": null, "title": "Showcase cycle complete", "description": "", "payload": {"jobs_found": 2139, "recent_filtered": 1665, "top_match": {"title": "Salesforce Developer", "company": "Mercury", "fit_score": 59.5, "url": "https://job-boards.greenhouse.io/mercury/jobs/5857783004"}, "fields_filled": 0, "total_fields": 12, "status": "error", "error": "Could not fill any of the top matches. Last error: CAPTCHA detected on this posting"}, "severity": "info", "created_at": "2026-05-01T07:19:08.247209+00:00"}
+

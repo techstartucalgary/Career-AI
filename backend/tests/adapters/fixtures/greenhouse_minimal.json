@@ -1,0 +1,46 @@
+{
+  "id": 5098765,
+  "title": "Marketing Coordinator",
+  "updated_at": "2024-07-20T10:00:00-04:00",
+  "location": {
+    "name": "Remote"
+  },
+  "content": "<p>Join our marketing team...</p>",
+  "departments": [],
+  "offices": [],
+  "questions": [
+    {
+      "id": 30001,
+      "label": "First Name",
+      "required": true,
+      "fields": [
+        {"name": "first_name", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 30002,
+      "label": "Last Name",
+      "required": true,
+      "fields": [
+        {"name": "last_name", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 30003,
+      "label": "Email",
+      "required": true,
+      "fields": [
+        {"name": "email", "type": "input_text", "values": []}
+      ]
+    },
+    {
+      "id": 30004,
+      "label": "Resume/CV",
+      "required": true,
+      "fields": [
+        {"name": "resume", "type": "input_file", "values": []}
+      ]
+    }
+  ],
+  "demographic_questions": []
+}

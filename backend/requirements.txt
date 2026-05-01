@@ -26,3 +26,6 @@ sounddevice
 numpy
 opencv-python
 mediapipe
+rapidfuzz
+playwright
+certifi

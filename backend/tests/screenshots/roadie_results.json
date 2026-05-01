@@ -1,0 +1,198 @@
+{
+  "name": "Roadie",
+  "url": "https://job-boards.greenhouse.io/roadie/jobs/8485879002",
+  "job_title": "UX Design Intern - Summer 2026",
+  "form_rendered": true,
+  "fields_total": 17,
+  "fields_filled": 10,
+  "fields_skipped": [
+    "Resume/CV",
+    "Portfolio",
+    "LinkedIn Profile",
+    "Which state are you currently a resident in?  (fill failed)",
+    "Please indicate your preferred pronouns:\n",
+    "How would you describe your racial/ethnic background? (mark all that apply)",
+    "How would you describe your sexual orientation? (mark all that apply)"
+  ],
+  "required_empty": [
+    "Resume/CV",
+    "Which state are you currently a resident in? "
+  ],
+  "select_tests": [
+    {
+      "label": "Do you now or in the future require employment sponsorship to work in the United States? ",
+      "value": "No",
+      "success": true,
+      "name_attr": "question_35943488002"
+    },
+    {
+      "label": "Which state are you currently a resident in? ",
+      "value": "AB",
+      "success": false,
+      "name_attr": "question_35943489002"
+    },
+    {
+      "label": "How would you describe your gender identity? (mark all that apply)",
+      "value": "I don't wish to answer",
+      "success": true,
+      "name_attr": "demographic_4017206002"
+    },
+    {
+      "label": "Do you identify as transgender?",
+      "value": "I don't wish to answer",
+      "success": true,
+      "name_attr": "demographic_4017203002"
+    },
+    {
+      "label": "Do you have a disability or chronic condition (physical, visual, auditory, cognitive, mental, emotional, or other) that substantially limits one or more of your major life activities, including mobility, communication (seeing, hearing, speaking), and learning?",
+      "value": "I don't wish to answer",
+      "success": true,
+      "name_attr": "demographic_4017202002"
+    },
+    {
+      "label": "Are you a veteran or active member of the United States Armed Forces?",
+      "value": "I don't wish to answer",
+      "success": true,
+      "name_attr": "demographic_4017201002"
+    }
+  ],
+  "file_uploads": [],
+  "eeo_results": [
+    {
+      "label": "How would you describe your gender identity? (mark all that apply)",
+      "value": "I don't wish to answer",
+      "filled": true
+    },
+    {
+      "label": "Do you identify as transgender?",
+      "value": "I don't wish to answer",
+      "filled": true
+    },
+    {
+      "label": "Do you have a disability or chronic condition (physical, visual, auditory, cognitive, mental, emotional, or other) that substantially limits one or more of your major life activities, including mobility, communication (seeing, hearing, speaking), and learning?",
+      "value": "I don't wish to answer",
+      "filled": true
+    },
+    {
+      "label": "Are you a veteran or active member of the United States Armed Forces?",
+      "value": "I don't wish to answer",
+      "filled": true
+    }
+  ],
+  "fill_details": [
+    {
+      "label": "First Name",
+      "value": "Divakar",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.99
+    },
+    {
+      "label": "Last Name",
+      "value": "Gaba",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.99
+    },
+    {
+      "label": "Preferred First Name",
+      "value": "Divakar",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.99
+    },
+    {
+      "label": "Email",
+      "value": "divakar.gaba@ucalgary.ca",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.99
+    },
+    {
+      "label": "Phone",
+      "value": "000-000-0000",
+      "status": "FILLED",
+      "source": "placeholder",
+      "confidence": 0.5
+    },
+    {
+      "label": "Resume/CV",
+      "value": null,
+      "status": "EMPTY",
+      "reason": "needs_user_input"
+    },
+    {
+      "label": "Portfolio",
+      "value": null,
+      "status": "EMPTY",
+      "reason": "needs_user_input"
+    },
+    {
+      "label": "LinkedIn Profile",
+      "value": null,
+      "status": "EMPTY",
+      "reason": "needs_user_input"
+    },
+    {
+      "label": "Do you now or in the future require employment sponsorship to work in the United States? ",
+      "value": "No",
+      "status": "FILLED",
+      "source": "profile",
+      "confidence": 0.8
+    },
+    {
+      "label": "Which state are you currently a resident in? ",
+      "value": "AB",
+      "status": "FILL_FAILED"
+    },
+    {
+      "label": "Please indicate your preferred pronouns:\n",
+      "value": null,
+      "status": "EMPTY",
+      "reason": "needs_user_input"
+    },
+    {
+      "label": "How would you describe your gender identity? (mark all that apply)",
+      "value": "I don't wish to answer",
+      "status": "FILLED",
+      "source": "override",
+      "confidence": 0.95
+    },
+    {
+      "label": "How would you describe your racial/ethnic background? (mark all that apply)",
+      "value": null,
+      "status": "EMPTY",
+      "reason": "needs_user_input"
+    },
+    {
+      "label": "How would you describe your sexual orientation? (mark all that apply)",
+      "value": null,
+      "status": "EMPTY",
+      "reason": "needs_user_input"
+    },
+    {
+      "label": "Do you identify as transgender?",
+      "value": "I don't wish to answer",
+      "status": "FILLED",
+      "source": "override",
+      "confidence": 0.95
+    },
+    {
+      "label": "Do you have a disability or chronic condition (physical, visual, auditory, cognitive, mental, emotional, or other) that substantially limits one or more of your major life activities, including mobility, communication (seeing, hearing, speaking), and learning?",
+      "value": "I don't wish to answer",
+      "status": "FILLED",
+      "source": "override",
+      "confidence": 0.95
+    },
+    {
+      "label": "Are you a veteran or active member of the United States Armed Forces?",
+      "value": "I don't wish to answer",
+      "status": "FILLED",
+      "source": "override",
+      "confidence": 0.95
+    }
+  ],
+  "screenshot": "tests/screenshots/roadie_before_submit.png",
+  "errors": [],
+  "duration_s": 35.9
+}
