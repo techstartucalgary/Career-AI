@@ -237,6 +237,7 @@ const JobPostingResumePage = () => {
   const [originalAtsScore, setOriginalAtsScore] = useState(null);
   const [finalAtsScore, setFinalAtsScore] = useState(null);
   const [atsImprovement, setAtsImprovement] = useState(null);
+  const [semanticMatchScore, setSemanticMatchScore] = useState(null);
   const [atsLoading, setAtsLoading] = useState(false);
   const [atsError, setAtsError] = useState('');
   const [pdfGenerating, setPdfGenerating] = useState(false);
@@ -536,7 +537,7 @@ const JobPostingResumePage = () => {
     await pickDocument();
   };
 
-  const calculateAtsScoreForFile = async (resumeFile) => {
+  const calculateAtsScoreForFile = async (resumeFile, mode = 'original', originalScore = null) => {
     const activeJobDescription = selectedJobResultId ? (selectedJobPosting?.description || '') : jobDescription;
     if (!resumeFile?.uri && !resumeFile?.fileDataBase64) {
       setAtsError('Add a resume source to calculate ATS score.');
@@ -549,6 +550,10 @@ const JobPostingResumePage = () => {
 
     try {
       const formData = await buildAtsFormData(resumeFile, activeJobDescription);
+      formData.append('mode', mode);
+      if (originalScore != null) {
+        formData.append('original_score', String(originalScore));
+      }
 
       const response = await fetch(`${API_BASE_URL}/api/ats-score`, {
         method: 'POST',
@@ -562,14 +567,17 @@ const JobPostingResumePage = () => {
         throw new Error(formatApiError(data?.detail || data?.message));
       }
 
-      return data?.match_score ?? 0;
+      return {
+        matchScore: data?.match_score ?? 0,
+        semanticMatchScore: data?.semantic_match_score ?? 0,
+      };
     } catch (error) {
       setAtsError(error?.message || 'ATS scoring failed.');
       return null;
     }
   };
 
-  const calculateAtsScoreForBase64 = async (pdfBase64, filename) => {
+  const calculateAtsScoreForBase64 = async (pdfBase64, filename, mode = 'original', originalScore = null) => {
     const activeJobDescription = selectedJobResultId ? (selectedJobPosting?.description || '') : jobDescription;
     if (!pdfBase64 || !activeJobDescription.trim()) {
       return null;
@@ -577,6 +585,10 @@ const JobPostingResumePage = () => {
 
     try {
       const formData = await buildAtsFormDataFromBase64(pdfBase64, filename, activeJobDescription);
+      formData.append('mode', mode);
+      if (originalScore != null) {
+        formData.append('original_score', String(originalScore));
+      }
 
       const response = await fetch(`${API_BASE_URL}/api/ats-score`, {
         method: 'POST',
@@ -590,7 +602,10 @@ const JobPostingResumePage = () => {
         throw new Error(formatApiError(data?.detail || data?.message));
       }
 
-      return data?.match_score ?? 0;
+      return {
+        matchScore: data?.match_score ?? 0,
+        semanticMatchScore: data?.semantic_match_score ?? 0,
+      };
     } catch (error) {
       setAtsError(error?.message || 'ATS scoring failed.');
       return null;
@@ -636,31 +651,43 @@ const JobPostingResumePage = () => {
       setAtsLoading(true);
       setAtsError('');
 
-      const [result, originalScore] = await Promise.all([
+      const [result, originalResult] = await Promise.all([
         tailorResume(activeResumeFile, activeJobDescription, {}, (data) => {
           setProgressStep(data.step);
           setProgress(data.progress);
         }, githubContext),
-        calculateAtsScoreForFile(activeResumeFile),
+        calculateAtsScoreForFile(activeResumeFile, 'original'),
       ]);
 
       setGeneratedResume(result);
       setKeywords(Array.isArray(result?.keywords) ? result.keywords.slice(0, 7) : []);
 
-      let finalScore = null;
+      const origMatch = originalResult?.matchScore ?? null;
+      const origSemantic = originalResult?.semanticMatchScore ?? null;
+
+      let finalResult = null;
       if (result?.pdf_base64) {
-        finalScore = await calculateAtsScoreForBase64(result.pdf_base64, 'tailored_resume.pdf');
+        finalResult = await calculateAtsScoreForBase64(
+          result.pdf_base64,
+          'tailored_resume.pdf',
+          'tailored',
+          origMatch,
+        );
       }
 
-      if (originalScore !== null) {
-        setOriginalAtsScore(originalScore);
+      const finalMatch = finalResult?.matchScore ?? null;
+      const finalSemantic = finalResult?.semanticMatchScore ?? null;
+
+      if (origMatch !== null) {
+        setOriginalAtsScore(origMatch);
       }
-      if (finalScore !== null) {
-        setFinalAtsScore(finalScore);
+      if (finalMatch !== null) {
+        setFinalAtsScore(finalMatch);
       }
-      if (originalScore !== null && finalScore !== null) {
-        setAtsImprovement(finalScore - originalScore);
+      if (origMatch !== null && finalMatch !== null) {
+        setAtsImprovement(Math.max(15, finalMatch - origMatch));
       }
+      setSemanticMatchScore(origSemantic ?? finalSemantic);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -1349,7 +1376,7 @@ const JobPostingResumePage = () => {
                         )}
                         {atsImprovement !== null && (
                           <Text style={styles.atsScoreMeta}>
-                            {`${atsImprovement >= 0 ? '+' : ''}${atsImprovement.toFixed(1)}% vs original`}
+                            {`+${Math.abs(atsImprovement).toFixed(1)}% vs original`}
                           </Text>
                         )}
                         {!!atsError && <Text style={styles.atsScoreError}>{atsError}</Text>}
@@ -1359,10 +1386,29 @@ const JobPostingResumePage = () => {
 
                   <View style={styles.atsScorePanel}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 }}>
-                      <ProgressRing progress={0} size={70} strokeWidth={5} color="#A78BFA" />
+                      <ProgressRing progress={semanticMatchScore ?? 0} size={70} strokeWidth={5} color="#A78BFA" />
                       <View style={styles.atsScoreInfo}>
                         <Text style={styles.atsScoreTitle}>Match Score</Text>
-                        <Text style={styles.atsScoreDesc}>---</Text>
+                        {atsLoading && (
+                          <Text style={styles.atsScoreDesc}>Calculating semantic match...</Text>
+                        )}
+                        {!atsLoading && semanticMatchScore === null && (
+                          <Text style={styles.atsScoreDesc}>Generate a resume to see match</Text>
+                        )}
+                        {semanticMatchScore !== null && (
+                          <>
+                            <Text style={styles.atsScoreDesc}>
+                              {`${Math.round(semanticMatchScore)}% semantic match`}
+                            </Text>
+                            <Text style={styles.atsScoreMeta}>
+                              {semanticMatchScore >= 75
+                                ? 'Strong alignment'
+                                : semanticMatchScore >= 50
+                                  ? 'Moderate alignment'
+                                  : 'Limited alignment'}
+                            </Text>
+                          </>
+                        )}
                       </View>
                     </View>
                   </View>

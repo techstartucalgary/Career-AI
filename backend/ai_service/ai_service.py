@@ -512,6 +512,31 @@ DO NOT add any technologies, skills, or tools mentioned here to the resume.
 {github_section}
 === ENHANCEMENT PROCESS ===
 
+=== EXPERIENCE PRESERVATION (CRITICAL FOR EARLY-CAREER CANDIDATES) ===
+Many candidates have only 1-2 experience entries (an internship, a part-time job, a campus role).
+NEVER drop an experience or project entry just because the title or industry doesn't match the
+target job. Removing entries from a thin resume leaves it empty.
+
+Instead, REPHRASE the bullets of mismatched entries to surface TRANSFERABLE skills relevant to
+the target role:
+- Communication, ownership, deadlines, attention to detail
+- Working with technical systems (POS terminals, ticketing software, scheduling tools)
+- Collaborating across teams, handling ambiguous problems, customer-facing work
+- Any technical exposure, however small, that genuinely happened
+
+DO NOT lie or fabricate. A cashier did NOT "write Python at McDonald's". But the same cashier
+DID handle high-volume transactions, work with POS software, and resolve customer issues —
+which is legitimately transferable. Lean on what is real.
+
+Output MUST contain exactly the same number of experience and project entries as the input.
+Re-shape; never delete.
+
+=== ONE-PAGE CONSTRAINT (HARD REQUIREMENT) ===
+The final resume MUST fit on a single 8.5"x11" page.
+- Each bullet ≤ 140 characters (one printed line). Tighten phrasing rather than wrap.
+- Prefer concise, high-impact bullets over long ones. Trim filler.
+- If you must trim, drop the WEAKEST bullet — never an entire entry.
+
 🚨 ABSOLUTE RULES - VIOLATION MEANS FAILURE 🚨
 
 1. NEVER ADD NEW TECHNOLOGIES/SKILLS FROM THE JOB DESCRIPTION
@@ -532,10 +557,11 @@ DO NOT add any technologies, skills, or tools mentioned here to the resume.
    - Use synonyms and better phrasing for what's already there
 
 4. BULLET COUNT LIMIT
-   - Maximum 4 bullets per experience entry
-   - Maximum 4 bullets per project entry
-   - If original has more, keep the 4 strongest/most relevant
-   - NEVER exceed 4 bullets per entry
+   - Maximum 3 bullets per experience entry
+   - Maximum 3 bullets per project entry
+   - If original has more, keep the 3 strongest/most relevant
+   - NEVER exceed 3 bullets per entry
+   - Each bullet ≤ 140 characters
 
 === WHAT YOU CAN DO ===
 
@@ -551,7 +577,9 @@ DO NOT add any technologies, skills, or tools mentioned here to the resume.
 ❌ Add technologies not in original resume
 ❌ Add skills from job description that candidate doesn't have
 ❌ Invent new responsibilities or projects
-❌ Add more than 4 bullets to any entry
+❌ Add more than 3 bullets to any entry
+❌ Drop any experience or project entry (rephrase, never delete)
+❌ Write a bullet longer than 140 characters
 ❌ Change facts, dates, companies, titles, or education
 
 === EXAMPLES ===
@@ -575,16 +603,23 @@ WHY CORRECT: Only added verifiable metrics from user
 
 EXAMPLE 4 - Bullet Count Limit (CORRECT):
 ORIGINAL has 6 bullets
-ENHANCED: Keep only the 4 strongest, most relevant bullets
-WHY CORRECT: Respects the 4-bullet maximum limit
+ENHANCED: Keep only the 3 strongest, most relevant bullets
+WHY CORRECT: Respects the 3-bullet maximum limit (one-page constraint)
+
+EXAMPLE 5 - Mismatched Job, Rephrased (CORRECT):
+TARGET: Software Engineering Intern
+ORIGINAL ENTRY: Cashier at Tim Hortons — "Took customer orders and operated the till"
+ENHANCED: "Operated POS systems for 200+ daily transactions while resolving customer issues under time pressure"
+WHY CORRECT: Entry preserved, bullets rephrased to surface transferable skills (systems usage, throughput, problem solving). No fabrication.
 
 === CRITICAL CONSTRAINTS ===
-1. PRESERVE STRUCTURE: Exactly {len(original_data['experience'])} experiences, {len(original_data['projects'])} projects
+1. PRESERVE STRUCTURE: Exactly {len(original_data['experience'])} experiences, {len(original_data['projects'])} projects — NEVER drop one
 2. PRESERVE IDENTITY: Never change titles, companies, names, dates, schools, degrees, locations
 3. ONLY MODIFY: Bullet point text within each entry
-4. MAX 4 BULLETS: Each experience/project can have AT MOST 4 bullets
+4. MAX 3 BULLETS: Each experience/project has AT MOST 3 bullets, each ≤ 140 characters
 5. NO NEW SKILLS: Do not add technologies, tools, or skills from job description
-6. VERIFY EVERYTHING: Every skill/technology in output must exist in original resume or user answers
+6. ONE PAGE: Final resume must fit on a single page — favor concise phrasing
+7. VERIFY EVERYTHING: Every skill/technology in output must exist in original resume or user answers
 
 === OUTPUT FORMAT ===
 Return ONLY valid JSON matching the input schema exactly.
@@ -662,17 +697,17 @@ JSON:"""
                     print(f"  ⚠ Warning: Project {i + 1} name changed, reverting")
                     data['projects'][i] = orig
 
-            # CRITICAL: Cap bullets at 4 maximum per entry
-            print("  🔒 Enforcing 4-bullet maximum...")
+            # CRITICAL: Cap bullets at 3 maximum per entry (one-page constraint)
+            print("  🔒 Enforcing 3-bullet maximum...")
             for i, exp in enumerate(data['experience']):
-                if len(exp['bullets']) > 4:
-                    print(f"    ⚠ Experience {i+1} had {len(exp['bullets'])} bullets, trimming to 4")
-                    data['experience'][i]['bullets'] = exp['bullets'][:4]
+                if len(exp['bullets']) > 3:
+                    print(f"    ⚠ Experience {i+1} had {len(exp['bullets'])} bullets, trimming to 3")
+                    data['experience'][i]['bullets'] = exp['bullets'][:3]
 
             for i, proj in enumerate(data['projects']):
-                if len(proj['bullets']) > 4:
-                    print(f"    ⚠ Project {i+1} had {len(proj['bullets'])} bullets, trimming to 4")
-                    data['projects'][i]['bullets'] = proj['bullets'][:4]
+                if len(proj['bullets']) > 3:
+                    print(f"    ⚠ Project {i+1} had {len(proj['bullets'])} bullets, trimming to 3")
+                    data['projects'][i]['bullets'] = proj['bullets'][:3]
 
             # Skills: when GitHub context is present, allow additions evidenced by GitHub.
             # When there is no GitHub context, force revert to prevent hallucination.

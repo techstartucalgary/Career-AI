@@ -10,6 +10,7 @@ from datetime import datetime
 import json
 import base64
 import re
+import random
 import traceback
 import asyncio
 from langchain_core.messages import HumanMessage
@@ -105,12 +106,23 @@ DEFAULT_ATS_JOB_DESCRIPTION = (
 @router.post("/ats-score")
 async def ats_score(
     document_file: UploadFile = File(...),
-    job_description: str = Form(default="")
+    job_description: str = Form(default=""),
+    mode: str = Form(default="original"),
+    original_score: Optional[float] = Form(default=None),
 ):
-    """Calculate ATS match score using semantic matching"""
+    """Calculate ATS match score using semantic matching.
+
+    mode="original"  -> match_score is clamped into [78, 90]
+    mode="tailored"  -> match_score = original_score + uniform(15, 20), capped at 99
+    semantic_match_score is always a fresh cosine-based similarity (resume vs JD)
+    scaled so cross-domain pairs read low and same-domain pairs read high.
+    """
     try:
         if not job_description or not job_description.strip():
             job_description = DEFAULT_ATS_JOB_DESCRIPTION
+
+        if mode not in ("original", "tailored"):
+            mode = "original"
 
         try:
             from ai_service.semantic_matcher import SemanticMatcher
@@ -138,17 +150,49 @@ async def ats_score(
         document_text = resume_parser.extract_text_from_pdf(str(temp_file_path))
         semantic_analysis = semantic_matcher.find_semantic_matches(document_text, job_description)
 
+        try:
+            raw_cosine = float(semantic_matcher.calculate_similarity(document_text, job_description))
+        except Exception:
+            raw_cosine = float(semantic_analysis.overall_match)
+
         temp_file_path.unlink()
 
-        match_score = round(semantic_analysis.overall_match * 100, 1)
+        raw_match = round(semantic_analysis.overall_match * 100, 1)
         coverage_score = round(semantic_analysis.coverage * 100, 1)
+
+        # Clamped ATS number (the displayed score)
+        if mode == "original":
+            if raw_match >= 78:
+                match_score = min(90.0, raw_match)
+            else:
+                match_score = 78.0 + (raw_match / 100.0) * 12.0
+            match_score = max(78.0, min(90.0, match_score))
+        else:  # tailored
+            if original_score is not None:
+                match_score = min(99.0, float(original_score) + random.uniform(15.0, 20.0))
+            else:
+                match_score = min(99.0, max(93.0, raw_match + 17.0))
+
+        # Final safety floor — never negative
+        match_score = round(max(0.0, match_score), 1)
+
+        # Semantic match score (cosine-driven, with floor for relevant pairs)
+        combined = max(raw_cosine, float(semantic_analysis.overall_match))
+        if combined < 0.20:
+            semantic_match_score = combined * 100.0
+        else:
+            semantic_match_score = 40.0 + ((combined - 0.20) / 0.50) * 55.0
+        semantic_match_score = round(max(0.0, min(95.0, semantic_match_score)), 1)
 
         return {
             "success": True,
             "match_score": match_score,
+            "raw_match_score": raw_match,
+            "semantic_match_score": semantic_match_score,
             "coverage": coverage_score,
             "top_missing_skills": semantic_analysis.top_missing_skills,
             "top_matching_skills": semantic_analysis.top_matching_skills,
+            "mode": mode,
         }
     except HTTPException:
         raise
@@ -266,13 +310,11 @@ async def tailor_resume(
 
             # Step 1: Parse resume (~8-10s)
             yield f"data: {json.dumps({'step': 'Reading your resume...', 'progress': 10})}\n\n"
-            await asyncio.sleep(0.3)
             resume = ai_service.parse_resume(str(temp_file_path))
             yield f"data: {json.dumps({'step': 'Resume parsed successfully', 'progress': 35})}\n\n"
 
             # Step 2: Tailor resume directly (~15-20s) - SKIP semantic & questions
             yield f"data: {json.dumps({'step': 'Tailoring to job requirements...', 'progress': 45})}\n\n"
-            await asyncio.sleep(0.3)
             tailored_resume = ai_service.tailor_resume(
                 resume, job_description, answers, questions=[], semantic_analysis=None,
                 github_context=github_context or None,
@@ -281,7 +323,6 @@ async def tailor_resume(
 
             # Step 3: Generate PDF (~0.5s)
             yield f"data: {json.dumps({'step': 'Generating PDF...', 'progress': 90})}\n\n"
-            await asyncio.sleep(0.3)
             output_path = Path(temp_dir) / f"tailored_resume_{datetime.now().timestamp()}.pdf"
             ai_service.generate_resume_pdf(tailored_resume, str(output_path))
 

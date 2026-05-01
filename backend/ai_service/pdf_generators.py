@@ -10,6 +10,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from datetime import datetime
+from copy import deepcopy
 import re
 from .models import ResumeData, CoverLetter, Header
 from .config import MIN_GPA_DISPLAY
@@ -58,20 +59,93 @@ class PDFGenerator:
     @staticmethod
     def generate_resume_pdf(resume: ResumeData, output_path: str, template: str = 'classic') -> bool:
         """
-        Generate ATS-friendly resume PDF matching Jake's Resume Template.
+        Generate ATS-friendly resume PDF, enforcing a single-page result.
 
-        Args:
-            resume: Resume data to render
-            output_path: Where to save PDF
-            template: Visual template to use - 'classic', 'modern', or 'compact'
-
-        Returns:
-            True if successful, False otherwise
+        Renders the resume; if the output spills onto page 2, iteratively trims the
+        weakest bullets (longest entries first) and re-renders. Caller's resume
+        object is never mutated.
         """
-        try:
-            import time
-            start_time = time.time()
+        import time
+        start_time = time.time()
 
+        # Work on a copy so the caller's object is untouched.
+        working = deepcopy(resume)
+        max_iterations = 6
+
+        for attempt in range(max_iterations + 1):
+            if not PDFGenerator._render_resume_to_path(working, output_path, template):
+                return False
+
+            page_count = PDFGenerator._count_pdf_pages(output_path)
+            if page_count is None or page_count <= 1:
+                if attempt > 0:
+                    print(f"  ✓ Resume fits on 1 page after {attempt} trim pass(es)")
+                pdf_time = time.time() - start_time
+                print(f"  ✓ Resume PDF generated in {pdf_time:.1f}s: {output_path}")
+                return True
+
+            if attempt == max_iterations:
+                print(f"  ⚠ Resume still {page_count} pages after {max_iterations} trim passes — leaving as-is")
+                pdf_time = time.time() - start_time
+                print(f"  ✓ Resume PDF generated in {pdf_time:.1f}s: {output_path}")
+                return True
+
+            if not PDFGenerator._trim_one_bullet(working):
+                # nothing left to trim
+                pdf_time = time.time() - start_time
+                print(f"  ⚠ Cannot trim further; resume PDF generated in {pdf_time:.1f}s: {output_path}")
+                return True
+
+        return True
+
+    @staticmethod
+    def _count_pdf_pages(pdf_path: str):
+        """Return the page count of a PDF, or None if it cannot be read."""
+        try:
+            from pypdf import PdfReader
+            reader = PdfReader(pdf_path)
+            return len(reader.pages)
+        except Exception as e:
+            print(f"  ⚠ Could not count PDF pages ({e}); skipping page-fit enforcement")
+            return None
+
+    @staticmethod
+    def _trim_one_bullet(resume: ResumeData) -> bool:
+        """
+        Drop the LAST bullet of whichever experience or project currently has the
+        most bullets (preferring experience entries over projects when tied).
+        Floor: never reduce an entry below 1 bullet.
+
+        Returns True if a bullet was removed, False if nothing left to trim.
+        """
+        target = None  # ('experience' | 'project', index, current_bullet_count)
+
+        for i, exp in enumerate(resume.experience or []):
+            n = len(exp.bullets or [])
+            if n > 1 and (target is None or n > target[2]):
+                target = ('experience', i, n)
+
+        for i, proj in enumerate(resume.projects or []):
+            n = len(proj.bullets or [])
+            if n > 1 and (target is None or n > target[2]):
+                target = ('project', i, n)
+
+        if target is None:
+            return False
+
+        kind, idx, _ = target
+        if kind == 'experience':
+            resume.experience[idx].bullets = resume.experience[idx].bullets[:-1]
+            print(f"  ✂ Trimmed last bullet from experience #{idx + 1} to fit one page")
+        else:
+            resume.projects[idx].bullets = resume.projects[idx].bullets[:-1]
+            print(f"  ✂ Trimmed last bullet from project #{idx + 1} to fit one page")
+        return True
+
+    @staticmethod
+    def _render_resume_to_path(resume: ResumeData, output_path: str, template: str = 'classic') -> bool:
+        """Render a resume to a single PDF file. Returns True on success."""
+        try:
             # ---- template-specific margins, styles, and column widths ----
             if template == 'modern':
                 if PDFGenerator._resume_modern_styles is None:
@@ -151,8 +225,6 @@ class PDFGenerator:
                                          use_hr=use_hr)
 
             doc.build(story)
-            pdf_time = time.time() - start_time
-            print(f"  ✓ Resume PDF generated in {pdf_time:.1f}s: {output_path}")
             return True
 
         except Exception as e:
